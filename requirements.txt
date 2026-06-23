@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+sqlmodel
+ortools
+python-dotenv
+anthropic
+bcrypt
+PyJWT
+psycopg[binary]
+alembic
+pytest
+httpx
+
+psycopg2-binary>=2.9,<3

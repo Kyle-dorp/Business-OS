@@ -1,0 +1,40 @@
+.venv/
+node_modules/
+.env
+*.db
+*.db-*
+__pycache__/
+*.pyc
+frontend/dist/
+
+# Secrets and local environment
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Python
+venv/
+env/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+.next/
+dist/
+build/
+coverage/
+
+# Local databases
+*.sqlite
+*.sqlite3
+
+# Operating system files
+.DS_Store
+Thumbs.db

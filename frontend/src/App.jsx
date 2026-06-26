@@ -11,6 +11,7 @@ import NotificationsPage from "./pages/NotificationsPage";
 import PlatformPage from "./pages/PlatformPage";
 import RequestsPage from "./pages/RequestsPage";
 import SettingsPage from "./pages/SettingsPage";
+import FinancePage from "./pages/FinancePage";
 
 class PageErrorBoundary extends Component {
   constructor(props) { super(props); this.state = { error: null }; }
@@ -30,6 +31,7 @@ const MANAGER_TABS = [
   { id: "sales", label: "Sales & invoices", icon: "$", module: "sales" },
   { id: "purchasing", label: "Bills & purchasing", icon: "↓", module: "purchasing" },
   { id: "accounting", label: "Bookkeeping", icon: "≡", module: "accounting" },
+  { id: "finance", label: "Finance", icon: "$", module: "accounting" },
   { id: "reports", label: "Reports", icon: "↗", module: "reports" },
   { id: "tasks", label: "Tasks", icon: "✓", module: "tasks" },
   { id: "inventory", label: "Inventory & assets", icon: "□", module: "inventory" },
@@ -51,6 +53,35 @@ const MANAGER_NAV_GROUPS = [
   { label: "People & scheduling", ids: ["availability", "manager"] },
 ];
 
+function buildThemeStyle(theme = {}) {
+  const p = theme.primary || "#2f6fed";
+  const sb = theme.sidebar_bg || "#111c31";
+  const ac = theme.accent || "#14835f";
+  const pg = theme.page_bg || "#eef3f9";
+  const font = theme.font || "";
+  return `
+    :root {
+      --blue: ${p}; --blue-dark: ${p}; --blue-soft: ${p}22;
+      --navy: ${sb}; --navy-2: ${sb};
+      --green: ${ac};
+      --purple: ${p};
+      ${font ? `font-family: ${font}, ui-sans-serif, system-ui, sans-serif;` : ""}
+    }
+    body { background: ${pg} !important; }
+    .drawer { background: ${sb} !important; box-shadow: 20px 0 55px rgba(0,0,0,.35) !important; }
+    .primary-btn, .small-btn, .approve-btn, .send-button {
+      background: ${p} !important; box-shadow: 0 8px 18px ${p}44 !important;
+    }
+    .primary-btn:hover, .small-btn:hover, .approve-btn:hover, .send-button:hover {
+      box-shadow: 0 11px 24px ${p}66 !important;
+    }
+    .nav-btn.active { background: ${p} !important; box-shadow: 0 10px 22px ${p}44 !important; }
+    .eyebrow { color: ${ac} !important; }
+    .os-field input:focus, .os-field select:focus { outline: 3px solid ${p}22 !important; border-color: ${p} !important; }
+    .os-field input:focus-visible, .os-field select:focus-visible { outline: 3px solid ${p}44 !important; }
+  `.trim();
+}
+
 export default function App() {
   const [initializing, setInitializing] = useState(true);
   const [needsSetup, setNeedsSetup] = useState(false);
@@ -60,6 +91,7 @@ export default function App() {
   const [notificationCount, setNotificationCount] = useState(0);
   const [businesses, setBusinesses] = useState([]);
   const [workspace, setWorkspace] = useState(null);
+  const [uiConfig, setUiConfig] = useState(null);
   const tabs = useMemo(() => {
     if (user?.role !== "manager") return EMPLOYEE_TABS;
     const configured = new Map((workspace?.modules || []).map((item) => [item.module_key, item.enabled]));
@@ -77,7 +109,12 @@ export default function App() {
     if (!list.length) list = await api("/platform/bootstrap", { method: "POST" });
     setBusinesses(list);
     const selected = list.some((x) => String(x.business.id) === String(getBusinessId())) ? getBusinessId() : list[0]?.business.id;
-    if (selected) { setBusinessId(selected); setWorkspace(await api("/platform/workspace")); }
+    if (selected) {
+      setBusinessId(selected);
+      const [ws, cfg] = await Promise.all([api("/platform/workspace"), api("/platform/ui-config")]);
+      setWorkspace(ws);
+      setUiConfig(cfg);
+    }
   }
 
   async function bootstrap() {
@@ -120,31 +157,40 @@ export default function App() {
     await loadWorkspace(); await switchBusiness(business.id);
   }
 
+  const navLabels = uiConfig?.nav_labels || {};
+  const branding = uiConfig?.branding || {};
+  const logoLetter = branding.logo_letter || "O";
+  const tagline = branding.tagline || "Operations + accounting";
+  const themeStyle = uiConfig ? buildThemeStyle(uiConfig.theme) : "";
+
+  const resolvedTabs = useMemo(() => tabs.map((tab) => navLabels[tab.id] ? { ...tab, label: navLabels[tab.id] } : tab), [tabs, navLabels]);
+
   if (initializing) return <div className="boot-screen"><div className="boot-mark">O</div><div className="boot-pulse" /><p>Opening business workspace…</p></div>;
   if (!user) return <AuthPage needsSetup={needsSetup} onAuthenticated={authenticated} />;
-  const currentLabel = tabs.find((tab) => tab.id === activeTab)?.label || "Home";
+  const currentLabel = resolvedTabs.find((tab) => tab.id === activeTab)?.label || "Home";
   const tabButton = (tab) => <button key={tab.id} className={activeTab === tab.id ? "nav-btn active" : "nav-btn"} onClick={() => changeTab(tab.id)}><span className="nav-icon">{tab.icon}</span><span>{tab.label}</span>{tab.id === "notifications" && notificationCount > 0 && <span className="notification-badge">{notificationCount}</span>}</button>;
   const groupedTabIds = new Set(MANAGER_NAV_GROUPS.flatMap((group) => group.ids));
 
   return <div className="app commercial-shell">
+    {themeStyle && <style>{themeStyle}</style>}
     {drawerOpen && <button className="drawer-backdrop" aria-label="Close navigation" onClick={() => setDrawerOpen(false)} />}
     <aside className={drawerOpen ? "drawer open" : "drawer"}>
-      <div className="drawer-brand"><div className="drawer-logo">O</div><div><strong>{workspace?.business?.name || "Business OS"}</strong><span>Operations + accounting</span></div><button className="drawer-close" onClick={() => setDrawerOpen(false)}>×</button></div>
+      <div className="drawer-brand"><div className="drawer-logo">{logoLetter}</div><div><strong>{workspace?.business?.name || "Business OS"}</strong><span>{tagline}</span></div><button className="drawer-close" onClick={() => setDrawerOpen(false)}>×</button></div>
       <nav className="drawer-nav">
         <div className="workspace-switcher"><select className="workspace-select" value={workspace?.business?.id || ""} onChange={(e) => switchBusiness(e.target.value)}>{businesses.map((x) => <option key={x.business.id} value={x.business.id}>{x.business.name}</option>)}</select>{user.role === "manager" && <button title="Create another business" onClick={createBusiness}>+</button>}</div>
         <span className="drawer-section-label">WORKSPACE</span>
-        {user.role !== "manager" ? tabs.map(tabButton) : <>
-          {tabs.filter((tab) => tab.id === "home").map(tabButton)}
+        {user.role !== "manager" ? resolvedTabs.map(tabButton) : <>
+          {resolvedTabs.filter((tab) => tab.id === "home").map(tabButton)}
           {MANAGER_NAV_GROUPS.map((group) => {
-            const groupTabs = tabs.filter((tab) => group.ids.includes(tab.id));
+            const groupTabs = resolvedTabs.filter((tab) => group.ids.includes(tab.id));
             if (!groupTabs.length) return null;
             return <details className="nav-group" key={group.label} defaultOpen={groupTabs.some((tab) => tab.id === activeTab)}>
               <summary>{group.label}<span aria-hidden="true">⌄</span></summary>
               <div>{groupTabs.map(tabButton)}</div>
             </details>;
           })}
-          {tabs.filter((tab) => !groupedTabIds.has(tab.id) && !["home", "settings"].includes(tab.id)).map(tabButton)}
-          {tabs.filter((tab) => tab.id === "settings").map(tabButton)}
+          {resolvedTabs.filter((tab) => !groupedTabIds.has(tab.id) && !["home", "settings"].includes(tab.id)).map(tabButton)}
+          {resolvedTabs.filter((tab) => tab.id === "settings").map(tabButton)}
         </>}
       </nav>
       <div className="drawer-footer account-footer"><div className="account-avatar">{user.username[0].toUpperCase()}</div><div><strong>{user.username}</strong><span>{workspace?.role || user.role}</span></div><button title="Log out" onClick={logout}>↪</button></div>
@@ -156,6 +202,7 @@ export default function App() {
           {activeTab === "home" && <PlatformPage section="overview" />}
           {["contacts", "sales", "purchasing", "accounting", "reports", "tasks", "inventory"].includes(activeTab) && <PlatformPage section={activeTab} />}
           {activeTab === "availability" && <AvailabilityPage />}{activeTab === "manager" && <ManagerPage />}
+          {activeTab === "finance" && <FinancePage />}
           {activeTab === "assistant" && <AssistantPage />}{activeTab === "notifications" && <NotificationsPage onCountChange={setNotificationCount} />}
           {activeTab === "settings" && <SettingsPage user={user} workspaceRole={workspace?.role} modules={workspace?.modules || []} onModulesChanged={refreshWorkspace} onUserChange={setUser} onLogout={logout} />}
         </> : <>{activeTab === "home" && <EmployeeHomePage />}{activeTab === "my-availability" && <EmployeeAvailabilityPage />}{activeTab === "requests" && <RequestsPage />}{activeTab === "settings" && <SettingsPage user={user} onUserChange={setUser} onLogout={logout} />}</>}

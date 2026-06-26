@@ -16,7 +16,7 @@ from backend.app.models import (
     ChecklistTemplate, ClosingReport, Contact, Department, Expense,
     InventoryItem, InventoryMovement, Invoice, InvoiceLine, JournalEntry,
     JournalLine, LedgerAccount, Location, ManagerSettings, Membership, Payment,
-    Position, TaskItem, UserAccount,
+    Position, TaskItem, UIConfig, UserAccount,
 )
 
 router = APIRouter(prefix="/platform", tags=["business platform"])
@@ -67,23 +67,46 @@ WRITE_ROLES = {"owner", "admin", "manager", "accountant"}
 ADMIN_ROLES = {"owner", "admin"}
 
 DEFAULT_ACCOUNTS = [
+    # Assets
     ("1000", "Operating Bank", "asset", "cash"),
+    ("1010", "Cash Drawer", "asset", "cash_drawer"),
     ("1100", "Accounts Receivable", "asset", "accounts_receivable"),
     ("1200", "Inventory", "asset", "inventory"),
     ("1500", "Equipment", "asset", "fixed_asset"),
+    # Liabilities
     ("2000", "Accounts Payable", "liability", "accounts_payable"),
     ("2100", "Credit Card", "liability", "credit_card"),
+    ("2200", "Sales Tax Payable", "liability", "sales_tax"),
+    # Equity
     ("3000", "Owner Equity", "equity", "owner_equity"),
     ("3100", "Retained Earnings", "equity", "retained_earnings"),
+    # Income
     ("4000", "Sales Revenue", "income", "sales"),
     ("4100", "Service Revenue", "income", "services"),
+    ("4200", "Catering Revenue", "income", "catering"),
+    # Cost of goods
     ("5000", "Cost of Goods Sold", "expense", "cost_of_goods_sold"),
+    ("5100", "Food Cost - Proteins", "expense", "food_cost_protein"),
+    ("5200", "Food Cost - Bread & Bakery", "expense", "food_cost_bread"),
+    ("5300", "Food Cost - Produce & Dairy", "expense", "food_cost_produce"),
+    ("5400", "Paper & Packaging", "expense", "food_cost_packaging"),
+    ("5500", "Food Cost - Beverages", "expense", "food_cost_beverage"),
+    # Operating expenses
     ("6000", "Payroll Expense", "expense", "payroll"),
     ("6100", "Rent Expense", "expense", "rent"),
     ("6200", "Utilities Expense", "expense", "utilities"),
     ("6300", "Supplies Expense", "expense", "supplies"),
+    ("6400", "Card Processing Fees", "expense", "card_fees"),
+    ("6500", "Marketing & Advertising", "expense", "marketing"),
+    ("6600", "Insurance", "expense", "insurance"),
+    ("6700", "Repairs & Maintenance", "expense", "repairs"),
     ("6900", "Other Expense", "expense", "other"),
 ]
+
+FOOD_COST_SUBTYPES = frozenset({
+    "cost_of_goods_sold", "food_cost_protein", "food_cost_bread",
+    "food_cost_produce", "food_cost_packaging", "food_cost_beverage",
+})
 
 
 class BusinessCreate(BaseModel):
@@ -214,6 +237,8 @@ class ClosingReportPayload(BaseModel):
     report_date: str = Field(default_factory=lambda: date.today().isoformat())
     location_id: Optional[int] = None
     sales: float = 0
+    card_sales: float = 0
+    sales_tax: float = 0
     cash_expected: float = 0
     cash_actual: float = 0
     labor_cost: float = 0
@@ -222,8 +247,22 @@ class ClosingReportPayload(BaseModel):
     notes: str = ""
 
 
+class ClosingReportPostPayload(BaseModel):
+    bank_account_id: int
+
+
 class PresetRecommendationPayload(BaseModel):
     description: str
+
+
+class SalesTaxRemitPayload(BaseModel):
+    amount: float
+    period: str  # e.g. "Q2 2025"
+    bank_account_id: int
+
+
+class UIConfigPatch(BaseModel):
+    patch: dict = {}
 
 
 def cents(amount: float) -> int:
@@ -492,10 +531,22 @@ def post_invoice(invoice_id: int, context=Depends(require_write), session: Sessi
     if invoice.status != "draft": raise HTTPException(409, "Only draft invoices can be posted")
     ar = account_by_subtype(session, business_id, "accounts_receivable")
     revenue = account_by_subtype(session, business_id, "sales")
-    post_entry(session, business_id, user.id, invoice.issue_date, f"Invoice {invoice.number}", "invoice", invoice.id, [
-        {"account_id": ar.id, "description": invoice.number, "debit_cents": invoice.total_cents, "credit_cents": 0},
-        {"account_id": revenue.id, "description": invoice.number, "debit_cents": 0, "credit_cents": invoice.total_cents},
-    ])
+    tax_account = session.exec(select(LedgerAccount).where(
+        LedgerAccount.business_id == business_id, LedgerAccount.subtype == "sales_tax",
+        LedgerAccount.active == True,  # noqa: E712
+    )).first()
+    if tax_account and invoice.tax_cents > 0:
+        lines = [
+            {"account_id": ar.id, "description": invoice.number, "debit_cents": invoice.total_cents, "credit_cents": 0},
+            {"account_id": revenue.id, "description": invoice.number, "debit_cents": 0, "credit_cents": invoice.subtotal_cents},
+            {"account_id": tax_account.id, "description": "Sales tax collected", "debit_cents": 0, "credit_cents": invoice.tax_cents},
+        ]
+    else:
+        lines = [
+            {"account_id": ar.id, "description": invoice.number, "debit_cents": invoice.total_cents, "credit_cents": 0},
+            {"account_id": revenue.id, "description": invoice.number, "debit_cents": 0, "credit_cents": invoice.total_cents},
+        ]
+    post_entry(session, business_id, user.id, invoice.issue_date, f"Invoice {invoice.number}", "invoice", invoice.id, lines)
     invoice.status = "sent"; audit(session, business_id, user.id, "invoice.post", "invoice", invoice.id)
     session.commit(); session.refresh(invoice)
     return invoice
@@ -778,11 +829,218 @@ def closing_reports(context=Depends(business_context), session: Session = Depend
 def create_closing_report(payload: ClosingReportPayload, context=Depends(require_write), session: Session = Depends(get_session)):
     business_id, _, user = context
     report = ClosingReport(business_id=business_id, location_id=payload.location_id, report_date=payload.report_date,
-        sales_cents=cents(payload.sales), cash_expected_cents=cents(payload.cash_expected),
+        sales_cents=cents(payload.sales), card_sales_cents=cents(payload.card_sales),
+        sales_tax_cents=cents(payload.sales_tax), cash_expected_cents=cents(payload.cash_expected),
         cash_actual_cents=cents(payload.cash_actual), labor_cost_cents=cents(payload.labor_cost),
         waste_cents=cents(payload.waste), issues=payload.issues.strip(), notes=payload.notes.strip(), submitted_by_user_id=user.id)
     session.add(report); session.flush(); audit(session, business_id, user.id, "closing_report.create", "closing_report", report.id)
     session.commit(); session.refresh(report); return report
+
+
+@router.post("/closing-reports/{report_id}/post")
+def post_closing_report(report_id: int, payload: ClosingReportPostPayload, context=Depends(require_write), session: Session = Depends(get_session)):
+    business_id, _, user = context
+    report = session.get(ClosingReport, report_id)
+    if not report or report.business_id != business_id:
+        raise HTTPException(404, "Closing report not found")
+    if report.sales_cents <= 0:
+        raise HTTPException(400, "Cannot post a closing report with zero sales")
+    existing = session.exec(select(JournalEntry).where(
+        JournalEntry.business_id == business_id,
+        JournalEntry.source_type == "closing_report",
+        JournalEntry.source_id == report_id,
+        JournalEntry.status == "posted",
+    )).first()
+    if existing:
+        raise HTTPException(409, "This closing report has already been posted to the books")
+    bank = session.get(LedgerAccount, payload.bank_account_id)
+    if not bank or bank.business_id != business_id:
+        raise HTTPException(400, "Invalid deposit account")
+    revenue = account_by_subtype(session, business_id, "sales")
+    tax_cents = report.sales_tax_cents
+    revenue_cents = report.sales_cents - tax_cents
+    lines = [
+        {"account_id": bank.id, "description": f"Daily sales {report.report_date}", "debit_cents": report.sales_cents, "credit_cents": 0},
+        {"account_id": revenue.id, "description": f"Daily sales {report.report_date}", "debit_cents": 0, "credit_cents": revenue_cents},
+    ]
+    if tax_cents > 0:
+        tax_account = session.exec(select(LedgerAccount).where(
+            LedgerAccount.business_id == business_id, LedgerAccount.subtype == "sales_tax",
+            LedgerAccount.active == True,  # noqa: E712
+        )).first()
+        if tax_account:
+            lines.append({"account_id": tax_account.id, "description": "Sales tax collected", "debit_cents": 0, "credit_cents": tax_cents})
+        else:
+            lines[1]["credit_cents"] = report.sales_cents
+    post_entry(session, business_id, user.id, report.report_date, f"Daily sales {report.report_date}", "closing_report", report_id, lines)
+    audit(session, business_id, user.id, "closing_report.post", "closing_report", report_id)
+    session.commit()
+    return {"posted": True, "date": report.report_date}
+
+
+@router.get("/reports/ar-aging")
+def ar_aging(context=Depends(business_context), session: Session = Depends(get_session)):
+    business_id = context[0]
+    today_str = date.today().isoformat()
+    invoices = session.exec(select(Invoice).where(
+        Invoice.business_id == business_id,
+        Invoice.status.in_(["sent", "partial", "overdue"]),
+    )).all()
+    buckets: dict[str, list] = {"current": [], "1_30": [], "31_60": [], "61_90": [], "over_90": []}
+    for inv in invoices:
+        balance = inv.total_cents - inv.paid_cents
+        if balance <= 0:
+            continue
+        days_past = (date.fromisoformat(today_str) - date.fromisoformat(inv.due_date)).days
+        contact = session.get(Contact, inv.customer_id)
+        row = {
+            "invoice_number": inv.number, "due_date": inv.due_date,
+            "customer": contact.name if contact else "Unknown",
+            "days_past_due": max(0, days_past), "balance_cents": balance,
+        }
+        if days_past <= 0: buckets["current"].append(row)
+        elif days_past <= 30: buckets["1_30"].append(row)
+        elif days_past <= 60: buckets["31_60"].append(row)
+        elif days_past <= 90: buckets["61_90"].append(row)
+        else: buckets["over_90"].append(row)
+    totals = {k: sum(x["balance_cents"] for x in v) for k, v in buckets.items()}
+    return {"buckets": buckets, "totals": totals, "grand_total_cents": sum(totals.values())}
+
+
+@router.get("/reports/ap-aging")
+def ap_aging(context=Depends(business_context), session: Session = Depends(get_session)):
+    business_id = context[0]
+    today_str = date.today().isoformat()
+    bills = session.exec(select(Bill).where(
+        Bill.business_id == business_id,
+        Bill.status.in_(["open", "partial"]),
+    )).all()
+    buckets: dict[str, list] = {"current": [], "1_30": [], "31_60": [], "61_90": [], "over_90": []}
+    for bill in bills:
+        balance = bill.total_cents - bill.paid_cents
+        if balance <= 0:
+            continue
+        days_past = (date.fromisoformat(today_str) - date.fromisoformat(bill.due_date)).days
+        contact = session.get(Contact, bill.vendor_id)
+        row = {
+            "bill_number": bill.number or f"Bill {bill.id}", "due_date": bill.due_date,
+            "vendor": contact.name if contact else "Unknown",
+            "days_past_due": max(0, days_past), "balance_cents": balance,
+        }
+        if days_past <= 0: buckets["current"].append(row)
+        elif days_past <= 30: buckets["1_30"].append(row)
+        elif days_past <= 60: buckets["31_60"].append(row)
+        elif days_past <= 90: buckets["61_90"].append(row)
+        else: buckets["over_90"].append(row)
+    totals = {k: sum(x["balance_cents"] for x in v) for k, v in buckets.items()}
+    return {"buckets": buckets, "totals": totals, "grand_total_cents": sum(totals.values())}
+
+
+@router.get("/reports/food-cost")
+def food_cost_report(start: Optional[str] = None, end: Optional[str] = None, context=Depends(business_context), session: Session = Depends(get_session)):
+    business_id = context[0]
+    accounts, totals = account_balances(session, business_id, start, end)
+    sales_accounts = [a for a in accounts if a.account_type == "income"]
+    food_accounts = [a for a in accounts if a.subtype in FOOD_COST_SUBTYPES]
+    total_sales = sum(totals[a.id]["credit_cents"] - totals[a.id]["debit_cents"] for a in sales_accounts)
+    total_food_cost = sum(totals[a.id]["debit_cents"] - totals[a.id]["credit_cents"] for a in food_accounts)
+    pct = round(total_food_cost / total_sales * 100, 1) if total_sales > 0 else 0
+    return {
+        "total_sales_cents": total_sales,
+        "total_food_cost_cents": total_food_cost,
+        "food_cost_pct": pct,
+        "breakdown": [
+            {
+                "account_name": a.name,
+                "amount_cents": totals[a.id]["debit_cents"] - totals[a.id]["credit_cents"],
+                "pct_of_sales": round((totals[a.id]["debit_cents"] - totals[a.id]["credit_cents"]) / total_sales * 100, 1) if total_sales > 0 else 0,
+            }
+            for a in food_accounts
+        ],
+    }
+
+
+DEFAULT_UI_CONFIG: dict = {
+    "theme": {
+        "primary": "#2f6fed",
+        "sidebar_bg": "#111c31",
+        "accent": "#14835f",
+        "page_bg": "#eef3f9",
+        "font": "",
+    },
+    "branding": {
+        "logo_letter": "O",
+        "tagline": "Operations + accounting",
+    },
+    "nav_labels": {},
+}
+
+
+def _merged_ui_config(record: Optional["UIConfig"]) -> dict:
+    import copy
+    result = copy.deepcopy(DEFAULT_UI_CONFIG)
+    if record:
+        try:
+            saved = json.loads(record.config_json or "{}")
+            for section, values in saved.items():
+                if isinstance(values, dict):
+                    result[section] = {**result.get(section, {}), **values}
+                else:
+                    result[section] = values
+        except Exception:
+            pass
+    return result
+
+
+@router.post("/accounting/sales-tax/remit")
+def remit_sales_tax(payload: SalesTaxRemitPayload, context=Depends(require_write), session: Session = Depends(get_session)):
+    business_id, user = context
+    amount_cents = round(payload.amount * 100)
+    if amount_cents <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be greater than zero")
+    tax_acct = session.exec(select(LedgerAccount).where(LedgerAccount.business_id == business_id, LedgerAccount.subtype == "sales_tax")).first()
+    if not tax_acct:
+        raise HTTPException(status_code=400, detail="No Sales Tax Payable account found — check your chart of accounts")
+    bank_acct = session.exec(select(LedgerAccount).where(LedgerAccount.id == payload.bank_account_id, LedgerAccount.business_id == business_id)).first()
+    if not bank_acct:
+        raise HTTPException(status_code=400, detail="Bank account not found")
+    entry_date = utc_now_iso()[:10]
+    post_entry(session, business_id, user.id, entry_date, f"CO sales tax remittance {payload.period}", "sales_tax_remit", 0, [
+        {"account_id": tax_acct.id, "description": f"Sales tax paid {payload.period}", "debit_cents": amount_cents, "credit_cents": 0},
+        {"account_id": bank_acct.id, "description": f"Sales tax paid {payload.period}", "debit_cents": 0, "credit_cents": amount_cents},
+    ])
+    return {"ok": True, "amount_cents": amount_cents}
+
+
+@router.get("/ui-config")
+def get_ui_config(context=Depends(business_context), session: Session = Depends(get_session)):
+    business_id = context[0]
+    record = session.exec(select(UIConfig).where(UIConfig.business_id == business_id)).first()
+    return _merged_ui_config(record)
+
+
+@router.put("/ui-config")
+def update_ui_config_endpoint(payload: UIConfigPatch, context=Depends(require_write), session: Session = Depends(get_session)):
+    business_id, _, user = context
+    record = session.exec(select(UIConfig).where(UIConfig.business_id == business_id)).first()
+    if not record:
+        record = UIConfig(business_id=business_id)
+    try:
+        existing = json.loads(record.config_json) if record.config_json else {}
+    except Exception:
+        existing = {}
+    for section, values in payload.patch.items():
+        if isinstance(values, dict):
+            existing[section] = {**existing.get(section, {}), **values}
+        else:
+            existing[section] = values
+    record.config_json = json.dumps(existing)
+    record.updated_at = utc_now_iso()
+    session.add(record)
+    audit(session, business_id, user.id, "ui_config.update", "ui_config", record.id, {"sections": list(payload.patch.keys())})
+    session.commit()
+    session.refresh(record)
+    return _merged_ui_config(record)
 
 
 @router.get("/presets")

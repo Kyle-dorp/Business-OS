@@ -24,6 +24,8 @@ ActionType = Literal[
     "regenerate_schedule",
     "adjust_shift",
     "replace_shift_employee",
+    "update_ui_config",
+    "toggle_module",
 ]
 
 
@@ -74,6 +76,13 @@ class AssistantAction(BaseModel):
     store_open_time: Optional[str] = None
     store_close_time: Optional[str] = None
 
+    # UI customization — pass as a JSON object, not a string
+    ui_config_patch: dict = {}
+
+    # Module toggle
+    module_key: Optional[str] = None
+    module_enabled: bool = True
+
     # Projected crew target
     target_date: Optional[str] = None
     target_day_of_week: Optional[int] = None
@@ -103,7 +112,18 @@ You CAN propose:
 - labor projections with a minimum/maximum labor-percent range;
 - date-specific or recurring Projected Crew targets;
 - store hours, base wage, and the trainee-extra preference;
-- schedule regeneration or edits to an existing draft.
+- schedule regeneration or edits to an existing draft;
+- UI theme, branding, and navigation label changes via update_ui_config.
+
+For update_ui_config, set ui_config_patch to a JSON object (not a string) with any combination of:
+  "theme": { "primary": "#hex", "sidebar_bg": "#hex", "accent": "#hex", "page_bg": "#hex", "font": "font-family" }
+  "branding": { "logo_letter": "B", "tagline": "Sub Shoppe" }
+  "nav_labels": { "tasks": "Daily Ops", "accounting": "Books", "reports": "Financials" }
+
+Valid nav_labels keys: home, contacts, sales, purchasing, accounting, finance, reports, tasks, inventory, availability, manager, assistant, notifications, settings.
+All color values must be valid CSS hex colors (e.g. "#1a2b3c"). Choose colors that match the business's brand and look professional together. The sidebar_bg should be dark enough for white text to be readable on it.
+
+For toggle_module, set module_key to one of: team, scheduling, accounting, sales, purchasing, tasks, inventory, reports, assistant, notifications. Set module_enabled to true to show it or false to hide it. Home and settings cannot be hidden. One action per module. "contacts" and "customers" map to the "team" module. "scheduling" covers both the schedule view and availability tabs. "finance" is part of the "accounting" module.
 
 Important rules:
 - Never invent names, availability, dates, sales, skills, or staffing requirements.
@@ -141,8 +161,8 @@ Important rules:
 - If the manager is only asking a question, return no actions.
 - For accounting questions, use exact saved cents and clearly distinguish revenue, cash,
   receivables, payables, expenses, and net income. Never invent a transaction.
-- Accounting writes are not currently among your typed actions. Explain the steps or direct
-  the user to the correct screen instead of pretending a financial change was saved.
+- Accounting writes (invoices, bills, expenses, journal entries) are not among your typed
+  actions. Explain the steps or direct the user to the correct screen instead.
 - Keep replies direct and explain what approval will change.
 """.strip()
 
@@ -264,7 +284,7 @@ def decide_with_ai(message: str, context: dict) -> tuple[AssistantDecision, bool
         from anthropic import Anthropic
 
         client = Anthropic()
-        model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5")
+        model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
         history = context.get("conversation_history") or []
         always_remember = str(context.get("always_remember") or "").strip()
         database_context = {
@@ -297,8 +317,16 @@ def decide_with_ai(message: str, context: dict) -> tuple[AssistantDecision, bool
         text = "".join(block.text for block in response.content if getattr(block, "type", "") == "text")
         if text.startswith("```"):
             text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text, flags=re.DOTALL)
-        parsed = AssistantDecision.model_validate_json(text)
-        return parsed, True
+        try:
+            parsed = AssistantDecision.model_validate_json(text)
+            return parsed, True
+        except Exception:
+            # Lenient path: salvage the reply text even if actions fail validation
+            try:
+                raw = json.loads(text)
+                return AssistantDecision(reply=str(raw.get("reply", text[:300]))), True
+            except Exception:
+                raise
     except Exception as error:
         fallback = _fallback_decision(message, context)
         fallback.reply += f" (AI fallback active: {type(error).__name__}.)"

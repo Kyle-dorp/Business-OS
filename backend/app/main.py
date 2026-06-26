@@ -59,6 +59,7 @@ from backend.app.models import (
     ScheduleWarning,
     TaskItem,
     TemporaryUnavailability,
+    UIConfig,
     UserAccount,
 )
 from backend.app.tenancy import current_business_id, reset_current_business_id, set_current_business_id
@@ -70,10 +71,12 @@ from backend.app.scheduler import (
     temporary_rule_blocks,
 )
 from backend.app.platform import account_balances, router as platform_router
+from backend.app.finance import router as finance_router
 
 
 app = FastAPI(title="Business OS API", version="1.0.0")
 app.include_router(platform_router)
+app.include_router(finance_router)
 
 cors_origins = [item.strip() for item in os.getenv(
     "CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
@@ -2195,6 +2198,47 @@ def _apply_setup_action(session: Session, action: AssistantAction) -> str:
         session.commit()
         return "Updated manager settings"
 
+    if action.type == "update_ui_config":
+        patch = action.ui_config_patch if isinstance(action.ui_config_patch, dict) else {}
+        business_id = current_business_id()
+        record = session.exec(select(UIConfig).where(UIConfig.business_id == business_id)).first()
+        if not record:
+            record = UIConfig(business_id=business_id)
+        try:
+            existing = json.loads(record.config_json) if record.config_json else {}
+        except Exception:
+            existing = {}
+        for section, values in patch.items():
+            if isinstance(values, dict):
+                existing[section] = {**existing.get(section, {}), **values}
+            else:
+                existing[section] = values
+        record.config_json = json.dumps(existing)
+        from datetime import datetime, timezone
+        record.updated_at = datetime.now(timezone.utc).isoformat()
+        session.add(record)
+        session.commit()
+        sections = ", ".join(patch.keys())
+        return f"UI config updated: {sections}"
+
+    if action.type == "toggle_module":
+        PROTECTED = {"home", "settings"}
+        VALID = {"team", "scheduling", "accounting", "sales", "purchasing", "tasks", "inventory", "reports", "assistant", "notifications"}
+        key = (action.module_key or "").strip().lower()
+        if not key or key not in VALID:
+            raise HTTPException(status_code=400, detail=f"Unknown module '{key}'. Valid: {', '.join(sorted(VALID))}")
+        if key in PROTECTED:
+            raise HTTPException(status_code=400, detail=f"The '{key}' module cannot be hidden")
+        business_id = current_business_id()
+        record = session.exec(select(BusinessModule).where(BusinessModule.business_id == business_id, BusinessModule.module_key == key)).first()
+        if not record:
+            record = BusinessModule(business_id=business_id, module_key=key)
+        record.enabled = action.module_enabled
+        session.add(record)
+        session.commit()
+        state = "enabled" if action.module_enabled else "hidden"
+        return f"Module '{key}' {state}"
+
     raise HTTPException(status_code=400, detail=f"Unsupported setup action: {action.type}")
 
 
@@ -2213,6 +2257,8 @@ def apply_assistant_actions(
         "create_labor_projection",
         "create_crew_target",
         "update_manager_settings",
+        "update_ui_config",
+        "toggle_module",
     }
     schedule_types = {"regenerate_schedule", "adjust_shift", "replace_shift_employee"}
 

@@ -80,6 +80,8 @@ class ManagerSettings(SQLModel, table=True):
     schedule_extra_with_trainee: bool = True
     store_open_time: str = "10:30"
     store_close_time: str = "21:00"
+    # Colorado: state 2.9% + Rio Blanco County 3.6% = 6.5% (Rangely has no additional city tax)
+    default_sales_tax_rate: float = 6.5
 
 
 class LaborProjection(SQLModel, table=True):
@@ -440,6 +442,8 @@ class ClosingReport(SQLModel, table=True):
     location_id: Optional[int] = Field(default=None, index=True)
     report_date: str = Field(index=True)
     sales_cents: int = 0
+    card_sales_cents: int = 0
+    sales_tax_cents: int = 0
     cash_expected_cents: int = 0
     cash_actual_cents: int = 0
     labor_cost_cents: int = 0
@@ -477,6 +481,13 @@ class InventoryMovement(SQLModel, table=True):
     created_at: str = Field(default_factory=utc_now_iso)
 
 
+class UIConfig(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    business_id: int = Field(index=True, unique=True)
+    config_json: str = "{}"
+    updated_at: str = Field(default_factory=utc_now_iso)
+
+
 class AuditEvent(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     business_id: int = Field(index=True)
@@ -485,4 +496,29 @@ class AuditEvent(SQLModel, table=True):
     entity_type: str = ""
     entity_id: Optional[int] = None
     detail_json: str = "{}"
+    created_at: str = Field(default_factory=utc_now_iso)
+
+
+class Budget(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    business_id: int = Field(index=True)
+    period: str = Field(index=True)
+    account_id: int = Field(index=True)
+    budget_cents: int = 0
+    notes: str = ""
+    created_at: str = Field(default_factory=utc_now_iso)
+
+
+class PayrollRun(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    business_id: int = Field(index=True)
+    period_start: str
+    period_end: str
+    gross_wages_cents: int = 0
+    employer_taxes_cents: int = 0
+    deductions_cents: int = 0
+    net_pay_cents: int = 0
+    payment_account_id: int = Field(index=True)
+    notes: str = ""
+    created_by_user_id: int = Field(index=True)
     created_at: str = Field(default_factory=utc_now_iso)

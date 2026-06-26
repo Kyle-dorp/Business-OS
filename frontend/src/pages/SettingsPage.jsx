@@ -25,6 +25,7 @@ export default function SettingsPage({ user, workspaceRole, modules = [], onModu
   const [businessDescription, setBusinessDescription] = useState("");
   const [recommendation, setRecommendation] = useState(null);
   const [modulesBusy, setModulesBusy] = useState(false);
+  const [businessName, setBusinessName] = useState("");
   const [error, setError] = useState("");
   const [saved, setSaved] = useState("");
 
@@ -42,7 +43,10 @@ export default function SettingsPage({ user, workspaceRole, modules = [], onModu
   }
   useEffect(() => { loadTeam(); }, [user.role]);
   useEffect(() => {
-    if (["owner", "admin"].includes(workspaceRole)) api("/platform/presets").then(setPresets).catch((err) => setError(err.message));
+    if (["owner", "admin"].includes(workspaceRole)) {
+      api("/platform/presets").then(setPresets).catch((err) => setError(err.message));
+      api("/platform/workspace").then((ws) => setBusinessName(ws?.business?.name || "")).catch(() => {});
+    }
   }, [workspaceRole]);
 
   function flash(message) { setSaved(message); window.setTimeout(() => setSaved(""), 1800); }
@@ -91,8 +95,16 @@ export default function SettingsPage({ user, workspaceRole, modules = [], onModu
     try {
       setModulesBusy(true); setError("");
       await api(`/platform/presets/${key}/apply`, { method: "POST" });
-      await onModulesChanged?.(); flash("Business setup applied");
+      await onModulesChanged?.(); flash("Business setup applied — reload to see branding changes");
     } catch (err) { setError(err.message); } finally { setModulesBusy(false); }
+  }
+
+  async function saveBusinessName() {
+    try {
+      setError("");
+      await api("/platform/business", { method: "PATCH", body: JSON.stringify({ name: businessName }) });
+      flash("Business name updated — reload to see it in the sidebar");
+    } catch (err) { setError(err.message); }
   }
 
   async function askAiForPreset() {
@@ -108,10 +120,19 @@ export default function SettingsPage({ user, workspaceRole, modules = [], onModu
     {error && <div className="alert error">{error}</div>}
 
     {user.role === "manager" && ["owner", "admin"].includes(workspaceRole) && <>
+      <section className="card os-form" style={{ borderTop: "3px solid var(--blue, #2f6fed)" }}>
+        <span className="eyebrow">BUSINESS PROFILE</span>
+        <h2 style={{ marginTop: "4px" }}>Business name</h2>
+        <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "8px" }}>
+          <input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="e.g. Bam's Sub Shoppe" style={{ flex: 1 }} />
+          <button className="primary-btn" onClick={saveBusinessName} disabled={!businessName.trim()}>Save</button>
+        </div>
+      </section>
+
       <details className="card ops-disclosure setup-disclosure" defaultOpen>
-        <summary><div><span className="eyebrow">QUICK SETUP</span><h2>What kind of business is this?</h2><p>A preset chooses useful tools, starter departments, and a closing checklist.</p></div><b>⌄</b></summary>
+        <summary><div><span className="eyebrow">QUICK SETUP</span><h2>What kind of business is this?</h2><p>A preset configures the right tools, departments, closing checklist, and branding in one click.</p></div><b>⌄</b></summary>
         <div className="disclosure-body">
-          <div className="preset-grid">{presets.map((preset) => <button key={preset.key} disabled={modulesBusy} onClick={() => choosePreset(preset.key)}><strong>{preset.label}</strong><span>{preset.description}</span></button>)}</div>
+          <div className="preset-grid">{presets.map((preset) => <button key={preset.key} disabled={modulesBusy} onClick={() => choosePreset(preset.key)} style={preset.key === "sub_shop" ? { borderColor: "var(--blue,#2f6fed)", background: "var(--blue,#2f6fed)11" } : undefined}><strong>{preset.label}</strong><span>{preset.description}</span></button>)}</div>
           <div className="ai-preset-box"><div><span className="eyebrow">LET CLAUDE CHOOSE</span><h3>Describe the business normally</h3><p>Claude will recommend a preset. Nothing changes until you approve it.</p></div><textarea placeholder="Example: We run a warehouse that receives pallets, stores inventory, and ships customer orders." value={businessDescription} onChange={(event) => setBusinessDescription(event.target.value)} /><button className="primary-btn" disabled={modulesBusy || !businessDescription.trim()} onClick={askAiForPreset}>Recommend my setup</button>{recommendation && <div className="preset-recommendation"><div><strong>{recommendation.label}</strong><span>{recommendation.description}</span></div><button className="small-btn" onClick={() => choosePreset(recommendation.key)}>Apply this setup</button></div>}</div>
         </div>
       </details>

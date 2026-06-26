@@ -57,6 +57,22 @@ PRESETS = {
         "modules": {"home", "team", "accounting", "sales", "purchasing", "tasks", "reports", "assistant", "notifications", "settings"},
         "checklist": ["Review unfinished work", "Confirm tomorrow's appointments", "Secure sensitive files", "Record daily notes"],
     },
+    "sub_shop": {
+        "label": "Sub sandwich shop",
+        "description": "Counter-service sub shop: closing report, inventory, bookkeeping, and notifications.",
+        "departments": ["Front Counter", "Kitchen", "Management"],
+        "modules": {"accounting", "inventory", "tasks", "notifications", "assistant"},
+        "checklist": [
+            "Count the cash drawer",
+            "Record daily sales total",
+            "Enter sales tax collected (6.5%)",
+            "Check inventory levels",
+            "Record any food waste",
+            "Post sales to ledger",
+            "Lock up and set alarm",
+        ],
+        "branding": {"logo_letter": "B", "tagline": "Sub Shoppe"},
+    },
     "custom": {
         "label": "Custom", "description": "Start neutral and choose every tool yourself.",
         "departments": ["General"], "modules": {"home", "assistant", "settings"},
@@ -411,6 +427,22 @@ def create_business(payload: BusinessCreate, user=Depends(current_user), session
     session.commit()
     session.refresh(business)
     return business
+
+
+@router.patch("/business")
+def update_business_name(payload: dict, context=Depends(require_write), session: Session = Depends(get_session)):
+    business_id, membership, user = context
+    if membership.role not in ADMIN_ROLES:
+        raise HTTPException(status_code=403, detail="Owner or admin access required")
+    business = session.get(Business, business_id)
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    if "name" in payload and payload["name"].strip():
+        business.name = payload["name"].strip()
+    session.add(business)
+    audit(session, business_id, user.id, "business.update", "business", business_id)
+    session.commit()
+    return {"name": business.name}
 
 
 @router.get("/workspace")
@@ -1051,7 +1083,7 @@ def list_presets(context=Depends(business_context)):
 def _apply_preset(session: Session, business_id: int, preset_key: str) -> None:
     preset = PRESETS[preset_key]
     business = session.get(Business, business_id)
-    if business: business.industry = preset_key
+    if business: business.industry = preset_key; session.add(business)
     for module_key in MODULES:
         record = session.exec(select(BusinessModule).where(BusinessModule.business_id == business_id, BusinessModule.module_key == module_key)).first()
         if not record: record = BusinessModule(business_id=business_id, module_key=module_key)
@@ -1062,6 +1094,12 @@ def _apply_preset(session: Session, business_id: int, preset_key: str) -> None:
     template = session.exec(select(ChecklistTemplate).where(ChecklistTemplate.business_id == business_id, ChecklistTemplate.category == "closing")).first()
     if not template: template = ChecklistTemplate(business_id=business_id, name="Closing checklist", category="closing")
     template.items_json = json.dumps(preset["checklist"]); template.description = f"Closing steps for {preset['label'].lower()}."; session.add(template)
+    if "branding" in preset:
+        ui = session.exec(select(UIConfig).where(UIConfig.business_id == business_id)).first()
+        if not ui: ui = UIConfig(business_id=business_id)
+        cfg = json.loads(ui.config_json) if ui.config_json else {}
+        cfg["branding"] = {**cfg.get("branding", {}), **preset["branding"]}
+        ui.config_json = json.dumps(cfg); session.add(ui)
 
 
 @router.post("/presets/{preset_key}/apply")

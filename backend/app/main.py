@@ -2222,7 +2222,7 @@ def _apply_setup_action(session: Session, action: AssistantAction) -> str:
         return f"UI config updated: {sections}"
 
     if action.type == "toggle_module":
-        PROTECTED = {"home", "settings"}
+        PROTECTED = {"home", "settings", "assistant"}
         VALID = {"team", "scheduling", "accounting", "sales", "purchasing", "tasks", "inventory", "reports", "assistant", "notifications"}
         key = (action.module_key or "").strip().lower()
         if not key or key not in VALID:

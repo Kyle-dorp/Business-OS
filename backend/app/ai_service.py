@@ -123,7 +123,7 @@ For update_ui_config, set ui_config_patch to a JSON object (not a string) with a
 Valid nav_labels keys: home, contacts, sales, purchasing, accounting, finance, reports, tasks, inventory, availability, manager, assistant, notifications, settings.
 All color values must be valid CSS hex colors (e.g. "#1a2b3c"). Choose colors that match the business's brand and look professional together. The sidebar_bg should be dark enough for white text to be readable on it.
 
-For toggle_module, set module_key to one of: team, scheduling, accounting, sales, purchasing, tasks, inventory, reports, assistant, notifications. Set module_enabled to true to show it or false to hide it. Home and settings cannot be hidden. One action per module. "contacts" and "customers" map to the "team" module. "scheduling" covers both the schedule view and availability tabs. "finance" is part of the "accounting" module.
+For toggle_module, set module_key to one of: team, scheduling, accounting, sales, purchasing, tasks, inventory, reports, notifications. Set module_enabled to true to show it or false to hide it. Home, Settings, and the AI Assistant cannot be hidden. One action per module. "contacts" and "customers" map to the "team" module. "scheduling" covers both the schedule view and availability tabs. "finance" is part of the "accounting" module.
 
 Important rules:
 - Never invent names, availability, dates, sales, skills, or staffing requirements.
@@ -316,7 +316,18 @@ def decide_with_ai(message: str, context: dict) -> tuple[AssistantDecision, bool
         response = client.messages.create(model=model, max_tokens=4096, system=system, messages=input_messages)
         text = "".join(block.text for block in response.content if getattr(block, "type", "") == "text")
         if text.startswith("```"):
+            # Entire response is a fenced code block
             text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text, flags=re.DOTALL)
+        elif "```" in text:
+            # Text with an embedded JSON code block — extract just the JSON
+            code_match = re.search(r'```(?:json)?\s*(\{[\s\S]*?\})\s*```', text)
+            if code_match:
+                text = code_match.group(1)
+            else:
+                # Last resort: find the first top-level JSON object in the text
+                obj_match = re.search(r'\{[\s\S]*?"reply"[\s\S]*\}', text)
+                if obj_match:
+                    text = obj_match.group(0)
         try:
             parsed = AssistantDecision.model_validate_json(text)
             return parsed, True

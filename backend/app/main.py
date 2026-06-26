@@ -379,8 +379,10 @@ def login(payload: LoginRequest):
             (row for row in users if row.username.strip().lower() == payload.username.strip().lower()),
             None,
         )
-        if not user or not user.active or not verify_password(payload.password, user.password_hash):
-            raise HTTPException(status_code=401, detail="Incorrect username or password")
+        if not user or not user.active:
+            raise HTTPException(status_code=401, detail="No account found with that username")
+        if not verify_password(payload.password, user.password_hash):
+            raise HTTPException(status_code=401, detail="Wrong password")
         return {"token": create_access_token(user), "user": _user_dict(user)}
 
 

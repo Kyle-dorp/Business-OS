@@ -321,12 +321,14 @@ def decide_with_ai(message: str, context: dict) -> tuple[AssistantDecision, bool
             parsed = AssistantDecision.model_validate_json(text)
             return parsed, True
         except Exception:
-            # Lenient path: salvage the reply text even if actions fail validation
+            # Lenient path: salvage the reply text even if full validation fails
             try:
                 raw = json.loads(text)
-                return AssistantDecision(reply=str(raw.get("reply", text[:300]))), True
+                return AssistantDecision(reply=str(raw.get("reply", text[:500]))), True
             except Exception:
-                raise
+                # Claude returned plain text instead of JSON — show it directly
+                clean = text.strip()
+                return AssistantDecision(reply=clean[:600] if clean else "I couldn't format a response. Please try again."), True
     except Exception as error:
         fallback = _fallback_decision(message, context)
         fallback.reply += f" (AI fallback active: {type(error).__name__}.)"

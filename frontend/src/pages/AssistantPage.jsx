@@ -42,6 +42,17 @@ function actionSummary(action) {
       return `Adjust ${action.employee_name || "the employee"}${action.new_end_time ? ` to end at ${action.new_end_time}` : ""}`;
     case "replace_shift_employee":
       return `Replace ${action.employee_name || "the scheduled employee"} with ${action.replacement_employee_name || "another employee"}`;
+    case "toggle_module": {
+      const label = { team: "Customers & vendors", scheduling: "Scheduling", accounting: "Accounting & Finance", sales: "Sales & invoices", purchasing: "Bills & purchasing", tasks: "Tasks", inventory: "Inventory", reports: "Reports", assistant: "AI Assistant", notifications: "Notifications" }[action.module_key] || action.module_key;
+      return `${action.module_enabled ? "Show" : "Hide"} ${label}`;
+    }
+    case "update_ui_config": {
+      const sections = Object.keys(action.ui_config_patch || {});
+      if (sections.includes("theme")) return `Update theme colors`;
+      if (sections.includes("branding")) return `Update branding (logo / tagline)`;
+      if (sections.includes("nav_labels")) return `Rename nav labels`;
+      return `Update appearance (${sections.join(", ") || "no changes"})`;
+    }
     default:
       return String(action.type || "change").replaceAll("_", " ");
   }

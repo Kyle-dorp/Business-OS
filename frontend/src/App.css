@@ -514,6 +514,13 @@ textarea { resize: vertical; }
 .composer textarea:focus { box-shadow: none; }
 .composer-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .composer-footer span { color: #8996a8; font-size: .72rem; }
+.composer-actions { display: flex; align-items: center; gap: 6px; }
+.attach-btn { background: none; border: 1px solid #d0d7e0; border-radius: 8px; padding: 6px 8px; cursor: pointer; color: #6b7a90; display: flex; align-items: center; transition: background .15s, color .15s; }
+.attach-btn:hover { background: #eef3f9; color: #2f6fed; }
+.composer-img-preview { position: relative; display: inline-flex; margin: 6px 0 0; }
+.composer-img-preview img { max-height: 80px; border-radius: 8px; border: 2px solid #2f6fed44; }
+.composer-img-remove { position: absolute; top: -6px; right: -6px; background: #e74c3c; color: #fff; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 12px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.chat-img-preview { max-width: 240px; max-height: 180px; border-radius: 10px; margin-bottom: 6px; display: block; }
 
 @media (max-width: 1180px) {
   .employee-settings-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }

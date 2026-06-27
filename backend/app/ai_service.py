@@ -325,7 +325,7 @@ def _fallback_decision(message: str, context: dict) -> AssistantDecision:
     )
 
 
-def decide_with_ai(message: str, context: dict) -> tuple[AssistantDecision, bool]:
+def decide_with_ai(message: str, context: dict, image_base64: str = None, image_media_type: str = "image/jpeg") -> tuple[AssistantDecision, bool]:
     """Return a structured proposal and whether the Claude API was used."""
     if not ai_is_configured():
         return _fallback_decision(message, context), False
@@ -362,7 +362,14 @@ def decide_with_ai(message: str, context: dict) -> tuple[AssistantDecision, bool
             selected_history.append({"role": role, "content": content})
             used_characters += item_size
         input_messages = list(reversed(selected_history))
-        input_messages.append({"role": "user", "content": message})
+        if image_base64:
+            last_content = [
+                {"type": "image", "source": {"type": "base64", "media_type": image_media_type or "image/jpeg", "data": image_base64}},
+                {"type": "text", "text": message},
+            ]
+        else:
+            last_content = message
+        input_messages.append({"role": "user", "content": last_content})
         response = client.messages.create(model=model, max_tokens=4096, system=system, messages=input_messages)
         text = "".join(block.text for block in response.content if getattr(block, "type", "") == "text")
         if text.startswith("```"):

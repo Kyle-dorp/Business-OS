@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 
 import { api } from "../api";
 import { formatWeekRange, shiftWeek, toIsoDate } from "../utils";
@@ -73,8 +73,10 @@ export default function AssistantPage() {
   const [error, setError] = useState("");
   const [appliedParts, setAppliedParts] = useState({});
   const [schedPanelOpen, setSchedPanelOpen] = useState(false);
+  const [pendingImage, setPendingImage] = useState(null);
   const chatEndRef = useRef(null);
   const textareaRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   async function loadThread() {
     try {
@@ -128,22 +130,44 @@ export default function AssistantPage() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, busy]);
 
+  const pickImage = useCallback((e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target.result;
+      const base64 = dataUrl.split(",")[1];
+      setPendingImage({ base64, mediaType: file.type || "image/jpeg", previewUrl: dataUrl });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }, []);
+
   async function sendText(text) {
     const trimmed = text.trim();
-    if (!trimmed || busy) return;
-    const optimistic = { role: "user", content: trimmed, id: `temp-${Date.now()}` };
+    if ((!trimmed && !pendingImage) || busy) return;
+    const optimistic = {
+      role: "user",
+      content: trimmed || "(image attached)",
+      id: `temp-${Date.now()}`,
+      imagePreview: pendingImage?.previewUrl,
+    };
     setMessages((current) => [...current, optimistic]);
     setInput("");
+    const imageToSend = pendingImage;
+    setPendingImage(null);
     setBusy(true);
     setError("");
     try {
       const result = await api("/assistant/chat", {
         method: "POST",
         body: JSON.stringify({
-          message: trimmed,
+          message: trimmed || "Please read this image.",
           week_start: weekStart,
           schedule_id: scheduleId ? Number(scheduleId) : null,
           thread_id: threadId,
+          image_base64: imageToSend?.base64 || null,
+          image_media_type: imageToSend?.mediaType || null,
         }),
       });
       setThreadId(result.thread_id);
@@ -244,6 +268,7 @@ export default function AssistantPage() {
               <div className={`chat-message-row ${message.role}`} key={message.id || `${message.role}-${index}`}>
                 {message.role === "assistant" && <div className="message-avatar">AI</div>}
                 <div className="message-stack">
+                  {message.imagePreview && <img className="chat-img-preview" src={message.imagePreview} alt="attached" />}
                   <div className="message-bubble"><p>{message.content}</p></div>
                   {actions.length > 0 && (
                     <div className="proposal-card">
@@ -265,8 +290,23 @@ export default function AssistantPage() {
           <div ref={chatEndRef} />
         </div>
         <form className="composer modern-composer" onSubmit={(event) => { event.preventDefault(); sendText(input); }}>
+          {pendingImage && (
+            <div className="composer-img-preview">
+              <img src={pendingImage.previewUrl} alt="ready to send" />
+              <button type="button" className="composer-img-remove" onClick={() => setPendingImage(null)}>×</button>
+            </div>
+          )}
           <textarea ref={textareaRef} rows="1" value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); sendText(input); } }} placeholder="Ask about your business…" />
-          <div className="composer-footer"><span>Shift+Enter for a new line</span><button className="send-button" disabled={busy || !input.trim()} aria-label="Send message">↑</button></div>
+          <div className="composer-footer">
+            <span>Shift+Enter for a new line</span>
+            <div className="composer-actions">
+              <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={pickImage} />
+              <button type="button" className="attach-btn" title="Attach image" onClick={() => fileInputRef.current?.click()}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              </button>
+              <button className="send-button" disabled={busy || (!input.trim() && !pendingImage)} aria-label="Send message">↑</button>
+            </div>
+          </div>
         </form>
       </section>
     </div>

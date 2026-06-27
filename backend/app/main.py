@@ -204,6 +204,8 @@ class ChatRequest(BaseModel):
     week_start: Optional[str] = None
     schedule_id: Optional[int] = None
     thread_id: Optional[int] = None
+    image_base64: Optional[str] = None
+    image_media_type: Optional[str] = "image/jpeg"
 
 
 class AssistantApplyRequest(BaseModel):
@@ -1805,7 +1807,7 @@ def assistant_chat(
         raise HTTPException(status_code=400, detail="Message cannot be blank")
     thread = _get_or_create_assistant_thread(session, user.id, payload.thread_id)
     context = _assistant_context(session, payload, user.id, thread.id)
-    decision, used_openai = decide_with_ai(message, context)
+    decision, used_openai = decide_with_ai(message, context, image_base64=payload.image_base64, image_media_type=payload.image_media_type)
     decision = _normalize_ai_actions(decision, context)
     user_message = AssistantMessage(
         user_id=user.id,

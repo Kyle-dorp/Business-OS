@@ -1343,16 +1343,42 @@ body {
 }
 @media print {
   .no-print, .topbar, .drawer, .drawer-backdrop, .cc-apply-msg { display: none !important; }
-  .cc-sheet { border: none; box-shadow: none; padding: 0; max-width: 100%; }
-  .cc-input, .cc-time-input { border-bottom: 1px solid #555; }
+  body { background: #fff !important; margin: 0 !important; }
+
+  /* Force single page */
+  @page { size: letter portrait; margin: 0.4in; }
+  .closing-chart-page { page-break-after: avoid; }
+  .cc-header { margin-bottom: 4px; }
+  .cc-header h1 { font-size: 1rem; margin: 0; }
+  .cc-header .eyebrow { font-size: .6rem; }
+  .cc-date-input { font-size: .7rem; border: none; border-bottom: 1px solid #555; padding: 1px 2px; }
+  .cc-sheet { border: none; box-shadow: none; padding: 0; max-width: 100%; font-size: .72rem; }
+  .cc-col-header { font-size: .65rem; padding-bottom: 2px; margin-bottom: 4px; }
+  .cc-divider-h { margin: 5px 0; }
+  .cc-two-col { gap: 0; }
+  .cc-col { padding: 0; }
+  .cc-field-row { margin-bottom: 2px; gap: 6px; }
+  .cc-label { font-size: .7rem; }
+  .cc-sales-row { gap: 10px 20px; }
+  .cc-sales-field { gap: 6px; }
+  .cc-who-grid { gap: 3px 20px; }
+  .cc-notes { border: 1px solid #555; background: transparent; min-height: 36px; font-size: .72rem; }
+  .cc-notes-row { margin-top: 0; }
+
+  /* Inputs become underlines */
+  .cc-input, .cc-time-input { border-bottom: 1px solid #555; font-size: .72rem; padding: 1px 2px; }
   .cc-money-wrap { border-bottom: 1px solid #555; }
+  .cc-money-inner { font-size: .72rem; }
+  .cc-dollar { font-size: .72rem; }
+  .cc-sub-text { width: 180px; font-size: .72rem; }
+
+  /* Selects replaced by print spans */
   .cc-num-select { display: none !important; }
-  .cc-num-print { display: inline-block !important; min-width: 2em; border-bottom: 1px solid #555; text-align: center; }
-  .cc-time-print { display: inline-block !important; min-width: 3.5em; border-bottom: 1px solid #555; }
-  .cc-notes { border: 1px solid #555; background: transparent; }
+  .cc-num-print { display: inline-block !important; min-width: 1.6em; border-bottom: 1px solid #555; text-align: center; font-size: .72rem; }
+  .cc-time-print { display: inline-block !important; min-width: 3em; border-bottom: 1px solid #555; font-size: .72rem; }
+  .cc-time-dash { font-size: .72rem; }
+
   input::placeholder, textarea::placeholder { color: transparent !important; }
-  .cc-sub-text { width: 240px; }
-  body { background: #fff !important; }
 
   /* Menu print */
   .menu-page-header { display: none !important; }

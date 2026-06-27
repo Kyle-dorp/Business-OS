@@ -182,17 +182,7 @@ export default function App() {
         <span className="drawer-section-label">WORKSPACE</span>
         {user.role !== "manager" ? resolvedTabs.map(tabButton) : <>
           {resolvedTabs.filter((tab) => tab.id === "home").map(tabButton)}
-          {drawerOpen ? <>
-            {MANAGER_NAV_GROUPS.map((group) => {
-              const groupTabs = resolvedTabs.filter((tab) => group.ids.includes(tab.id));
-              if (!groupTabs.length) return null;
-              return <details className="nav-group" key={group.label} defaultOpen={groupTabs.some((tab) => tab.id === activeTab)}>
-                <summary>{group.label}<span aria-hidden="true">⌄</span></summary>
-                <div>{groupTabs.map(tabButton)}</div>
-              </details>;
-            })}
-            {resolvedTabs.filter((tab) => !groupedTabIds.has(tab.id) && !["home", "settings"].includes(tab.id)).map(tabButton)}
-          </> : resolvedTabs.filter((tab) => !["home", "settings"].includes(tab.id)).map(tabButton)}
+          {resolvedTabs.filter((tab) => !["home", "settings"].includes(tab.id)).map(tabButton)}
           {resolvedTabs.filter((tab) => tab.id === "settings").map(tabButton)}
         </>}
       </nav>

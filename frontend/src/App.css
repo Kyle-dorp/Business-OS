@@ -1303,6 +1303,8 @@ body {
   -webkit-appearance: none; appearance: none; text-align: center;
 }
 .cc-num-select:focus { outline: none; border-bottom-color: var(--blue, #2f6fed); }
+.cc-num-print { display: none; }
+.cc-time-print { display: none; }
 
 .cc-sales-row { display: flex; flex-wrap: wrap; gap: 20px 32px; margin-top: 4px; }
 .cc-sales-field { display: flex; align-items: center; gap: 10px; }
@@ -1344,7 +1346,9 @@ body {
   .cc-sheet { border: none; box-shadow: none; padding: 0; max-width: 100%; }
   .cc-input, .cc-time-input { border-bottom: 1px solid #555; }
   .cc-money-wrap { border-bottom: 1px solid #555; }
-  .cc-num-select { border-bottom: 1px solid #555; }
+  .cc-num-select { display: none !important; }
+  .cc-num-print { display: inline-block !important; min-width: 2em; border-bottom: 1px solid #555; text-align: center; }
+  .cc-time-print { display: inline-block !important; min-width: 3.5em; border-bottom: 1px solid #555; }
   .cc-notes { border: 1px solid #555; background: transparent; }
   input::placeholder, textarea::placeholder { color: transparent !important; }
   .cc-sub-text { width: 240px; }

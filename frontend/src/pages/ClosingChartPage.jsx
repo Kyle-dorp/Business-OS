@@ -26,10 +26,14 @@ const DEFAULT_CONFIG = {
 };
 
 function NumSelect({ value, onChange, max = 10 }) {
+  const v = value ?? "0";
   return (
-    <select className="cc-num-select" value={value ?? "0"} onChange={(e) => onChange(e.target.value)}>
-      {Array.from({ length: max + 1 }, (_, i) => <option key={i} value={String(i)}>{i}</option>)}
-    </select>
+    <span className="cc-num-wrap">
+      <select className="cc-num-select no-print" value={v} onChange={(e) => onChange(e.target.value)}>
+        {Array.from({ length: max + 1 }, (_, i) => <option key={i} value={String(i)}>{i}</option>)}
+      </select>
+      <span className="cc-num-print">{v !== "0" ? v : ""}</span>
+    </span>
   );
 }
 
@@ -56,9 +60,11 @@ function MoneyInput({ value, onChange }) {
 function TimeRange({ value = {}, onChange }) {
   return (
     <span className="cc-time-range">
-      <input className="cc-time-input" type="time" value={value.start || ""} onChange={(e) => onChange({ ...value, start: e.target.value })} />
+      <input className="cc-time-input no-print" type="time" value={value.start || ""} onChange={(e) => onChange({ ...value, start: e.target.value })} />
+      <span className="cc-time-print">{value.start || ""}</span>
       <span className="cc-time-dash">–</span>
-      <input className="cc-time-input" type="time" value={value.end || ""} onChange={(e) => onChange({ ...value, end: e.target.value })} />
+      <input className="cc-time-input no-print" type="time" value={value.end || ""} onChange={(e) => onChange({ ...value, end: e.target.value })} />
+      <span className="cc-time-print">{value.end || ""}</span>
     </span>
   );
 }

@@ -120,26 +120,27 @@ For update_ui_config, set ui_config_patch to a JSON object (not a string) with a
   "branding": { "logo_letter": "B", "tagline": "Sub Shoppe" }
   "nav_labels": { "tasks": "Daily Ops", "accounting": "Books", "reports": "Financials" }
   "nav_flat": true or false — when true, sidebar nav shows all items as a plain flat list with no group headers; when false (default), items are grouped under "Money & Records" and "Daily Operations"
-  "closing_chart": { ... } — configures the Closing Chart page layout (see below)
+  "closing_chart": { ... } — configures the Closing Chart page (see below)
 
 Valid nav_labels keys: home, contacts, sales, purchasing, accounting, finance, reports, tasks, inventory, availability, manager, assistant, notifications, settings.
 
-CLOSING CHART CONFIG — the "closing_chart" key in ui_config_patch controls the entire layout of the Closing Chart page.
-The current config is available in context as "closing_chart_config" (null means use defaults).
-Always send the COMPLETE new config when updating — it replaces the existing one.
-Structure:
-  {
-    "sections": [
-      { "id": "unique_id", "label": "Section Title", "inline": false, "fields": ["Field1", "Field2"] }
-    ],
-    "paired": [["id1", "id2"]]   // sections listed together appear side-by-side as columns; omit a section from paired to make it full-width
-  }
-  "inline": false = each field on its own row (good for a few items with labels); true = all fields on one row (good for many short items)
-  "paired" is optional — unpaired sections render full-width below the paired groups.
-Example — add a Sauces section and pair it with Ingredients:
-  { "sections": [...existing..., {"id":"sauces","label":"Sauces","inline":true,"fields":["Ranch","Mayo","Mustard"]}], "paired": [["leftover_bread","closing_temps"],["ingredients","sauces"]] }
-To add a field to an existing section, include ALL existing fields plus the new one in that section's "fields" array.
-The "notes" textarea is always shown at the bottom — it cannot be removed via config.
+CLOSING CHART CONFIG — "closing_chart" in ui_config_patch. Current config is in context as "closing_chart_config" (null = defaults). Always send the COMPLETE new config.
+Schema:
+{
+  "employees": ["Name1", "Name2"],           // Who appears in "Who Worked" with time inputs
+  "bread_types": ["Italian", "Jalapeño", "Herb", "White"],  // Shown in Leftover Bread + Closing Temps
+  "sandwiches": [{"name": "Dagwoods", "sizes": ["6\"","12\""]}, {"name": "Bomb", "sizes": ["6\"","12\""]}],
+  "soups": ["Soups sold", "Ajous sold"],     // Items in the "Items Sold" column
+  "emp_sub_sizes": ["12\"", "6\""],          // Sizes in Employee Subs
+  "emp_sides": ["Chips", "Soda", "Brownie"] // Items in Employee Sides
+}
+Examples:
+- Add employee "Sandra": set "employees" to [...existing..., "Sandra"]
+- Remove "Hunter": set "employees" to the list without Hunter
+- Add a sandwich type "Club" with sizes 6" and 12": add {"name":"Club","sizes":["6\"","12\""]} to "sandwiches"
+- Add "Chili" to items sold: set "soups" to [...existing..., "Chili"]
+- Add bread type "Wheat": set "bread_types" to [...existing..., "Wheat"]
+The page always shows: Total Sales, Leftover Bread + Closing Temps, Ingredients (fixed), sandwiches sold, employee subs/sides, who worked, and notes. Only the lists above are configurable.
 All color values must be valid CSS hex colors (e.g. "#1a2b3c"). Choose colors that match the business's brand and look professional together. The sidebar_bg should be dark enough for white text to be readable on it.
 
 For toggle_module, set module_key to one of: team, scheduling, accounting, sales, purchasing, tasks, inventory, reports, notifications. Set module_enabled to true to show it or false to hide it. Home, Settings, and the AI Assistant cannot be hidden. One action per module. "contacts" and "customers" map to the "team" module. "scheduling" covers both the schedule view and availability tabs. "finance" is part of the "accounting" module.

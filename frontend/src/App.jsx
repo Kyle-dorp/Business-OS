@@ -168,7 +168,7 @@ export default function App() {
   if (initializing) return <div className="boot-screen"><div className="boot-mark">O</div><div className="boot-pulse" /><p>Opening business workspace…</p></div>;
   if (!user) return <AuthPage needsSetup={needsSetup} onAuthenticated={authenticated} />;
   const currentLabel = resolvedTabs.find((tab) => tab.id === activeTab)?.label || "Home";
-  const tabButton = (tab) => <button key={tab.id} className={activeTab === tab.id ? "nav-btn active" : "nav-btn"} onClick={() => changeTab(tab.id)}><span className="nav-icon">{tab.icon}</span><span>{tab.label}</span>{tab.id === "notifications" && notificationCount > 0 && <span className="notification-badge">{notificationCount}</span>}</button>;
+  const tabButton = (tab) => <button key={tab.id} title={tab.label} className={activeTab === tab.id ? "nav-btn active" : "nav-btn"} onClick={() => changeTab(tab.id)}><span className="nav-icon">{tab.icon}</span><span>{tab.label}</span>{tab.id === "notifications" && notificationCount > 0 && <span className="notification-badge">{notificationCount}</span>}</button>;
   const groupedTabIds = new Set(MANAGER_NAV_GROUPS.flatMap((group) => group.ids));
 
   return <div className="app commercial-shell">
@@ -181,22 +181,24 @@ export default function App() {
         <span className="drawer-section-label">WORKSPACE</span>
         {user.role !== "manager" ? resolvedTabs.map(tabButton) : <>
           {resolvedTabs.filter((tab) => tab.id === "home").map(tabButton)}
-          {MANAGER_NAV_GROUPS.map((group) => {
-            const groupTabs = resolvedTabs.filter((tab) => group.ids.includes(tab.id));
-            if (!groupTabs.length) return null;
-            return <details className="nav-group" key={group.label} defaultOpen={groupTabs.some((tab) => tab.id === activeTab)}>
-              <summary>{group.label}<span aria-hidden="true">⌄</span></summary>
-              <div>{groupTabs.map(tabButton)}</div>
-            </details>;
-          })}
-          {resolvedTabs.filter((tab) => !groupedTabIds.has(tab.id) && !["home", "settings"].includes(tab.id)).map(tabButton)}
+          {drawerOpen ? <>
+            {MANAGER_NAV_GROUPS.map((group) => {
+              const groupTabs = resolvedTabs.filter((tab) => group.ids.includes(tab.id));
+              if (!groupTabs.length) return null;
+              return <details className="nav-group" key={group.label} defaultOpen={groupTabs.some((tab) => tab.id === activeTab)}>
+                <summary>{group.label}<span aria-hidden="true">⌄</span></summary>
+                <div>{groupTabs.map(tabButton)}</div>
+              </details>;
+            })}
+            {resolvedTabs.filter((tab) => !groupedTabIds.has(tab.id) && !["home", "settings"].includes(tab.id)).map(tabButton)}
+          </> : resolvedTabs.filter((tab) => !["home", "settings"].includes(tab.id)).map(tabButton)}
           {resolvedTabs.filter((tab) => tab.id === "settings").map(tabButton)}
         </>}
       </nav>
       <div className="drawer-footer account-footer"><div className="account-avatar">{user.username[0].toUpperCase()}</div><div><strong>{user.username}</strong><span>{workspace?.role || user.role}</span></div><button title="Log out" onClick={logout}>↪</button></div>
     </aside>
     <main className="main">
-      <header className="topbar"><button className="hamburger" aria-label="Open navigation" onClick={() => setDrawerOpen(true)}><span /><span /><span /></button><div className="topbar-copy"><span>{workspace?.business?.name || "Business workspace"}</span><strong>{currentLabel}</strong></div><div className="topbar-actions">{user.role === "manager" && <button className="topbar-notification" onClick={() => changeTab("notifications")}>●{notificationCount > 0 && <b>{notificationCount}</b>}</button>}<button className="topbar-profile" onClick={() => changeTab("settings")}><span>{user.username[0].toUpperCase()}</span><div><strong>{user.username}</strong><small>{workspace?.role || user.role}</small></div></button></div></header>
+      <header className="topbar"><button className="hamburger" aria-label="Toggle navigation" onClick={() => setDrawerOpen((v) => !v)}><span /><span /><span /></button><div className="topbar-copy"><span>{workspace?.business?.name || "Business workspace"}</span><strong>{currentLabel}</strong></div><div className="topbar-actions">{user.role === "manager" && <button className="topbar-notification" onClick={() => changeTab("notifications")}>●{notificationCount > 0 && <b>{notificationCount}</b>}</button>}<button className="topbar-profile" onClick={() => changeTab("settings")}><span>{user.username[0].toUpperCase()}</span><div><strong>{user.username}</strong><small>{workspace?.role || user.role}</small></div></button></div></header>
       <PageErrorBoundary pageKey={activeTab}>
         {user.role === "manager" ? <>
           {activeTab === "home" && <PlatformPage section="overview" />}

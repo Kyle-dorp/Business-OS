@@ -17,8 +17,8 @@
   --text: #152033;
   --muted: #66748d;
   --line: #dce5f0;
-  --surface: rgba(255, 255, 255, 0.94);
-  --shadow: 0 18px 45px rgba(31, 48, 79, 0.10);
+  --surface: #ffffff;
+  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 14px rgba(31,48,79,.07);
 }
 
 /* Business operating system */
@@ -108,10 +108,7 @@ body {
   min-width: 320px;
   min-height: 100vh;
   color: var(--text);
-  background:
-    radial-gradient(circle at 10% 0%, rgba(47, 111, 237, 0.11), transparent 30rem),
-    radial-gradient(circle at 90% 15%, rgba(114, 89, 233, 0.08), transparent 32rem),
-    #eef3f9;
+  background: #f1f4f8;
 }
 button, input, select, textarea { font: inherit; }
 button { user-select: none; }
@@ -180,9 +177,7 @@ input[type="radio"]:focus-visible,
   height: 100dvh;
   overflow: hidden;
   color: #fff;
-  background:
-    radial-gradient(circle at 10% 0%, rgba(86, 127, 255, .28), transparent 18rem),
-    linear-gradient(165deg, #111c31, #0d1424 70%);
+  background: #0f172a;
   box-shadow: 20px 0 55px rgba(10, 20, 38, .35);
   transition: left .22s ease;
 }
@@ -216,7 +211,7 @@ input[type="radio"]:focus-visible,
 
 .page { width: min(1540px, 100%); margin: 0 auto; padding: 30px; }
 .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 24px; }
-.page-header h1 { margin: 2px 0 0; font-size: clamp(2rem, 4vw, 3rem); line-height: 1; letter-spacing: -.045em; }
+.page-header h1 { margin: 2px 0 0; font-size: clamp(1.5rem, 3vw, 2.2rem); line-height: 1.1; letter-spacing: -.03em; }
 .page-header p { margin: 10px 0 0; color: var(--muted); font-size: 1rem; max-width: 780px; }
 .eyebrow { display: block; color: var(--blue); font-size: .72rem; font-weight: 900; letter-spacing: .16em; }
 .stack { display: flex; flex-direction: column; gap: 18px; }
@@ -249,14 +244,14 @@ input[type="radio"]:focus-visible,
 }
 .primary-btn, .small-btn, .approve-btn, .send-button {
   color: #fff;
-  background: linear-gradient(135deg, var(--blue), #4f69ed);
-  box-shadow: 0 8px 18px rgba(47, 111, 237, .20);
+  background: var(--blue);
+  box-shadow: 0 2px 8px rgba(47, 111, 237, .22);
 }
 .primary-btn { padding: 12px 18px; }
 .small-btn { padding: 9px 12px; }
 .approve-btn { width: 100%; padding: 11px 14px; }
 .send-button { padding: 10px 17px; }
-.primary-btn:hover, .small-btn:hover, .approve-btn:hover, .send-button:hover { transform: translateY(-1px); box-shadow: 0 11px 24px rgba(47,111,237,.27); }
+.primary-btn:hover, .small-btn:hover, .approve-btn:hover, .send-button:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(47,111,237,.32); }
 .secondary-btn { padding: 10px 14px; color: #2f4567; background: #eef3fa; border: 1px solid #d6e0ed; }
 .secondary-btn:hover { background: #e3ebf6; }
 .publish-btn { padding: 11px 16px; color: #fff; background: var(--green); }
@@ -583,10 +578,7 @@ textarea { resize: vertical; }
 }
 
 body {
-  background:
-    radial-gradient(circle at 4% -10%, rgba(98, 167, 255, .20), transparent 28rem),
-    radial-gradient(circle at 96% 4%, rgba(118, 87, 246, .14), transparent 30rem),
-    linear-gradient(180deg, #f7f9fd 0%, #eef3fa 100%);
+  background: #f1f4f8;
 }
 
 .commercial-shell .main { min-width: 0; }
@@ -1042,3 +1034,104 @@ body {
 @media (max-width:1200px) { .fin-stat-row { grid-template-columns:repeat(3,1fr); } }
 @media (max-width:900px) { .fin-two-col { grid-template-columns:1fr; } .fin-stat-row { grid-template-columns:repeat(2,1fr); } }
 @media (max-width:600px) { .fin-stat-row { grid-template-columns:1fr 1fr; } .fin-subnav-btn { padding:8px 11px; font-size:.76rem; } }
+
+/* ── Desktop persistent sidebar ──────────────────────────────────────────────
+   On ≥769px the drawer is always visible. Collapsed = 64px icon rail.
+   Expanded (drawer.open) = 240px full sidebar. Hamburger toggles between them.
+   ─────────────────────────────────────────────────────────────────────────── */
+@media (min-width: 769px) {
+  /* Shell becomes a horizontal flex container, full-viewport-height */
+  .commercial-shell {
+    display: flex;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  /* Sidebar: always visible; transition width, not left */
+  .commercial-shell .drawer {
+    position: relative;
+    top: 0; right: auto; bottom: 0; left: 0;
+    flex-shrink: 0;
+    width: 64px;
+    height: 100%;
+    z-index: 1;
+    box-shadow: none;
+    border-right: 1px solid rgba(255,255,255,.08);
+    transition: width .2s ease;
+  }
+  .commercial-shell .drawer.open {
+    width: 240px;
+    box-shadow: 4px 0 20px rgba(0,0,0,.18);
+  }
+
+  /* No overlay backdrop needed on desktop */
+  .commercial-shell .drawer-backdrop { display: none !important; }
+
+  /* ── Mini mode (not .open): collapse text, center icons ── */
+  .commercial-shell .drawer:not(.open) .drawer-brand > div:nth-child(2),
+  .commercial-shell .drawer:not(.open) .drawer-close,
+  .commercial-shell .drawer:not(.open) .workspace-switcher,
+  .commercial-shell .drawer:not(.open) .drawer-section-label,
+  .commercial-shell .drawer:not(.open) .account-footer > div:nth-child(2),
+  .commercial-shell .drawer:not(.open) .account-footer > button { display: none; }
+
+  .commercial-shell .drawer:not(.open) .drawer-brand {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding: 18px 10px;
+    gap: 0;
+  }
+  .commercial-shell .drawer:not(.open) .account-footer {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 0;
+  }
+  .commercial-shell .drawer:not(.open) .nav-btn {
+    position: relative;
+    padding: 12px;
+    justify-content: center;
+    gap: 0;
+  }
+  .commercial-shell .drawer:not(.open) .nav-btn > span:not(.nav-icon):not(.notification-badge) { display: none; }
+  .commercial-shell .drawer:not(.open) .nav-icon { width: auto; font-size: 1.1rem; }
+  .commercial-shell .drawer:not(.open) .notification-badge {
+    position: absolute; top: 5px; right: 5px;
+    min-width: 16px; height: 16px; font-size: .56rem; margin: 0;
+  }
+
+  /* ── Main: takes remaining width, scrolls internally ── */
+  .commercial-shell .main {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  /* Topbar sticks inside .main's scroll container */
+  .commercial-shell .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    flex-shrink: 0;
+  }
+}
+
+/* ── AI chat: pin the composer to the bottom ─────────────────────────────────
+   The .ai-chat-panel already uses grid-template-rows: auto 1fr auto.
+   We just need to give the standalone panel a fixed height so 1fr constrains
+   the thread, keeping the composer always visible without scrolling away.
+   ─────────────────────────────────────────────────────────────────────────── */
+@media (min-width: 769px) {
+  .commercial-chat-page .ai-chat-panel.standalone {
+    /* topbar 76px + page padding + heading + context bar ≈ 360px */
+    height: calc(100dvh - 360px);
+    min-height: 420px;
+    overflow: hidden;
+  }
+  .commercial-chat-page .ai-chat-panel.standalone .chat-thread {
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+  }
+}

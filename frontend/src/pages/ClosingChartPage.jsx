@@ -33,6 +33,26 @@ function NumSelect({ value, onChange, max = 10 }) {
   );
 }
 
+function MoneyInput({ value, onChange }) {
+  function handleChange(e) {
+    let v = e.target.value;
+    if (v.startsWith("$")) v = v.slice(1);
+    onChange(v);
+  }
+  return (
+    <span className="cc-money-wrap">
+      <span className="cc-dollar">$</span>
+      <input
+        className="cc-money-inner"
+        inputMode="decimal"
+        value={value || ""}
+        onChange={handleChange}
+        placeholder="0.00"
+      />
+    </span>
+  );
+}
+
 function TimeRange({ value = {}, onChange }) {
   return (
     <span className="cc-time-range">
@@ -100,20 +120,17 @@ export default function ClosingChartPage({ config: rawConfig }) {
         const detail = await api(`/schedules/${latest.id}`).catch(() => null);
         if (detail?.shifts?.length) {
           const dayIndex = new Date(date + "T12:00:00").getDay();
-          const mapped = [1, 2, 3, 4, 5, 6, 0];
-          const todayShifts = detail.shifts.filter((s) => {
-            const sd = new Date(s.date + "T12:00:00").getDay();
-            return sd === dayIndex;
-          });
+          const todayShifts = detail.shifts.filter((s) => new Date(s.date + "T12:00:00").getDay() === dayIndex);
           if (todayShifts.length) {
             setForm((prev) => {
               const next = structuredClone(prev);
               next.who_worked = next.who_worked || {};
               todayShifts.forEach((shift) => {
                 if (shift.employee_name) {
-                  const start = shift.start_time ? shift.start_time.slice(0, 5) : "";
-                  const end = shift.end_time ? shift.end_time.slice(0, 5) : "";
-                  next.who_worked[shift.employee_name] = { start, end };
+                  next.who_worked[shift.employee_name] = {
+                    start: shift.start_time ? shift.start_time.slice(0, 5) : "",
+                    end: shift.end_time ? shift.end_time.slice(0, 5) : "",
+                  };
                 }
               });
               return next;
@@ -126,7 +143,7 @@ export default function ClosingChartPage({ config: rawConfig }) {
       } else {
         msgs.push("No schedule found for this week");
       }
-    } catch (err) {
+    } catch {
       msgs.push("Could not load schedule");
     }
     setApplyMsg(msgs.join(" · ") || "Done");
@@ -150,7 +167,7 @@ export default function ClosingChartPage({ config: rawConfig }) {
           <button className="primary-btn no-print" onClick={save}>{saved ? "Saved ✓" : "Save"}</button>
         </div>
       </div>
-      {applyMsg && <div className="cc-apply-msg">{applyMsg}</div>}
+      {applyMsg && <div className="cc-apply-msg no-print">{applyMsg}</div>}
 
       <div className="cc-sheet">
 
@@ -161,7 +178,7 @@ export default function ClosingChartPage({ config: rawConfig }) {
             {[["Gross", "sales.gross"], ["Net", "sales.net"], ["Profit", "sales.profit"]].map(([label, path]) => (
               <span className="cc-sales-field" key={label}>
                 <label className="cc-label">{label}:</label>
-                <input className="cc-input cc-money" value={getPath(path)} onChange={(e) => setPath(path, e.target.value)} placeholder="$0.00" />
+                <MoneyInput value={getPath(path)} onChange={(v) => setPath(path, v)} />
               </span>
             ))}
           </div>
@@ -187,21 +204,6 @@ export default function ClosingChartPage({ config: rawConfig }) {
               <div className="cc-field-row" key={b}>
                 <label className="cc-label">{b}:</label>
                 <input className="cc-input cc-temp" value={getPath(`temps.${b}`)} onChange={(e) => setPath(`temps.${b}`, e.target.value)} placeholder="°F" />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="cc-divider-h" />
-
-        {/* Ingredients */}
-        <div>
-          <div className="cc-col-header">Ingredients</div>
-          <div className="cc-ing-row">
-            {["Meat", "Cheese", "Tomatoes", "Lettuce", "Onions"].map((ing) => (
-              <div className="cc-ing-field" key={ing}>
-                <label className="cc-label">{ing}:</label>
-                <input className="cc-input" value={getPath(`ingredients.${ing}`)} onChange={(e) => setPath(`ingredients.${ing}`, e.target.value)} placeholder="__" />
               </div>
             ))}
           </div>
@@ -243,11 +245,17 @@ export default function ClosingChartPage({ config: rawConfig }) {
         <div className="cc-two-col">
           <div className="cc-col">
             <div className="cc-col-header">Employee Subs</div>
-            <div className="cc-ing-row">
+            <div className="cc-emp-subs-list">
               {cfg.emp_sub_sizes.map((sz) => (
-                <div className="cc-ing-field" key={sz}>
+                <div className="cc-emp-sub-row" key={sz}>
                   <label className="cc-label">{sz}:</label>
-                  <NumSelect value={getPath(`emp_subs.${sz}`)} onChange={(v) => setPath(`emp_subs.${sz}`, v)} max={20} />
+                  <input
+                    className="cc-input cc-sub-text"
+                    type="text"
+                    value={getPath(`emp_subs.${sz}`)}
+                    onChange={(e) => setPath(`emp_subs.${sz}`, e.target.value)}
+                    placeholder="e.g. Bam – Italian"
+                  />
                 </div>
               ))}
             </div>

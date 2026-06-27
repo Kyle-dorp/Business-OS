@@ -121,8 +121,9 @@ For update_ui_config, set ui_config_patch to a JSON object (not a string) with a
   "nav_labels": { "tasks": "Daily Ops", "accounting": "Books", "reports": "Financials" }
   "nav_flat": true or false — when true, sidebar nav shows all items as a plain flat list with no group headers; when false (default), items are grouped under "Money & Records" and "Daily Operations"
   "closing_chart": { ... } — configures the Closing Chart page (see below)
+  "menu": { ... } — configures the printable Menu page (see below)
 
-Valid nav_labels keys: home, contacts, sales, purchasing, accounting, finance, reports, tasks, inventory, availability, manager, assistant, notifications, settings.
+Valid nav_labels keys: home, contacts, sales, purchasing, accounting, finance, reports, tasks, inventory, availability, manager, assistant, notifications, settings, menu.
 
 CLOSING CHART CONFIG — "closing_chart" in ui_config_patch. Current config is in context as "closing_chart_config" (null = defaults). Always send the COMPLETE new config.
 Schema:
@@ -140,7 +141,36 @@ Examples:
 - Add a sandwich type "Club" with sizes 6" and 12": add {"name":"Club","sizes":["6\"","12\""]} to "sandwiches"
 - Add "Chili" to items sold: set "soups" to [...existing..., "Chili"]
 - Add bread type "Wheat": set "bread_types" to [...existing..., "Wheat"]
-The page always shows: Total Sales, Leftover Bread + Closing Temps, Ingredients (fixed), sandwiches sold, employee subs/sides, who worked, and notes. Only the lists above are configurable.
+The page always shows: Total Sales, Leftover Bread + Closing Temps, sandwiches sold, employee subs/sides, who worked, and notes. Only the lists above are configurable.
+
+MENU PAGE CONFIG — "menu" key in ui_config_patch. Always send complete config.
+Schema:
+{
+  "title": "Bam's Sub Shoppe",
+  "subtitle": "Est. 2024",
+  "categories": [
+    {
+      "name": "Sub Sandwiches",
+      "description": "optional",
+      "items": [
+        { "name": "Italian BMT", "sizes": {"6\"": "8.99", "12\"": "13.99"} },
+        { "name": "BLT", "sizes": {"6\"": "7.99", "12\"": "12.99"} }
+      ]
+    },
+    {
+      "name": "Soups",
+      "items": [
+        { "name": "Chicken Noodle", "price": "3.99" }
+      ]
+    }
+  ],
+  "footer": "Prices subject to change."
+}
+Use "sizes" for items with multiple size options; use "price" for single-price items.
+Examples:
+- Add a new sub: add {"name":"Club","sizes":{"6\"":"8.49","12\"":"13.49"}} to the Subs category items
+- Add a category: add a new category object to the "categories" array
+- Update a price: find the item and change its price/sizes values
 All color values must be valid CSS hex colors (e.g. "#1a2b3c"). Choose colors that match the business's brand and look professional together. The sidebar_bg should be dark enough for white text to be readable on it.
 
 For toggle_module, set module_key to one of: team, scheduling, accounting, sales, purchasing, tasks, inventory, reports, notifications. Set module_enabled to true to show it or false to hide it. Home, Settings, and the AI Assistant cannot be hidden. One action per module. "contacts" and "customers" map to the "team" module. "scheduling" covers both the schedule view and availability tabs. "finance" is part of the "accounting" module.

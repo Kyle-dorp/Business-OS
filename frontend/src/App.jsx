@@ -87,6 +87,7 @@ export default function App() {
   const [needsSetup, setNeedsSetup] = useState(false);
   const [user, setUser] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [sidebarHidden, setSidebarHidden] = useState(false);
   const [activeTab, setActiveTab] = useState("home");
   const [notificationCount, setNotificationCount] = useState(0);
   const [businesses, setBusinesses] = useState([]);
@@ -146,7 +147,7 @@ export default function App() {
   }, [tabs, activeTab, user]);
 
   async function authenticated(nextUser) { setUser(nextUser); setNeedsSetup(false); restoreTab(nextUser); await loadWorkspace(); }
-  function logout() { setToken(""); setBusinessId(""); setUser(null); setWorkspace(null); setDrawerOpen(false); }
+  function logout() { setToken(""); setBusinessId(""); setUser(null); setWorkspace(null); setDrawerOpen(false); setSidebarHidden(false); }
   function changeTab(id) { setActiveTab(id); setDrawerOpen(false); }
   async function switchBusiness(id) { setBusinessId(id); setWorkspace(await api("/platform/workspace")); setActiveTab("home"); }
   async function refreshWorkspace() { setWorkspace(await api("/platform/workspace")); }
@@ -174,7 +175,7 @@ export default function App() {
   return <div className="app commercial-shell">
     {themeStyle && <style>{themeStyle}</style>}
     {drawerOpen && <button className="drawer-backdrop" aria-label="Close navigation" onClick={() => setDrawerOpen(false)} />}
-    <aside className={drawerOpen ? "drawer open" : "drawer"}>
+    <aside className={`drawer${drawerOpen ? " open" : ""}${sidebarHidden ? " sidebar-hidden" : ""}`}>
       <div className="drawer-brand"><div className="drawer-logo">{logoLetter}</div><div><strong>{workspace?.business?.name || "Business OS"}</strong><span>{tagline}</span></div><button className="drawer-close" onClick={() => setDrawerOpen(false)}>×</button></div>
       <nav className="drawer-nav">
         <div className="workspace-switcher"><select className="workspace-select" value={workspace?.business?.id || ""} onChange={(e) => switchBusiness(e.target.value)}>{businesses.map((x) => <option key={x.business.id} value={x.business.id}>{x.business.name}</option>)}</select>{user.role === "manager" && <button title="Create another business" onClick={createBusiness}>+</button>}</div>
@@ -198,7 +199,11 @@ export default function App() {
       <div className="drawer-footer account-footer"><div className="account-avatar">{user.username[0].toUpperCase()}</div><div><strong>{user.username}</strong><span>{workspace?.role || user.role}</span></div><button title="Log out" onClick={logout}>↪</button></div>
     </aside>
     <main className="main">
-      <header className="topbar"><button className="hamburger" aria-label="Toggle navigation" onClick={() => setDrawerOpen((v) => !v)}><span /><span /><span /></button><div className="topbar-copy"><span>{workspace?.business?.name || "Business workspace"}</span><strong>{currentLabel}</strong></div><div className="topbar-actions">{user.role === "manager" && <button className="topbar-notification" onClick={() => changeTab("notifications")}>●{notificationCount > 0 && <b>{notificationCount}</b>}</button>}<button className="topbar-profile" onClick={() => changeTab("settings")}><span>{user.username[0].toUpperCase()}</span><div><strong>{user.username}</strong><small>{workspace?.role || user.role}</small></div></button></div></header>
+      <header className="topbar"><button className="hamburger" aria-label="Toggle navigation" onClick={() => {
+        if (sidebarHidden) { setSidebarHidden(false); setDrawerOpen(true); }
+        else if (drawerOpen) { setDrawerOpen(false); }
+        else { setSidebarHidden(true); }
+      }}><span /><span /><span /></button><div className="topbar-copy"><span>{workspace?.business?.name || "Business workspace"}</span><strong>{currentLabel}</strong></div><div className="topbar-actions">{user.role === "manager" && <button className="topbar-notification" onClick={() => changeTab("notifications")}>●{notificationCount > 0 && <b>{notificationCount}</b>}</button>}<button className="topbar-profile" onClick={() => changeTab("settings")}><span>{user.username[0].toUpperCase()}</span><div><strong>{user.username}</strong><small>{workspace?.role || user.role}</small></div></button></div></header>
       <PageErrorBoundary pageKey={activeTab}>
         {user.role === "manager" ? <>
           {activeTab === "home" && <PlatformPage section="overview" />}

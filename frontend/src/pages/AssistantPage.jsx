@@ -72,6 +72,7 @@ export default function AssistantPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [appliedParts, setAppliedParts] = useState({});
+  const [schedPanelOpen, setSchedPanelOpen] = useState(false);
   const chatEndRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -187,65 +188,85 @@ export default function AssistantPage() {
   const selectedSchedule = useMemo(() => schedules.find((row) => String(row.id) === String(scheduleId)), [schedules, scheduleId]);
 
   return (
-    <div className="page assistant-page commercial-chat-page">
-      <div className="page-header assistant-heading">
-        <div><span className="eyebrow">YOUR WHOLE BUSINESS</span><h1>AI Assistant</h1><p>Ask about the books, invoices, bills, inventory, tasks, people, or schedules. Changes still require approval.</p></div>
-        <div className="assistant-header-actions"><span className={status.ai_configured ? "ai-status connected" : "ai-status fallback"}><span className="status-dot" />{status.ai_configured ? "Claude connected" : "Fallback mode"}</span><button className="secondary-btn compact" onClick={() => setMemoryOpen((open) => !open)}>Always remember</button><button className="secondary-btn compact" onClick={clearChat}>Clear chat</button></div>
+    <div className=”assistant-fullscreen”>
+      {/* Slim control bar */}
+      <div className=”asst-bar”>
+        <div className=”asst-bar-left”>
+          <div className=”ai-avatar asst-avatar”>✦</div>
+          <div>
+            <strong>Business Assistant</strong>
+            <span className={status.ai_configured ? “asst-status on” : “asst-status off”}>
+              {status.ai_configured ? “● Claude connected” : “● Fallback mode”}
+            </span>
+          </div>
+        </div>
+        <div className=”asst-bar-right”>
+          <button className={schedPanelOpen ? “asst-sched-toggle active” : “asst-sched-toggle”} onClick={() => setSchedPanelOpen((v) => !v)} title=”Scheduling context”>
+            <svg width=”14” height=”14” viewBox=”0 0 14 14” fill=”none” aria-hidden=”true”><rect x=”1” y=”2” width=”12” height=”11” rx=”2” stroke=”currentColor” strokeWidth=”1.5”/><path d=”M1 6h12” stroke=”currentColor” strokeWidth=”1.5”/><path d=”M4 1v2M10 1v2” stroke=”currentColor” strokeWidth=”1.5” strokeLinecap=”round”/></svg>
+            Schedule
+          </button>
+          <button className=”secondary-btn compact” onClick={() => setMemoryOpen((v) => !v)}>Always remember</button>
+          <button className=”secondary-btn compact” onClick={clearChat}>Clear</button>
+        </div>
       </div>
 
-      {error && <div className="alert error">{error}</div>}
+      {error && <div className=”asst-error”>{error}</div>}
 
-      {memoryOpen && (
-        <section className="memory-panel card">
-          <div><span className="eyebrow">DURABLE CONTEXT</span><h2>Things to always keep in mind</h2><p>This stays attached to every AI request, even after old chat messages are trimmed for size.</p></div>
-          <textarea placeholder="Example: Prep always works 8–4. Avoid scheduling Sandra after 3 PM. Leadership is paid $1 more." value={memory} onChange={(event) => setMemory(event.target.value)} />
-          <button className="small-btn" onClick={saveMemory}>{memorySaved ? "Saved ✓" : "Save memory"}</button>
-        </section>
+      {/* Schedule context panel */}
+      {schedPanelOpen && (
+        <div className=”asst-sched-drawer”>
+          <div className=”context-week-control”>
+            <button onClick={() => setWeekStart(shiftWeek(weekStart, -1))}>←</button>
+            <label><span>Select week</span><strong>{formatWeekRange(weekStart)}</strong><input type=”date” value={weekStart} onChange={(event) => setWeekStart(event.target.value)} /></label>
+            <button onClick={() => setWeekStart(shiftWeek(weekStart, 1))}>→</button>
+          </div>
+          <label className=”schedule-context-select”><span>Schedule version <small>optional</small></span><select value={scheduleId} onChange={(event) => setScheduleId(event.target.value)}><option value=””>No schedule selected</option>{schedules.map((row) => <option value={row.id} key={row.id}>Version {row.version} · {row.status.replaceAll(“_”, “ “)}</option>)}</select></label>
+          <div className=”context-summary”><span>Context</span><strong>{selectedSchedule ? `Business + schedule ${selectedSchedule.version}` : “Whole business”}</strong></div>
+        </div>
       )}
 
-      <section className="assistant-context-bar">
-        <div className="context-week-control">
-          <button onClick={() => setWeekStart(shiftWeek(weekStart, -1))}>←</button>
-          <label><span>Select week</span><strong>{formatWeekRange(weekStart)}</strong><input type="date" value={weekStart} onChange={(event) => setWeekStart(event.target.value)} /></label>
-          <button onClick={() => setWeekStart(shiftWeek(weekStart, 1))}>→</button>
+      {/* Always-remember panel */}
+      {memoryOpen && (
+        <div className=”asst-memory-panel”>
+          <div><span className=”eyebrow”>DURABLE CONTEXT</span><p>Stays attached to every request — good for standing rules like “prep works 8–4”.</p></div>
+          <textarea placeholder=”Example: Prep always works 8–4. Avoid scheduling Sandra after 3 PM.” value={memory} onChange={(event) => setMemory(event.target.value)} />
+          <button className=”small-btn” onClick={saveMemory}>{memorySaved ? “Saved ✓” : “Save memory”}</button>
         </div>
-        <label className="schedule-context-select"><span>Schedule version <small>optional</small></span><select value={scheduleId} onChange={(event) => setScheduleId(event.target.value)}><option value="">No schedule selected</option>{schedules.map((row) => <option value={row.id} key={row.id}>Version {row.version} · {row.status.replaceAll("_", " ")}</option>)}</select></label>
-        <div className="context-summary"><span>Context</span><strong>{selectedSchedule ? `Business + schedule ${selectedSchedule.version}` : "Whole business"}</strong></div>
-      </section>
+      )}
 
-      <section className="ai-chat-panel standalone">
-        <div className="chat-topline"><div className="ai-avatar">O</div><div><strong>Business Assistant</strong><span>Accounts + operations · approval required for changes</span></div></div>
-        <div className="chat-thread">
-          {!messages.length && <div className="chat-welcome"><div className="welcome-spark">✦</div><h2>Ask in plain English.</h2><p>Try “What do customers owe us?”, “How profitable are we?”, “What needs attention?”, or describe a scheduling change.</p></div>}
+      {/* Full-height chat */}
+      <section className=”ai-chat-panel asst-full-panel”>
+        <div className=”chat-thread”>
+          {!messages.length && <div className=”chat-welcome”><div className=”welcome-spark”>✦</div><h2>Ask in plain English.</h2><p>Try “What do customers owe us?”, “How profitable are we?”, “What needs attention?”, or describe a scheduling change.</p></div>}
           {messages.map((message, index) => {
             const actions = message.actions || [];
             return (
               <div className={`chat-message-row ${message.role}`} key={message.id || `${message.role}-${index}`}>
-                {message.role === "assistant" && <div className="message-avatar">AI</div>}
-                <div className="message-stack">
-                  <div className="message-bubble"><p>{message.content}</p></div>
+                {message.role === “assistant” && <div className=”message-avatar”>AI</div>}
+                <div className=”message-stack”>
+                  <div className=”message-bubble”><p>{message.content}</p></div>
                   {actions.length > 0 && (
-                    <div className="proposal-card">
-                      <div className="proposal-heading"><div><span>Review changes</span><strong>{actions.length} proposed</strong></div>{message.applied && <span className="applied-badge">Applied</span>}</div>
-                      <div className="proposal-list">{actions.map((action, actionIndex) => {
+                    <div className=”proposal-card”>
+                      <div className=”proposal-heading”><div><span>Review changes</span><strong>{actions.length} proposed</strong></div>{message.applied && <span className=”applied-badge”>Applied</span>}</div>
+                      <div className=”proposal-list”>{actions.map((action, actionIndex) => {
                         const partApplied = appliedParts[`${message.id}-${actionIndex}`];
-                        const missingPosition = action.type === "create_position";
-                        return <div className={`proposal-item ${missingPosition ? "missing-position" : ""}`} key={actionIndex}><span className="proposal-number">{actionIndex + 1}</span><div><p>{actionSummary(action)}</p>{action.reason && <small>{action.reason}</small>}</div>{!message.applied && <button className={missingPosition ? "position-approve-btn" : "mini-apply-btn"} disabled={busy || partApplied} onClick={() => applyActions(actions, message, actionIndex)}>{partApplied ? "Applied ✓" : missingPosition ? "Add position" : "Apply"}</button>}</div>;
+                        const missingPosition = action.type === “create_position”;
+                        return <div className={`proposal-item ${missingPosition ? “missing-position” : “”}`} key={actionIndex}><span className=”proposal-number”>{actionIndex + 1}</span><div><p>{actionSummary(action)}</p>{action.reason && <small>{action.reason}</small>}</div>{!message.applied && <button className={missingPosition ? “position-approve-btn” : “mini-apply-btn”} disabled={busy || partApplied} onClick={() => applyActions(actions, message, actionIndex)}>{partApplied ? “Applied ✓” : missingPosition ? “Add position” : “Apply”}</button>}</div>;
                       })}</div>
-                      {!message.applied && <button className="approve-btn" disabled={busy} onClick={() => applyActions(actions, message)}>Approve all changes</button>}
+                      {!message.applied && <button className=”approve-btn” disabled={busy} onClick={() => applyActions(actions, message)}>Approve all changes</button>}
                     </div>
                   )}
                 </div>
-                {message.role === "user" && <div className="message-avatar user">You</div>}
+                {message.role === “user” && <div className=”message-avatar user”>You</div>}
               </div>
             );
           })}
-          {busy && <div className="chat-message-row assistant"><div className="message-avatar">AI</div><div className="typing-bubble"><span /><span /><span /></div></div>}
+          {busy && <div className=”chat-message-row assistant”><div className=”message-avatar”>AI</div><div className=”typing-bubble”><span /><span /><span /></div></div>}
           <div ref={chatEndRef} />
         </div>
-        <form className="composer modern-composer" onSubmit={(event) => { event.preventDefault(); sendText(input); }}>
-          <textarea ref={textareaRef} rows="1" value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); sendText(input); } }} placeholder="Ask about your business…" />
-          <div className="composer-footer"><span>Shift+Enter for a new line</span><button className="send-button" disabled={busy || !input.trim()} aria-label="Send message">↑</button></div>
+        <form className=”composer modern-composer” onSubmit={(event) => { event.preventDefault(); sendText(input); }}>
+          <textarea ref={textareaRef} rows=”1” value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === “Enter” && !event.shiftKey) { event.preventDefault(); sendText(input); } }} placeholder=”Ask about your business…” />
+          <div className=”composer-footer”><span>Shift+Enter for a new line</span><button className=”send-button” disabled={busy || !input.trim()} aria-label=”Send message”>↑</button></div>
         </form>
       </section>
     </div>

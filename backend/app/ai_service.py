@@ -119,6 +119,7 @@ For update_ui_config, set ui_config_patch to a JSON object (not a string) with a
   "theme": { "primary": "#hex", "sidebar_bg": "#hex", "accent": "#hex", "page_bg": "#hex", "font": "font-family" }
   "branding": { "logo_letter": "B", "tagline": "Sub Shoppe" }
   "nav_labels": { "tasks": "Daily Ops", "accounting": "Books", "reports": "Financials" }
+  "nav_flat": true or false — when true, sidebar nav shows all items as a plain flat list with no group headers; when false (default), items are grouped under "Money & Records" and "Daily Operations"
 
 Valid nav_labels keys: home, contacts, sales, purchasing, accounting, finance, reports, tasks, inventory, availability, manager, assistant, notifications, settings.
 All color values must be valid CSS hex colors (e.g. "#1a2b3c"). Choose colors that match the business's brand and look professional together. The sidebar_bg should be dark enough for white text to be readable on it.

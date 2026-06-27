@@ -3,6 +3,7 @@ import "./App.css";
 import { api, getBusinessId, getToken, setBusinessId, setToken } from "./api";
 import AuthPage from "./pages/AuthPage";
 import AssistantPage from "./pages/AssistantPage";
+import ClosingChartPage from "./pages/ClosingChartPage";
 import AvailabilityPage from "./pages/AvailabilityPage";
 import EmployeeAvailabilityPage from "./pages/EmployeeAvailabilityPage";
 import EmployeeHomePage from "./pages/EmployeeHomePage";
@@ -33,7 +34,7 @@ const MANAGER_TABS = [
   { id: "accounting", label: "Bookkeeping", icon: "≡", module: "accounting" },
   { id: "finance", label: "Finance", icon: "$", module: "accounting" },
   { id: "reports", label: "Reports", icon: "↗", module: "reports" },
-  { id: "tasks", label: "Tasks", icon: "✓", module: "tasks" },
+  { id: "tasks", label: "Closing Chart", icon: "✓", module: "tasks" },
   { id: "inventory", label: "Inventory & assets", icon: "□", module: "inventory" },
   { id: "availability", label: "Availability", icon: "◷", module: "scheduling" },
   { id: "manager", label: "Scheduling", icon: "▦", module: "scheduling" },
@@ -204,7 +205,8 @@ export default function App() {
       <PageErrorBoundary pageKey={activeTab}>
         {user.role === "manager" ? <>
           {activeTab === "home" && <PlatformPage section="overview" />}
-          {["contacts", "sales", "purchasing", "accounting", "reports", "tasks", "inventory"].includes(activeTab) && <PlatformPage section={activeTab} />}
+          {["contacts", "sales", "purchasing", "accounting", "reports", "inventory"].includes(activeTab) && <PlatformPage section={activeTab} />}
+          {activeTab === "tasks" && <ClosingChartPage />}
           {activeTab === "availability" && <AvailabilityPage />}{activeTab === "manager" && <ManagerPage />}
           {activeTab === "finance" && <FinancePage />}
           {activeTab === "assistant" && <AssistantPage />}{activeTab === "notifications" && <NotificationsPage onCountChange={setNotificationCount} />}

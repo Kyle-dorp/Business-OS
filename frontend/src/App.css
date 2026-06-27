@@ -1063,13 +1063,41 @@ body {
     width: 240px;
     box-shadow: 4px 0 20px rgba(0,0,0,.18);
   }
-  .commercial-shell .drawer.sidebar-hidden {
-    width: 0;
-    border: none;
-  }
 
   /* No overlay backdrop needed on desktop */
   .commercial-shell .drawer-backdrop { display: none !important; }
+
+  /* Mini sidebar hamburger: visible only when collapsed */
+  .commercial-shell .sidebar-expand-btn {
+    display: none;
+  }
+  .commercial-shell .drawer:not(.open) .sidebar-expand-btn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 40px;
+    height: 40px;
+    margin: 14px auto 0;
+    padding: 0 11px;
+    border: 0;
+    border-radius: 11px;
+    color: #8fa4c9;
+    background: transparent;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+  }
+  .commercial-shell .drawer:not(.open) .sidebar-expand-btn span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    border-radius: 99px;
+    background: currentColor;
+  }
+  .commercial-shell .drawer:not(.open) .sidebar-expand-btn:hover {
+    background: rgba(255,255,255,.1);
+    color: #fff;
+  }
 
   /* ── Mini mode (not .open): collapse text, center icons ── */
   .commercial-shell .drawer:not(.open) .drawer-brand > div:nth-child(2),

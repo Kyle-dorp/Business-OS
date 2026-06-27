@@ -5,42 +5,76 @@ function todayISO() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-const EMPTY = {
-  bread: { italian: "", jalapeno: "", herb: "", white: "" },
-  temps: { italian: "", jalapeno: "", herb: "", white: "" },
-  ingredients: { meat: "", cheese: "", tomatoes: "", lettuce: "", onions: "" },
-  notes: "",
+const DEFAULT_CONFIG = {
+  sections: [
+    { id: "leftover_bread", label: "Leftover Bread", inline: false, fields: ["Italian", "Jalapeño", "Herb", "White"] },
+    { id: "closing_temps", label: "Closing Temps", inline: false, fields: ["Italian", "Jalapeño", "Herb", "White"] },
+    { id: "ingredients", label: "Ingredients", inline: true, fields: ["Meat", "Cheese", "Tomatoes", "Lettuce", "Onions"] },
+  ],
+  paired: [["leftover_bread", "closing_temps"]],
 };
 
-const BREAD_TYPES = ["italian", "jalapeno", "herb", "white"];
-const BREAD_LABELS = { italian: "Italian", jalapeno: "Jalapeño", herb: "Herb", white: "White" };
-const ING_TYPES = ["meat", "cheese", "tomatoes", "lettuce", "onions"];
-const ING_LABELS = { meat: "Meat", cheese: "Cheese", tomatoes: "Tomatoes", lettuce: "Lettuce", onions: "Onions" };
+function Section({ section, values, onChange }) {
+  return (
+    <div className="cc-col">
+      <div className="cc-col-header">{section.label}</div>
+      {section.inline ? (
+        <div className="cc-ing-row">
+          {section.fields.map((field) => (
+            <div className="cc-ing-field" key={field}>
+              <label className="cc-label">{field}:</label>
+              <input className="cc-input" value={values[field] || ""} onChange={(e) => onChange(field, e.target.value)} placeholder="__" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        section.fields.map((field) => (
+          <div className="cc-field-row" key={field}>
+            <label className="cc-label">{field}:</label>
+            <input className="cc-input" value={values[field] || ""} onChange={(e) => onChange(field, e.target.value)} placeholder="___" />
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
 
-export default function ClosingChartPage() {
+export default function ClosingChartPage({ config: rawConfig }) {
+  const config = rawConfig || DEFAULT_CONFIG;
   const [date, setDate] = useState(todayISO);
-  const [form, setForm] = useState(EMPTY);
+  const [form, setForm] = useState({});
+  const [notes, setNotes] = useState("");
   const [saved, setSaved] = useState(false);
+
+  const storageKey = `closing-chart-${date}`;
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(`closing-chart-${date}`);
-      setForm(raw ? { ...EMPTY, ...JSON.parse(raw) } : EMPTY);
+      const raw = localStorage.getItem(storageKey);
+      const parsed = raw ? JSON.parse(raw) : {};
+      setForm(parsed.fields || {});
+      setNotes(parsed.notes || "");
     } catch {
-      setForm(EMPTY);
+      setForm({});
+      setNotes("");
     }
     setSaved(false);
-  }, [date]);
+  }, [date, storageKey]);
 
-  function setField(section, key, value) {
-    setForm((prev) => ({ ...prev, [section]: { ...prev[section], [key]: value } }));
+  function setField(sectionId, field, value) {
+    setForm((prev) => ({ ...prev, [sectionId]: { ...(prev[sectionId] || {}), [field]: value } }));
     setSaved(false);
   }
 
   function save() {
-    localStorage.setItem(`closing-chart-${date}`, JSON.stringify(form));
+    localStorage.setItem(storageKey, JSON.stringify({ fields: form, notes }));
     setSaved(true);
   }
+
+  // Build layout: paired groups + remaining full-width sections
+  const pairedIds = new Set((config.paired || []).flat());
+  const sectionMap = Object.fromEntries((config.sections || []).map((s) => [s.id, s]));
+  const fullWidthSections = (config.sections || []).filter((s) => !pairedIds.has(s.id));
 
   return (
     <div className="page closing-chart-page">
@@ -57,54 +91,42 @@ export default function ClosingChartPage() {
       </div>
 
       <div className="cc-sheet">
-        {/* Bread + Temps */}
-        <div className="cc-two-col">
-          <div className="cc-col">
-            <div className="cc-col-header">Leftover Bread</div>
-            {BREAD_TYPES.map((t) => (
-              <div className="cc-field-row" key={t}>
-                <label className="cc-label">{BREAD_LABELS[t]}:</label>
-                <input className="cc-input" value={form.bread[t]} onChange={(e) => setField("bread", t, e.target.value)} placeholder="___" />
+        {/* Paired (side-by-side) groups */}
+        {(config.paired || []).map((group, idx) => {
+          const sections = group.map((id) => sectionMap[id]).filter(Boolean);
+          if (!sections.length) return null;
+          return (
+            <div key={idx}>
+              {idx > 0 && <div className="cc-divider-h" />}
+              <div className="cc-two-col" style={{ gridTemplateColumns: sections.length === 1 ? "1fr" : Array.from({ length: sections.length }, (_, i) => i < sections.length - 1 ? "1fr 1px" : "1fr").join(" ") }}>
+                {sections.map((section, si) => (
+                  <div key={section.id} style={{ display: "contents" }}>
+                    {si > 0 && <div className="cc-divider" />}
+                    <Section section={section} values={form[section.id] || {}} onChange={(f, v) => setField(section.id, f, v)} />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <div className="cc-divider" />
-          <div className="cc-col">
-            <div className="cc-col-header">Closing Temps</div>
-            {BREAD_TYPES.map((t) => (
-              <div className="cc-field-row" key={t}>
-                <label className="cc-label">{BREAD_LABELS[t]}:</label>
-                <input className="cc-input cc-input-temp" value={form.temps[t]} onChange={(e) => setField("temps", t, e.target.value)} placeholder="°F" />
-              </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          );
+        })}
 
+        {/* Full-width sections */}
+        {fullWidthSections.map((section) => (
+          <div key={section.id}>
+            <div className="cc-divider-h" />
+            <Section section={section} values={form[section.id] || {}} onChange={(f, v) => setField(section.id, f, v)} />
+          </div>
+        ))}
+
+        {/* Notes — always at bottom */}
         <div className="cc-divider-h" />
-
-        {/* Ingredients */}
-        <div className="cc-ing-section">
-          <div className="cc-col-header">Ingredients</div>
-          <div className="cc-ing-row">
-            {ING_TYPES.map((t) => (
-              <div className="cc-ing-field" key={t}>
-                <label className="cc-label">{ING_LABELS[t]}:</label>
-                <input className="cc-input" value={form.ingredients[t]} onChange={(e) => setField("ingredients", t, e.target.value)} placeholder="__" />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="cc-divider-h" />
-
-        {/* Notes */}
         <div className="cc-notes-section">
           <div className="cc-col-header">Notes</div>
           <textarea
             className="cc-notes"
             rows={3}
-            value={form.notes}
-            onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
+            value={notes}
+            onChange={(e) => { setNotes(e.target.value); setSaved(false); }}
             placeholder="Issues, waste, incidents…"
           />
         </div>

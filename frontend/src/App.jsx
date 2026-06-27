@@ -206,7 +206,7 @@ export default function App() {
         {user.role === "manager" ? <>
           {activeTab === "home" && <PlatformPage section="overview" />}
           {["contacts", "sales", "purchasing", "accounting", "reports", "inventory"].includes(activeTab) && <PlatformPage section={activeTab} />}
-          {activeTab === "tasks" && <ClosingChartPage />}
+          {activeTab === "tasks" && <ClosingChartPage config={uiConfig?.closing_chart} />}
           {activeTab === "availability" && <AvailabilityPage />}{activeTab === "manager" && <ManagerPage />}
           {activeTab === "finance" && <FinancePage />}
           {activeTab === "assistant" && <AssistantPage />}{activeTab === "notifications" && <NotificationsPage onCountChange={setNotificationCount} />}

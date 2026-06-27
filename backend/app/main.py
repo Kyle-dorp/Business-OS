@@ -1545,6 +1545,11 @@ def _assistant_context(
     closing_reports = session.exec(select(ClosingReport).where(ClosingReport.business_id == business_id).order_by(ClosingReport.id.desc()).limit(30)).all()
     inventory = session.exec(select(InventoryItem).where(InventoryItem.business_id == business_id, InventoryItem.active == True)).all()  # noqa: E712
     modules = session.exec(select(BusinessModule).where(BusinessModule.business_id == business_id)).all()
+    ui_config_record = session.exec(select(UIConfig).where(UIConfig.business_id == business_id)).first()
+    try:
+        ui_config_data = json.loads(ui_config_record.config_json) if ui_config_record and ui_config_record.config_json else {}
+    except Exception:
+        ui_config_data = {}
     ledger_accounts, ledger_totals = account_balances(session, business_id)
     income_cents = sum(
         ledger_totals[row.id]["credit_cents"] - ledger_totals[row.id]["debit_cents"]
@@ -1639,6 +1644,7 @@ def _assistant_context(
             "store_close_time": settings.store_close_time,
         },
         "schedule": selected_schedule,
+        "closing_chart_config": ui_config_data.get("closing_chart"),
         "always_remember": memory.content if memory else "",
         "conversation_history": [
             {"role": item.role, "content": item.content}

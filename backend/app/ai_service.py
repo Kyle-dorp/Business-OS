@@ -389,7 +389,7 @@ def decide_with_ai(message: str, context: dict, image_base64: str = None, image_
         else:
             last_content = message
         input_messages.append({"role": "user", "content": last_content})
-        response = client.messages.create(model=model, max_tokens=4096, system=system, messages=input_messages)
+        response = client.messages.create(model=model, max_tokens=16000, system=system, messages=input_messages)
         text = "".join(block.text for block in response.content if getattr(block, "type", "") == "text")
         if text.startswith("```"):
             # Entire response is a fenced code block

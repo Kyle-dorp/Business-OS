@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
+import ClosingChartEditor from "../components/ClosingChartEditor";
 
 function todayISO() {
   const d = new Date();
@@ -95,13 +96,14 @@ function TimeRange({ value = {}, onChange }) {
   );
 }
 
-export default function ClosingChartPage({ config: rawConfig, previewMode = false }) {
+export default function ClosingChartPage({ config: rawConfig, onSaveConfig, previewMode = false }) {
   const cfg = { ...DEFAULT_CONFIG, ...(rawConfig || {}) };
   const [date, setDate] = useState(todayISO);
   const [form, setForm] = useState({});
   const [applying, setApplying] = useState(false);
   const [applyMsg, setApplyMsg] = useState("");
   const [saved, setSaved] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
 
   const storageKey = `closing-chart-v2-${date}`;
 
@@ -199,6 +201,7 @@ export default function ClosingChartPage({ config: rawConfig, previewMode = fals
                 <button className="secondary-btn compact no-print" disabled={applying} onClick={applyFromToday}>
                   {applying ? "Loading…" : "Apply from today"}
                 </button>
+                <button className="secondary-btn compact no-print" onClick={() => setEditorOpen(true)}>Edit config</button>
                 <button className="secondary-btn compact no-print" onClick={() => window.print()}>Print</button>
                 <button className="primary-btn no-print" onClick={save}>{saved ? "Saved ✓" : "Save"}</button>
               </div>
@@ -352,5 +355,12 @@ export default function ClosingChartPage({ config: rawConfig, previewMode = fals
 
       </div>
     </div>
+    {editorOpen && (
+      <ClosingChartEditor
+        config={rawConfig}
+        onSave={onSaveConfig}
+        onClose={() => setEditorOpen(false)}
+      />
+    )}
   );
 }

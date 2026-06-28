@@ -153,6 +153,10 @@ export default function App() {
   function changeTab(id) { setActiveTab(id); setDrawerOpen(false); }
   async function switchBusiness(id) { setBusinessId(id); setWorkspace(await api("/platform/workspace")); setActiveTab("home"); }
   async function refreshWorkspace() { setWorkspace(await api("/platform/workspace")); }
+  async function saveUiConfigPatch(patch) {
+    await api("/platform/ui-config", { method: "PUT", body: JSON.stringify({ patch }) });
+    setUiConfig(await api("/platform/ui-config"));
+  }
   async function createBusiness() {
     const name = window.prompt("New business name");
     if (!name?.trim()) return;
@@ -208,8 +212,8 @@ export default function App() {
         {user.role === "manager" ? <>
           {activeTab === "home" && <PlatformPage section="overview" />}
           {["contacts", "sales", "purchasing", "accounting", "reports", "inventory"].includes(activeTab) && <PlatformPage section={activeTab} />}
-          {activeTab === "tasks" && <ClosingChartPage config={uiConfig?.closing_chart} />}
-          {activeTab === "menu" && <MenuPage config={uiConfig?.menu} businessName={workspace?.business?.name} />}
+          {activeTab === "tasks" && <ClosingChartPage config={uiConfig?.closing_chart} onSaveConfig={(cc) => saveUiConfigPatch({ closing_chart: cc })} />}
+          {activeTab === "menu" && <MenuPage config={uiConfig?.menu} businessName={workspace?.business?.name} onSaveConfig={(m) => saveUiConfigPatch({ menu: m })} />}
           {activeTab === "availability" && <AvailabilityPage />}{activeTab === "manager" && <ManagerPage />}
           {activeTab === "finance" && <FinancePage />}
           {activeTab === "assistant" && <AssistantPage uiConfig={uiConfig} onUiConfigRefresh={async () => { const cfg = await api("/platform/ui-config"); setUiConfig(cfg); }} />}{activeTab === "notifications" && <NotificationsPage onCountChange={setNotificationCount} />}

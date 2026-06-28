@@ -1,11 +1,15 @@
+import { useState } from "react";
+import MenuEditor from "../components/MenuEditor";
+
 const DEFAULT_MENU = {
   title: "Menu",
   subtitle: "",
   categories: [],
 };
 
-export default function MenuPage({ config: rawConfig, businessName }) {
+export default function MenuPage({ config: rawConfig, businessName, onSaveConfig }) {
   const menu = rawConfig || DEFAULT_MENU;
+  const [editorOpen, setEditorOpen] = useState(false);
   const columns = menu.columns || 1;
   const landscape = menu.print_landscape === true;
   const theme = menu.theme || {};
@@ -41,7 +45,10 @@ export default function MenuPage({ config: rawConfig, businessName }) {
 
       <div className="page-header menu-page-header no-print">
         <div><span className="eyebrow">PRINTABLE</span><h1>Menu</h1></div>
-        <button className="secondary-btn compact" onClick={() => window.print()}>Print / Save PDF</button>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button className="secondary-btn compact" onClick={() => setEditorOpen(true)}>Edit menu</button>
+          <button className="secondary-btn compact" onClick={() => window.print()}>Print / Save PDF</button>
+        </div>
       </div>
 
       <div className="menu-sheet" style={sheetStyle}>
@@ -90,5 +97,12 @@ export default function MenuPage({ config: rawConfig, businessName }) {
         {menu.footer && <p className="menu-footer">{menu.footer}</p>}
       </div>
     </div>
+    {editorOpen && (
+      <MenuEditor
+        config={rawConfig}
+        onSave={onSaveConfig}
+        onClose={() => setEditorOpen(false)}
+      />
+    )}
   );
 }

@@ -144,34 +144,48 @@ Examples:
 The page always shows: Total Sales, Leftover Bread + Closing Temps, sandwiches sold, employee subs/sides, who worked, and notes. Only the lists above are configurable.
 
 MENU PAGE CONFIG — "menu" key in ui_config_patch. Always send complete config.
-Schema:
+Full schema (all fields optional except categories):
 {
   "title": "Bam's Sub Shoppe",
   "subtitle": "Est. 2024",
+  "footer": "Prices subject to change.",
+  "print_landscape": true,        // true = landscape for pamphlet/trifold printing
+  "columns": 3,                   // 1, 2, or 3 column layout (3 = pamphlet trifold)
+  "theme": {
+    "title_color": "#1a3a5c",     // color of the big title
+    "header_color": "#b22222",    // color of category header text
+    "subtitle_color": "#555555",  // color of subtitle text
+    "bg": "#fffdf7"               // background color of the menu sheet
+  },
   "categories": [
     {
-      "name": "Sub Sandwiches",
-      "description": "optional",
+      "name": "Classic Subs",
+      "emoji": "🥖",              // optional emoji shown before category name
+      "image_url": "https://...", // optional header image URL (user must supply URL)
+      "description": "Made fresh daily on your choice of bread.",
       "items": [
-        { "name": "Italian BMT", "sizes": {"6\"": "8.99", "12\"": "13.99"} },
-        { "name": "BLT", "sizes": {"6\"": "7.99", "12\"": "12.99"} }
-      ]
-    },
-    {
-      "name": "Soups",
-      "items": [
-        { "name": "Chicken Noodle", "price": "3.99" }
+        {
+          "name": "Italian",
+          "description": "Genoa salami, pepperoni, ham, lettuce, tomato",
+          "sizes": {"6\"": "8.99", "12\"": "13.99"}
+        },
+        { "name": "Chicken Noodle Soup", "price": "3.99" }
       ]
     }
-  ],
-  "footer": "Prices subject to change."
+  ]
 }
-Use "sizes" for items with multiple size options; use "price" for single-price items.
+Rules:
+- Use "sizes" for items with multiple size options; use "price" for single-price items.
+- For pamphlet-style menus: set print_landscape=true and columns=3. Order categories so they read left→right across the fold (cover column last).
+- Emojis make categories visually pop without real images. Choose fitting food emojis.
+- image_url: only use URLs the user explicitly provides — do not invent image URLs.
+- theme colors must be valid CSS hex strings. Choose colors that look professional and match the brand — dark titles, accent color for headers.
+- Always send the COMPLETE menu config in every update (never partial).
 Examples:
-- Add a new sub: add {"name":"Club","sizes":{"6\"":"8.49","12\"":"13.49"}} to the Subs category items
-- Add a category: add a new category object to the "categories" array
-- Update a price: find the item and change its price/sizes values
-All color values must be valid CSS hex colors (e.g. "#1a2b3c"). Choose colors that match the business's brand and look professional together. The sidebar_bg should be dark enough for white text to be readable on it.
+- Make it a 3-column landscape pamphlet: set print_landscape=true, columns=3
+- Add emoji to category: set "emoji": "🥖" on the category object
+- Set a warm cream background: set theme.bg to "#fffdf7"
+- Add color to headers: set theme.header_color to a rich accent color like "#8b1a1a"
 
 For toggle_module, set module_key to one of: team, scheduling, accounting, sales, purchasing, tasks, inventory, reports, notifications. Set module_enabled to true to show it or false to hide it. Home, Settings, and the AI Assistant cannot be hidden. One action per module. "contacts" and "customers" map to the "team" module. "scheduling" covers both the schedule view and availability tabs. "finance" is part of the "accounting" module.
 

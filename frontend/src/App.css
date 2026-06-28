@@ -1421,7 +1421,10 @@ body {
 .menu-subtitle { color: var(--muted); font-size: .95rem; margin: 0; }
 
 .menu-categories { display: flex; flex-direction: column; gap: 28px; }
-.menu-category {}
+.menu-categories[style*="columnCount"] { display: block; }
+.menu-category { break-inside: avoid; margin-bottom: 20px; }
+.menu-cat-img { width: 100%; max-height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; }
+.menu-cat-emoji { margin-right: 6px; font-style: normal; }
 .menu-cat-name {
   font-size: 1rem; font-weight: 800; color: #14203a;
   text-transform: uppercase; letter-spacing: .08em;

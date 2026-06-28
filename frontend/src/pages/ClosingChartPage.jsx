@@ -16,6 +16,7 @@ function mondayOf(dateStr) {
 const DEFAULT_CONFIG = {
   employees: ["Bam", "June", "Kyle", "Hunter"],
   bread_types: ["Italian", "Jalapeño", "Herb", "White"],
+  bread_count_columns: ["Leftover Bread"],
   sandwiches: [
     { name: "Dagwoods", sizes: ['6"', '12"'] },
     { name: "Bomb", sizes: ['6"', '12"'] },
@@ -24,6 +25,10 @@ const DEFAULT_CONFIG = {
   emp_sub_sizes: ['12"', '6"'],
   emp_sides: ["Chips", "Soda", "Brownie"],
 };
+
+function colKey(name) {
+  return name.toLowerCase().replace(/\s+/g, "_");
+}
 
 function NumSelect({ value, onChange, max = 10 }) {
   const v = value ?? "0";
@@ -212,18 +217,19 @@ export default function ClosingChartPage({ config: rawConfig }) {
 
         <div className="cc-divider-h" />
 
-        {/* Leftover Bread + Closing Temps */}
-        <div className="cc-two-col">
-          <div className="cc-col">
-            <div className="cc-col-header">Leftover Bread</div>
-            {cfg.bread_types.map((b) => (
-              <div className="cc-field-row" key={b}>
-                <label className="cc-label">{b}:</label>
-                <NumSelect value={getPath(`bread.${b}`)} onChange={(v) => setPath(`bread.${b}`, v)} />
-              </div>
-            ))}
-          </div>
-          <div className="cc-divider" />
+        {/* Bread count columns + Closing Temps */}
+        <div className="cc-bread-grid">
+          {(cfg.bread_count_columns || ["Leftover Bread"]).map((col) => (
+            <div className="cc-col" key={col}>
+              <div className="cc-col-header">{col}</div>
+              {cfg.bread_types.map((b) => (
+                <div className="cc-field-row" key={b}>
+                  <label className="cc-label">{b}:</label>
+                  <NumSelect value={getPath(`bread_data.${colKey(col)}.${b}`)} onChange={(v) => setPath(`bread_data.${colKey(col)}.${b}`, v)} />
+                </div>
+              ))}
+            </div>
+          ))}
           <div className="cc-col">
             <div className="cc-col-header">Closing Temps</div>
             {cfg.bread_types.map((b) => (

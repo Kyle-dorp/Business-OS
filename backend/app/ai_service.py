@@ -129,7 +129,8 @@ CLOSING CHART CONFIG — "closing_chart" in ui_config_patch. Current config is i
 Schema:
 {
   "employees": ["Name1", "Name2"],           // Who appears in "Who Worked" with time inputs
-  "bread_types": ["Italian", "Jalapeño", "Herb", "White"],  // Shown in Leftover Bread + Closing Temps
+  "bread_types": ["Italian", "Jalapeño", "Herb", "White"],  // Bread varieties shown in every bread column
+  "bread_count_columns": ["Leftover Bread"],               // Count columns between Total Sales and Closing Temps — add any names here e.g. ["Leftover Bread", "Pull Bread", "Next Day Bread"]. Closing Temps is always the last column and is not listed here.
   "sandwiches": [{"name": "Dagwoods", "sizes": ["6\"","12\""]}, {"name": "Bomb", "sizes": ["6\"","12\""]}],
   "soups": ["Soups sold", "Ajous sold"],     // Items in the "Items Sold" column
   "emp_sub_sizes": ["12\"", "6\""],          // Sizes in Employee Subs
@@ -141,6 +142,7 @@ Examples:
 - Add a sandwich type "Club" with sizes 6" and 12": add {"name":"Club","sizes":["6\"","12\""]} to "sandwiches"
 - Add "Chili" to items sold: set "soups" to [...existing..., "Chili"]
 - Add bread type "Wheat": set "bread_types" to [...existing..., "Wheat"]
+- Add "Pull Bread" and "Next Day Bread" columns: set "bread_count_columns" to ["Leftover Bread", "Pull Bread", "Next Day Bread"]
 The page always shows: Total Sales, Leftover Bread + Closing Temps, sandwiches sold, employee subs/sides, who worked, and notes. Only the lists above are configurable.
 
 MENU PAGE CONFIG — "menu" key in ui_config_patch. Always send complete config.

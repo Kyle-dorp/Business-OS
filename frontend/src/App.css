@@ -1263,6 +1263,7 @@ body {
   padding-bottom: 8px; border-bottom: 2px solid #14203a; margin-bottom: 14px;
 }
 .cc-two-col { display: grid; grid-template-columns: 1fr 1px 1fr; gap: 0 24px; }
+.cc-bread-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0 20px; }
 .cc-divider { background: #e2e8f0; }
 .cc-divider-h { height: 1px; background: #e2e8f0; margin: 22px 0; }
 .cc-col { display: flex; flex-direction: column; gap: 10px; }

@@ -187,6 +187,7 @@ export default function ClosingChartPage({ config: rawConfig, onSaveConfig, prev
   }
 
   return (
+    <>
     <div className={`page closing-chart-page${previewMode ? " cc-preview-mode" : ""}`}>
       {previewMode
         ? <div className="cc-preview-banner">Preview — changes not yet applied</div>
@@ -355,6 +356,7 @@ export default function ClosingChartPage({ config: rawConfig, onSaveConfig, prev
 
       </div>
     </div>
+    </div>
     {editorOpen && (
       <ClosingChartEditor
         config={rawConfig}
@@ -362,5 +364,6 @@ export default function ClosingChartPage({ config: rawConfig, onSaveConfig, prev
         onClose={() => setEditorOpen(false)}
       />
     )}
+    </>
   );
 }

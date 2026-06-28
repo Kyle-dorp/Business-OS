@@ -38,6 +38,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
   }
 
   return (
+    <>
     <div className="page menu-page">
       {landscape && (
         <style>{`@media print { @page { size: letter landscape !important; } }`}</style>
@@ -97,6 +98,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
         {menu.footer && <p className="menu-footer">{menu.footer}</p>}
       </div>
     </div>
+    </div>
     {editorOpen && (
       <MenuEditor
         config={rawConfig}
@@ -104,5 +106,6 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
         onClose={() => setEditorOpen(false)}
       />
     )}
+    </>
   );
 }

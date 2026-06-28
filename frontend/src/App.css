@@ -1293,6 +1293,19 @@ body {
 
 /* Employee subs text inputs */
 .cc-emp-subs-list { display: flex; flex-direction: column; gap: 10px; }
+.cc-emp-subs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+.cc-emp-sub-col { display: flex; flex-direction: column; gap: 4px; }
+.cc-sub-size-label { font-size: .75rem; font-weight: 700; color: var(--muted, #6b7a90); letter-spacing: .04em; text-transform: uppercase; }
+.cc-sub-textarea {
+  width: 100%; box-sizing: border-box;
+  resize: none; overflow: hidden;
+  border: none; border-bottom: 1px solid #b0bfcc;
+  background: transparent; color: #14203a;
+  font-size: .88rem; line-height: 1.55;
+  padding: 4px 0; min-height: 1.8em;
+  font-family: inherit;
+}
+.cc-sub-textarea:focus { outline: none; border-bottom-color: var(--blue, #2f6fed); }
 .cc-emp-sub-row { display: flex; align-items: center; gap: 10px; }
 .cc-sub-text { width: 180px; }
 
@@ -1371,6 +1384,9 @@ body {
   .cc-money-inner { font-size: .72rem; }
   .cc-dollar { font-size: .72rem; }
   .cc-sub-text { width: 180px; font-size: .72rem; }
+  .cc-sub-textarea { font-size: .72rem; overflow: visible; height: auto; border-bottom: 1px solid #555; }
+  .cc-emp-subs-grid { gap: 8px; }
+  .cc-sub-size-label { font-size: .65rem; }
 
   /* Selects replaced by print spans */
   .cc-num-select { display: none !important; }

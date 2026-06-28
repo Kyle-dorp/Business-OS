@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 
 function todayISO() {
@@ -54,6 +54,26 @@ function MoneyInput({ value, onChange }) {
         placeholder="0.00"
       />
     </span>
+  );
+}
+
+function AutoTextarea({ value, onChange, placeholder }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  }, [value]);
+  return (
+    <textarea
+      ref={ref}
+      className="cc-sub-textarea"
+      rows={1}
+      value={value || ""}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+    />
   );
 }
 
@@ -251,15 +271,13 @@ export default function ClosingChartPage({ config: rawConfig }) {
         <div className="cc-two-col">
           <div className="cc-col">
             <div className="cc-col-header">Employee Subs</div>
-            <div className="cc-emp-subs-list">
+            <div className="cc-emp-subs-grid">
               {cfg.emp_sub_sizes.map((sz) => (
-                <div className="cc-emp-sub-row" key={sz}>
-                  <label className="cc-label">{sz}:</label>
-                  <input
-                    className="cc-input cc-sub-text"
-                    type="text"
+                <div className="cc-emp-sub-col" key={sz}>
+                  <span className="cc-label cc-sub-size-label">{sz}</span>
+                  <AutoTextarea
                     value={getPath(`emp_subs.${sz}`)}
-                    onChange={(e) => setPath(`emp_subs.${sz}`, e.target.value)}
+                    onChange={(v) => setPath(`emp_subs.${sz}`, v)}
                     placeholder="e.g. Bam – Italian"
                   />
                 </div>

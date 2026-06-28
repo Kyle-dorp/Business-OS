@@ -806,9 +806,26 @@ body {
 .proposal-item { grid-template-columns: 24px minmax(0,1fr) auto; }
 .proposal-item small { display: block; margin-top: 3px; color: #8793a5; font-size: .72rem; }
 .proposal-item.missing-position { margin: 5px 0; padding: 9px; border: 1px solid #d9cdfd; border-radius: 11px; background: #f8f5ff; }
-.mini-apply-btn, .position-approve-btn { align-self: center; border: 0; border-radius: 9px; padding: 7px 10px; font-size: .72rem; font-weight: 850; cursor: pointer; }
+.proposal-item-btns { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+.mini-apply-btn, .position-approve-btn, .preview-btn { align-self: center; border: 0; border-radius: 9px; padding: 7px 10px; font-size: .72rem; font-weight: 850; cursor: pointer; }
 .mini-apply-btn { color: #35547f; background: #edf2f8; }
 .position-approve-btn { color: #6547c8; background: #eae3ff; }
+.preview-btn { color: #14835f; background: #e6f6f1; }
+.preview-btn:hover { background: #cceee3; }
+
+/* Proposal preview overlay */
+.proposal-preview-overlay { position: fixed; inset: 0; background: rgba(10,20,40,.55); z-index: 9999; display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow-y: auto; }
+.proposal-preview-panel { background: #fff; border-radius: 18px; width: 100%; max-width: 860px; display: flex; flex-direction: column; box-shadow: 0 24px 64px rgba(0,0,0,.28); min-height: 200px; }
+.proposal-preview-bar { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid #e6ecf4; }
+.proposal-preview-bar span { font-weight: 700; font-size: .88rem; color: #14835f; }
+.proposal-preview-close { border: 1px solid #d0dae9; background: #fff; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: .82rem; color: #555; }
+.proposal-preview-close:hover { background: #f4f7fc; }
+.proposal-preview-body { padding: 0; overflow-y: auto; max-height: 80vh; }
+.proposal-preview-body .page { padding: 20px 24px !important; }
+
+/* Closing chart preview mode */
+.cc-preview-mode .page { padding: 12px !important; }
+.cc-preview-banner { background: #e6f6f1; color: #14835f; font-size: .78rem; font-weight: 700; padding: 8px 16px; border-radius: 8px; margin-bottom: 12px; text-align: center; letter-spacing: .04em; }
 
 /* Employee portal and requests */
 .employee-hero { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 22px; padding: 28px; border: 1px solid #dce5f1; border-radius: 24px; background: radial-gradient(circle at 100% 0%, rgba(118,87,246,.14), transparent 20rem), linear-gradient(135deg, #fff, #f4f8ff); box-shadow: var(--shadow); }

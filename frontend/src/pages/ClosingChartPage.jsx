@@ -24,6 +24,7 @@ const DEFAULT_CONFIG = {
   soups: ["Soups sold", "Ajous sold"],
   emp_sub_sizes: ['12"', '6"'],
   emp_sides: ["Chips", "Soda", "Brownie"],
+  finance_fields: [],
 };
 
 function colKey(name) {
@@ -94,7 +95,7 @@ function TimeRange({ value = {}, onChange }) {
   );
 }
 
-export default function ClosingChartPage({ config: rawConfig }) {
+export default function ClosingChartPage({ config: rawConfig, previewMode = false }) {
   const cfg = { ...DEFAULT_CONFIG, ...(rawConfig || {}) };
   const [date, setDate] = useState(todayISO);
   const [form, setForm] = useState({});
@@ -105,6 +106,7 @@ export default function ClosingChartPage({ config: rawConfig }) {
   const storageKey = `closing-chart-v2-${date}`;
 
   useEffect(() => {
+    if (previewMode) return;
     try {
       const raw = localStorage.getItem(storageKey);
       setForm(raw ? JSON.parse(raw) : {});
@@ -113,7 +115,7 @@ export default function ClosingChartPage({ config: rawConfig }) {
     }
     setSaved(false);
     setApplyMsg("");
-  }, [date]);
+  }, [date, previewMode]);
 
   function setPath(path, value) {
     const keys = path.split(".");
@@ -183,24 +185,45 @@ export default function ClosingChartPage({ config: rawConfig }) {
   }
 
   return (
-    <div className="page closing-chart-page">
-      <div className="page-header cc-header">
-        <div>
-          <span className="eyebrow">DAILY OPERATIONS</span>
-          <h1>Closing Chart</h1>
-        </div>
-        <div className="cc-header-actions">
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="cc-date-input" />
-          <button className="secondary-btn compact no-print" disabled={applying} onClick={applyFromToday}>
-            {applying ? "Loading…" : "Apply from today"}
-          </button>
-          <button className="secondary-btn compact no-print" onClick={() => window.print()}>Print</button>
-          <button className="primary-btn no-print" onClick={save}>{saved ? "Saved ✓" : "Save"}</button>
-        </div>
-      </div>
-      {applyMsg && <div className="cc-apply-msg no-print">{applyMsg}</div>}
+    <div className={`page closing-chart-page${previewMode ? " cc-preview-mode" : ""}`}>
+      {previewMode
+        ? <div className="cc-preview-banner">Preview — changes not yet applied</div>
+        : <>
+            <div className="page-header cc-header">
+              <div>
+                <span className="eyebrow">DAILY OPERATIONS</span>
+                <h1>Closing Chart</h1>
+              </div>
+              <div className="cc-header-actions">
+                <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="cc-date-input" />
+                <button className="secondary-btn compact no-print" disabled={applying} onClick={applyFromToday}>
+                  {applying ? "Loading…" : "Apply from today"}
+                </button>
+                <button className="secondary-btn compact no-print" onClick={() => window.print()}>Print</button>
+                <button className="primary-btn no-print" onClick={save}>{saved ? "Saved ✓" : "Save"}</button>
+              </div>
+            </div>
+            {applyMsg && <div className="cc-apply-msg no-print">{applyMsg}</div>}
+          </>
+      }
 
       <div className="cc-sheet">
+
+        {/* Finances (optional, AI-configurable) */}
+        {cfg.finance_fields?.length > 0 && <>
+          <div>
+            <div className="cc-col-header">Finances</div>
+            <div className="cc-sales-row">
+              {cfg.finance_fields.map((field) => (
+                <span className="cc-sales-field" key={field}>
+                  <label className="cc-label">{field}:</label>
+                  <MoneyInput value={getPath(`finances.${field}`)} onChange={(v) => setPath(`finances.${field}`, v)} />
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="cc-divider-h" />
+        </>}
 
         {/* Total Sales */}
         <div>

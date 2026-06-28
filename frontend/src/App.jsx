@@ -212,7 +212,7 @@ export default function App() {
           {activeTab === "menu" && <MenuPage config={uiConfig?.menu} businessName={workspace?.business?.name} />}
           {activeTab === "availability" && <AvailabilityPage />}{activeTab === "manager" && <ManagerPage />}
           {activeTab === "finance" && <FinancePage />}
-          {activeTab === "assistant" && <AssistantPage />}{activeTab === "notifications" && <NotificationsPage onCountChange={setNotificationCount} />}
+          {activeTab === "assistant" && <AssistantPage uiConfig={uiConfig} onUiConfigRefresh={async () => { const cfg = await api("/platform/ui-config"); setUiConfig(cfg); }} />}{activeTab === "notifications" && <NotificationsPage onCountChange={setNotificationCount} />}
           {activeTab === "settings" && <SettingsPage user={user} workspaceRole={workspace?.role} modules={workspace?.modules || []} onModulesChanged={refreshWorkspace} onUserChange={setUser} onLogout={logout} />}
         </> : <>{activeTab === "home" && <EmployeeHomePage />}{activeTab === "my-availability" && <EmployeeAvailabilityPage />}{activeTab === "requests" && <RequestsPage />}{activeTab === "settings" && <SettingsPage user={user} onUserChange={setUser} onLogout={logout} />}</>}
       </PageErrorBoundary>

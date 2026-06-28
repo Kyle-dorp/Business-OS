@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 
 import { api } from "../api";
 import { formatWeekRange, shiftWeek, toIsoDate } from "../utils";
+import ClosingChartPage from "./ClosingChartPage";
+import MenuPage from "./MenuPage";
 
 function currentMonday() {
   const today = new Date();
@@ -58,7 +60,7 @@ function actionSummary(action) {
   }
 }
 
-export default function AssistantPage() {
+export default function AssistantPage({ uiConfig, onUiConfigRefresh }) {
   const [weekStart, setWeekStart] = useState(() => localStorage.getItem("scheduler.ai.week") || currentMonday());
   const [schedules, setSchedules] = useState([]);
   const [scheduleId, setScheduleId] = useState(() => localStorage.getItem("scheduler.ai.scheduleId") || "");
@@ -74,6 +76,7 @@ export default function AssistantPage() {
   const [appliedParts, setAppliedParts] = useState({});
   const [schedPanelOpen, setSchedPanelOpen] = useState(false);
   const [pendingImage, setPendingImage] = useState(null);
+  const [previewData, setPreviewData] = useState(null);
   const chatEndRef = useRef(null);
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -193,8 +196,18 @@ export default function AssistantPage() {
       });
       if (onlyIndex !== null) setAppliedParts((current) => ({ ...current, [`${message.id}-${onlyIndex}`]: true }));
       if (result.schedule?.id) await loadSchedules(result.schedule.id);
+      if (selectedActions.some((a) => a.type === "update_ui_config")) await onUiConfigRefresh?.();
       await loadThread();
     } catch (err) { setError(err.message); } finally { setBusy(false); }
+  }
+
+  function openPreview(action) {
+    const patch = action.ui_config_patch || {};
+    if (patch.closing_chart) {
+      setPreviewData({ type: "closing_chart", config: { ...(uiConfig?.closing_chart || {}), ...patch.closing_chart } });
+    } else if (patch.menu) {
+      setPreviewData({ type: "menu", config: patch.menu });
+    }
   }
 
   async function saveMemory() {
@@ -276,7 +289,8 @@ export default function AssistantPage() {
                       <div className="proposal-list">{actions.map((action, actionIndex) => {
                         const partApplied = appliedParts[`${message.id}-${actionIndex}`];
                         const missingPosition = action.type === "create_position";
-                        return <div className={`proposal-item ${missingPosition ? "missing-position" : ""}`} key={actionIndex}><span className="proposal-number">{actionIndex + 1}</span><div><p>{actionSummary(action)}</p>{action.reason && <small>{action.reason}</small>}</div>{!message.applied && <button className={missingPosition ? "position-approve-btn" : "mini-apply-btn"} disabled={busy || partApplied} onClick={() => applyActions(actions, message, actionIndex)}>{partApplied ? "Applied ✓" : missingPosition ? "Add position" : "Apply"}</button>}</div>;
+                        const canPreview = action.type === "update_ui_config" && (action.ui_config_patch?.closing_chart || action.ui_config_patch?.menu);
+                        return <div className={`proposal-item ${missingPosition ? "missing-position" : ""}`} key={actionIndex}><span className="proposal-number">{actionIndex + 1}</span><div><p>{actionSummary(action)}</p>{action.reason && <small>{action.reason}</small>}</div><div className="proposal-item-btns">{canPreview && <button className="preview-btn" onClick={() => openPreview(action)}>Preview</button>}{!message.applied && <button className={missingPosition ? "position-approve-btn" : "mini-apply-btn"} disabled={busy || partApplied} onClick={() => applyActions(actions, message, actionIndex)}>{partApplied ? "Applied ✓" : missingPosition ? "Add position" : "Apply"}</button>}</div></div>;
                       })}</div>
                       {!message.applied && <button className="approve-btn" disabled={busy} onClick={() => applyActions(actions, message)}>Approve all changes</button>}
                     </div>
@@ -309,6 +323,21 @@ export default function AssistantPage() {
           </div>
         </form>
       </section>
+
+      {previewData && (
+        <div className="proposal-preview-overlay" onClick={(e) => { if (e.target === e.currentTarget) setPreviewData(null); }}>
+          <div className="proposal-preview-panel">
+            <div className="proposal-preview-bar">
+              <span>Preview — not yet applied</span>
+              <button className="proposal-preview-close" onClick={() => setPreviewData(null)}>× Close</button>
+            </div>
+            <div className="proposal-preview-body">
+              {previewData.type === "closing_chart" && <ClosingChartPage config={previewData.config} previewMode />}
+              {previewData.type === "menu" && <MenuPage config={previewData.config} />}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

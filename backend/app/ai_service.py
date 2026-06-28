@@ -134,7 +134,10 @@ Schema:
   "sandwiches": [{"name": "Dagwoods", "sizes": ["6\"","12\""]}, {"name": "Bomb", "sizes": ["6\"","12\""]}],
   "soups": ["Soups sold", "Ajous sold"],     // Items in the "Items Sold" column
   "emp_sub_sizes": ["12\"", "6\""],          // Sizes in Employee Subs
-  "emp_sides": ["Chips", "Soda", "Brownie"] // Items in Employee Sides
+  "emp_sides": ["Chips", "Soda", "Brownie"], // Items in Employee Sides
+  "finance_fields": ["Opening Register", "Closing Register", "Credit Card Sales", "Cash Tips", "Register Tips", "Tax"]
+  // Optional Finances section rendered above Total Sales. Each entry is a labeled money ($) field.
+  // Default is [] (section hidden). Set to a list of field names to show the section.
 }
 Examples:
 - Add employee "Sandra": set "employees" to [...existing..., "Sandra"]

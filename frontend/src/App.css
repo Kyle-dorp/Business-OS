@@ -1376,6 +1376,10 @@ body {
   .no-print, .topbar, .drawer, .drawer-backdrop, .cc-apply-msg { display: none !important; }
   body { background: #fff !important; margin: 0 !important; }
 
+  /* Chrome strips background-color/background-image during print unless told otherwise —
+     without this, the menu's colored banners and theme backgrounds print as plain white. */
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+
   /* page size & margin set per-page via inline <style> tags */
   .closing-chart-page { page-break-after: avoid; }
   .cc-header { margin-bottom: 4px; }
@@ -1426,8 +1430,8 @@ body {
   .menu-title-block { padding: 0 10px 8px !important; margin-bottom: 10px !important; }
   .menu-title { font-size: 1.55rem !important; margin-bottom: 2px !important; }
   .menu-subtitle { font-size: .72rem !important; }
-  .menu-categories { margin-top: 0 !important; }
-  .menu-category { padding: 0 10px !important; margin-bottom: 18px !important; }
+  .menu-panel { padding: 0 10px !important; }
+  .menu-category { margin-bottom: 18px !important; }
   .menu-cat-name {
     font-size: .85rem !important; letter-spacing: .07em !important;
     padding: 8px 10px !important; margin: 0 0 7px !important;
@@ -1479,8 +1483,6 @@ body {
   margin-bottom: 10px;
   border-bottom-color: #d4c9b0;
 }
-.menu-pamphlet .menu-category { padding: 0 13px; }
-.menu-pamphlet .menu-cat-name { margin-left: -13px; margin-right: -13px; width: calc(100% + 26px); }
 .menu-pamphlet .menu-footer { padding: 8px 18px; margin-top: 6px; border-top-color: #d4c9b0; }
 
 /* Inline edit controls */
@@ -1502,6 +1504,13 @@ body {
   padding: 1px 7px; font-size: .68rem; cursor: pointer; color: #2f6fed; line-height: 1.5;
 }
 .menu-side-btn:hover { background: #e6effd; }
+.menu-panel-picker { display: inline-flex; gap: 2px; border: 1px solid #d4c9b0; border-radius: 5px; padding: 1px; background: #faf7f0; }
+.menu-panel-btn {
+  border: none; background: transparent; border-radius: 4px; width: 17px; height: 17px;
+  font-size: .65rem; line-height: 1; cursor: pointer; color: #8a7355; padding: 0;
+}
+.menu-panel-btn:hover { background: #f0ebe0; }
+.menu-panel-btn.active { background: #b9391f; color: #fff; }
 .menu-drag-handle {
   cursor: grab; color: #9c8a6f; display: inline-flex; align-items: center;
   padding: 2px 3px; border-radius: 4px;
@@ -1571,21 +1580,34 @@ body {
 .menu-title { font-size: 1.7rem; font-weight: 900; color: #14203a; margin: 0 0 3px; letter-spacing: -.02em; }
 .menu-subtitle { color: var(--muted); font-size: .84rem; margin: 0; }
 
-/* Categories */
-.menu-categories { display: flex; flex-direction: column; gap: 22px; }
-.menu-categories[style*="column-count"] { display: block; }
+/* Panels — explicit fold columns (left to right = panel 1, 2, 3) so front/back line up when folded */
+.menu-panels { display: flex; align-items: stretch; }
+.menu-panel { flex: 1 1 0; min-width: 0; border-right: 1.5px solid #d4c9b0; padding: 0 13px; }
+.menu-panel:last-child { border-right: none; }
 .menu-category { break-inside: avoid; margin-bottom: 12px; }
 .menu-cat-img { width: 100%; max-height: 100px; object-fit: cover; border-radius: 6px; margin-bottom: 6px; }
 .menu-cat-emoji { display: none; }
 .menu-cat-name {
-  display: block;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
   font-size: 1rem; font-weight: 800; color: #fff;
   text-transform: uppercase; letter-spacing: .1em; text-align: center;
-  margin: 0 0 8px; padding: 9px 16px;
-  background: #b9391f;
+  margin: 0 0 8px; margin-left: -13px; margin-right: -13px;
+  width: calc(100% + 26px);
+  padding: 9px 16px;
+  background-color: #c1612e;
+  background-image:
+    radial-gradient(circle at 12% 28%, rgba(255,255,255,.4) 1.4px, transparent 1.6px),
+    radial-gradient(circle at 32% 72%, rgba(255,255,255,.32) 1.1px, transparent 1.3px),
+    radial-gradient(circle at 52% 22%, rgba(255,255,255,.36) 1.3px, transparent 1.5px),
+    radial-gradient(circle at 68% 78%, rgba(255,255,255,.3) 1.1px, transparent 1.3px),
+    radial-gradient(circle at 84% 35%, rgba(255,255,255,.34) 1.3px, transparent 1.5px),
+    radial-gradient(circle at 94% 70%, rgba(255,255,255,.28) 1px, transparent 1.2px),
+    radial-gradient(circle at 22% 92%, rgba(255,255,255,.26) 1px, transparent 1.2px);
+  background-size: 100% 100%;
   box-shadow: 0 2px 5px rgba(0,0,0,.12);
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px));
 }
+.menu-cat-sun { color: #ffd84a; font-size: .95em; line-height: 1; flex-shrink: 0; }
 .menu-cat-desc { font-size: .72rem; color: var(--muted); margin: 0 0 5px; font-style: italic; padding: 0 2px; }
 
 /* Items */

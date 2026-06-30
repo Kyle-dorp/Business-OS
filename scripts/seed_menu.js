@@ -29,6 +29,7 @@
       {
         name: "Classic Subs",
         emoji: "🥖",
+        panel: 1,
         description: "All of our meats are top quality with real cheese and fresh local veggies.",
         items: [
           {
@@ -81,6 +82,7 @@
       {
         name: "Specialty Subs",
         emoji: "⭐",
+        panel: 2,
         description: "House creations — each one a flavor experience.",
         items: [
           {
@@ -138,6 +140,7 @@
       {
         name: "Sub Salads",
         emoji: "🥗",
+        panel: 3,
         description: "Specialty salads made fresh — available daily upon request.",
         items: [
           {
@@ -161,6 +164,7 @@
       {
         name: "Dressings",
         emoji: "🫙",
+        panel: 3,
         description: "Available on any sub.",
         items: [
           { name: "Mayo" },
@@ -179,6 +183,7 @@
         name: "Sub Combos",
         emoji: "🥤",
         side: "back",
+        panel: 3,
         description: "Complete your sub with a meal deal — combo, chips & a soda.",
         items: [
           { name: "Combo Meal", description: "Chips & a soda", price: "2.75" }
@@ -188,6 +193,7 @@
         name: "Breads",
         emoji: "🍞",
         side: "back",
+        panel: 3,
         description: "Baked fresh daily. Try different flavors to enhance your meal!",
         items: [
           { name: "Italian" },
@@ -200,6 +206,7 @@
         name: "Extras",
         emoji: "➕",
         side: "back",
+        panel: 2,
         items: [
           { name: "Extra Cheese", description: "Per type", sizes: { '6"': "1.50", '12"': "2.50" } },
           { name: "Extra Meat", sizes: { '6"': "2.50", '12"': "4.50" } },
@@ -210,6 +217,7 @@
         name: "Soups",
         emoji: "🍲",
         side: "back",
+        panel: 2,
         description: "Homemade from fresh ingredients. Ask which soups are available today!",
         items: [
           { name: "12 oz Cup of Soup", price: "4.10" }
@@ -219,6 +227,7 @@
         name: "Desserts",
         emoji: "🍫",
         side: "back",
+        panel: 3,
         description: "Tastes like homemade.",
         items: [
           { name: "Brownies (2 pack)", price: "1.50" },
@@ -231,6 +240,7 @@
         name: "Hours",
         emoji: "🕐",
         side: "back",
+        panel: 1,
         description: "203 W. Main Street, Rangely, CO · (970) 572-0136",
         items: [
           { name: "Monday",    description: "11:00 am – 7:00 pm" },
@@ -246,6 +256,7 @@
         name: "Delivery",
         emoji: "🚗",
         side: "back",
+        panel: 1,
         description: "We deliver! Gas surcharge applies.",
         items: [
           { name: "Rangely",        price: "2.50" },
@@ -257,6 +268,7 @@
         name: "Catering",
         emoji: "🎉",
         side: "back",
+        panel: 2,
         description: "Sporting events, meetings, parties & events. Contact Bam for pricing: (970) 572-0136",
         items: []
       }

@@ -44,7 +44,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
     <>
     <div className="page menu-page">
       {landscape && (
-        <style>{`@media print { @page { size: letter landscape !important; } }`}</style>
+        <style>{`@page { size: letter landscape; margin: 0.2in; }`}</style>
       )}
 
       <div className="page-header menu-page-header no-print">

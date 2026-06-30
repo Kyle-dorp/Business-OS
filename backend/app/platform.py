@@ -1053,6 +1053,7 @@ def get_ui_config(context=Depends(business_context), session: Session = Depends(
 
 @router.put("/ui-config")
 def update_ui_config_endpoint(payload: UIConfigPatch, context=Depends(require_write), session: Session = Depends(get_session)):
+    import traceback
     business_id, _, user = context
     record = session.exec(select(UIConfig).where(UIConfig.business_id == business_id)).first()
     if not record:
@@ -1061,18 +1062,21 @@ def update_ui_config_endpoint(payload: UIConfigPatch, context=Depends(require_wr
         existing = json.loads(record.config_json) if record.config_json else {}
     except Exception:
         existing = {}
-    for section, values in payload.patch.items():
-        if isinstance(values, dict):
-            existing[section] = {**existing.get(section, {}), **values}
-        else:
-            existing[section] = values
-    record.config_json = json.dumps(existing)
-    record.updated_at = utc_now_iso()
-    session.add(record)
-    audit(session, business_id, user.id, "ui_config.update", "ui_config", record.id, {"sections": list(payload.patch.keys())})
-    session.commit()
-    session.refresh(record)
-    return _merged_ui_config(record)
+    try:
+        for section, values in payload.patch.items():
+            if isinstance(values, dict):
+                existing[section] = {**existing.get(section, {}), **values}
+            else:
+                existing[section] = values
+        record.config_json = json.dumps(existing, ensure_ascii=False)
+        record.updated_at = utc_now_iso()
+        session.add(record)
+        audit(session, business_id, user.id, "ui_config.update", "ui_config", record.id, {"sections": list(payload.patch.keys())})
+        session.commit()
+        session.refresh(record)
+        return _merged_ui_config(record)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}\n{traceback.format_exc()}")
 
 
 @router.get("/presets")

@@ -16,7 +16,7 @@ from backend.app.models import (
     ChecklistTemplate, ClosingReport, Contact, Department, Expense,
     InventoryItem, InventoryMovement, Invoice, InvoiceLine, JournalEntry,
     JournalLine, LedgerAccount, Location, ManagerSettings, Membership, Payment,
-    Position, TaskItem, UIConfig, UserAccount,
+    Position, TaskItem, UIConfig, UserAccount, utc_now_iso,
 )
 
 router = APIRouter(prefix="/platform", tags=["business platform"])

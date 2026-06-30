@@ -356,7 +356,6 @@ export default function ClosingChartPage({ config: rawConfig, onSaveConfig, prev
 
       </div>
     </div>
-    </div>
     {editorOpen && (
       <ClosingChartEditor
         config={rawConfig}

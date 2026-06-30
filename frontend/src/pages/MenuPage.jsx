@@ -98,7 +98,6 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
         {menu.footer && <p className="menu-footer">{menu.footer}</p>}
       </div>
     </div>
-    </div>
     {editorOpen && (
       <MenuEditor
         config={rawConfig}

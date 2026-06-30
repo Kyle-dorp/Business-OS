@@ -12,12 +12,15 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
   const [editorOpen, setEditorOpen] = useState(false);
   const columns = menu.columns || 1;
   const landscape = menu.print_landscape === true;
+  const pamphlet = columns > 1;
   const theme = menu.theme || {};
 
   const titleStyle = theme.title_color ? { color: theme.title_color } : {};
   const headerStyle = theme.header_color ? { color: theme.header_color } : {};
   const sheetStyle = theme.bg ? { background: theme.bg } : {};
-  const categoriesStyle = columns > 1 ? { columnCount: columns, columnGap: "2rem" } : {};
+  const categoriesStyle = pamphlet
+    ? { columnCount: columns, columnGap: "0", columnRule: "1.5px solid #d4c9b0" }
+    : {};
 
   if (!menu.categories?.length) {
     return (
@@ -52,7 +55,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
         </div>
       </div>
 
-      <div className="menu-sheet" style={sheetStyle}>
+      <div className={`menu-sheet${pamphlet ? " menu-pamphlet" : ""}`} style={sheetStyle}>
         <div className="menu-title-block">
           <h1 className="menu-title" style={titleStyle}>{menu.title || businessName || "Menu"}</h1>
           {menu.subtitle && <p className="menu-subtitle" style={theme.subtitle_color ? { color: theme.subtitle_color } : {}}>{menu.subtitle}</p>}

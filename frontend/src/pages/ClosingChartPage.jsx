@@ -188,6 +188,7 @@ export default function ClosingChartPage({ config: rawConfig, onSaveConfig, prev
 
   return (
     <>
+    <style>{`@media print { @page { size: letter portrait; } }`}</style>
     <div className={`page closing-chart-page${previewMode ? " cc-preview-mode" : ""}`}>
       {previewMode
         ? <div className="cc-preview-banner">Preview — changes not yet applied</div>

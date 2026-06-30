@@ -38,7 +38,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
 
   const theme = menu.theme || {};
   const titleStyle = theme.title_color ? { color: theme.title_color } : {};
-  const headerStyle = theme.header_color ? { color: theme.header_color } : {};
+  const headerStyle = theme.header_color ? { background: theme.header_color } : {};
   const sheetStyle = theme.bg ? { background: theme.bg } : {};
   const columnStyle = { columnCount: 3, columnGap: "0", columnRule: "1.5px solid #d4c9b0" };
 

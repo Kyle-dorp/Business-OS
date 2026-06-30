@@ -1413,7 +1413,7 @@ body {
 
   input::placeholder, textarea::placeholder { color: transparent !important; }
 
-  /* Menu print — landscape pamphlet */
+  /* Menu print — landscape pamphlet (sized to fill each page since front/back now split across 2 sheets) */
   .menu-page-header { display: none !important; }
   .menu-page.page { padding: 0 !important; }
   .menu-sheet, .menu-pamphlet {
@@ -1423,20 +1423,25 @@ body {
     background: transparent !important; margin-bottom: 0 !important;
   }
   .menu-page-front { page-break-after: always; break-after: page; }
-  .menu-title-block { padding: 0 8px 5px !important; margin-bottom: 6px !important; }
-  .menu-title { font-size: 1rem !important; margin-bottom: 1px !important; }
-  .menu-subtitle { font-size: .55rem !important; }
+  .menu-title-block { padding: 0 10px 8px !important; margin-bottom: 10px !important; }
+  .menu-title { font-size: 1.55rem !important; margin-bottom: 2px !important; }
+  .menu-subtitle { font-size: .72rem !important; }
   .menu-categories { margin-top: 0 !important; }
-  .menu-category { padding: 0 7px !important; margin-bottom: 7px !important; }
-  .menu-cat-name { font-size: .62rem !important; letter-spacing: .05em !important; padding-bottom: 2px !important; margin-bottom: 2px !important; }
-  .menu-cat-desc { font-size: .52rem !important; margin-bottom: 2px !important; }
-  .menu-items { gap: 1px !important; margin-top: 3px !important; }
-  .menu-item-name { font-size: .60rem !important; }
-  .menu-item-desc { font-size: .52rem !important; line-height: 1.15 !important; }
-  .menu-item-prices { gap: 5px !important; }
-  .menu-price { font-size: .60rem !important; }
-  .menu-size { font-size: .50rem !important; }
-  .menu-footer { font-size: .52rem !important; margin-top: 5px !important; padding-top: 4px !important; }
+  .menu-category { padding: 0 10px !important; margin-bottom: 18px !important; }
+  .menu-cat-name {
+    font-size: .85rem !important; letter-spacing: .07em !important;
+    padding: 8px 10px !important; margin: 0 0 7px !important;
+    margin-left: -10px !important; margin-right: -10px !important;
+    width: calc(100% + 20px) !important;
+  }
+  .menu-cat-desc { font-size: .64rem !important; margin-bottom: 5px !important; }
+  .menu-items { gap: 6px !important; margin-top: 6px !important; }
+  .menu-item-name { font-size: .78rem !important; }
+  .menu-item-desc { font-size: .64rem !important; line-height: 1.25 !important; }
+  .menu-item-prices { gap: 7px !important; }
+  .menu-price { font-size: .78rem !important; }
+  .menu-size { font-size: .6rem !important; }
+  .menu-footer { font-size: .64rem !important; margin-top: 10px !important; padding-top: 7px !important; }
 }
 
 /* ── Menu Page ─────────────────────────────────────────────────────────────── */
@@ -1475,6 +1480,7 @@ body {
   border-bottom-color: #d4c9b0;
 }
 .menu-pamphlet .menu-category { padding: 0 13px; }
+.menu-pamphlet .menu-cat-name { margin-left: -13px; margin-right: -13px; width: calc(100% + 26px); }
 .menu-pamphlet .menu-footer { padding: 8px 18px; margin-top: 6px; border-top-color: #d4c9b0; }
 
 /* Inline edit controls */
@@ -1570,13 +1576,17 @@ body {
 .menu-categories[style*="column-count"] { display: block; }
 .menu-category { break-inside: avoid; margin-bottom: 12px; }
 .menu-cat-img { width: 100%; max-height: 100px; object-fit: cover; border-radius: 6px; margin-bottom: 6px; }
-.menu-cat-emoji { margin-right: 5px; font-style: normal; }
+.menu-cat-emoji { display: none; }
 .menu-cat-name {
-  font-size: .82rem; font-weight: 800; color: #14203a;
-  text-transform: uppercase; letter-spacing: .08em;
-  margin: 0 0 4px; padding-bottom: 4px; border-bottom: 1.5px solid currentColor;
+  display: block;
+  font-size: 1rem; font-weight: 800; color: #fff;
+  text-transform: uppercase; letter-spacing: .1em; text-align: center;
+  margin: 0 0 8px; padding: 9px 16px;
+  background: #b9391f;
+  box-shadow: 0 2px 5px rgba(0,0,0,.12);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px));
 }
-.menu-cat-desc { font-size: .72rem; color: var(--muted); margin: 0 0 5px; font-style: italic; }
+.menu-cat-desc { font-size: .72rem; color: var(--muted); margin: 0 0 5px; font-style: italic; padding: 0 2px; }
 
 /* Items */
 .menu-items { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; }

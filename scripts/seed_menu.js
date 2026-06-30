@@ -176,8 +176,18 @@
         ]
       },
       {
+        name: "Sub Combos",
+        emoji: "🥤",
+        side: "back",
+        description: "Complete your sub with a meal deal — combo, chips & a soda.",
+        items: [
+          { name: "Combo Meal", description: "Chips & a soda", price: "2.75" }
+        ]
+      },
+      {
         name: "Breads",
         emoji: "🍞",
+        side: "back",
         description: "Baked fresh daily. Try different flavors to enhance your meal!",
         items: [
           { name: "Italian" },
@@ -189,6 +199,7 @@
       {
         name: "Extras",
         emoji: "➕",
+        side: "back",
         items: [
           { name: "Extra Cheese", description: "Per type", sizes: { '6"': "1.50", '12"': "2.50" } },
           { name: "Extra Meat", sizes: { '6"': "2.50", '12"': "4.50" } },
@@ -198,6 +209,7 @@
       {
         name: "Soups",
         emoji: "🍲",
+        side: "back",
         description: "Homemade from fresh ingredients. Ask which soups are available today!",
         items: [
           { name: "12 oz Cup of Soup", price: "4.10" }
@@ -206,6 +218,7 @@
       {
         name: "Desserts",
         emoji: "🍫",
+        side: "back",
         description: "Tastes like homemade.",
         items: [
           { name: "Brownies (2 pack)", price: "1.50" },
@@ -217,6 +230,7 @@
       {
         name: "Hours",
         emoji: "🕐",
+        side: "back",
         description: "203 W. Main Street, Rangely, CO · (970) 572-0136",
         items: [
           { name: "Monday",    description: "11:00 am – 7:00 pm" },
@@ -231,6 +245,7 @@
       {
         name: "Delivery",
         emoji: "🚗",
+        side: "back",
         description: "We deliver! Gas surcharge applies.",
         items: [
           { name: "Rangely",        price: "2.50" },
@@ -241,6 +256,7 @@
       {
         name: "Catering",
         emoji: "🎉",
+        side: "back",
         description: "Sporting events, meetings, parties & events. Contact Bam for pricing: (970) 572-0136",
         items: []
       }

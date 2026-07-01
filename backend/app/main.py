@@ -297,7 +297,7 @@ PUBLIC_PATHS = {
 @app.middleware("http")
 async def authentication_middleware(request: Request, call_next):
     path = request.url.path
-    if request.method == "OPTIONS" or path in PUBLIC_PATHS or path.startswith(("/docs", "/assets/")):
+    if request.method == "OPTIONS" or path in PUBLIC_PATHS or path.startswith(("/docs", "/assets/", "/textures/")):
         return await call_next(request)
 
     authorization = request.headers.get("Authorization", "")

@@ -1533,7 +1533,7 @@ body {
 .menu-panel-btn.active { background: #b9391f; color: #fff; }
 .menu-drag-handle {
   cursor: grab; color: #9c8a6f; display: inline-flex; align-items: center;
-  padding: 2px 3px; border-radius: 4px;
+  padding: 2px 3px; border-radius: 4px; touch-action: none;
 }
 .menu-drag-handle:hover { background: #ede8de; }
 .menu-drag-handle:active { cursor: grabbing; }
@@ -1620,9 +1620,9 @@ body {
   margin-left: calc(-1 * var(--menu-pad-x, 13px)); margin-right: calc(-1 * var(--menu-pad-x, 13px));
   width: calc(100% + 2 * var(--menu-pad-x, 13px));
   padding: 9px 16px;
-  background-color: #7a140f;
-  background-image: repeating-conic-gradient(from 0deg at 50% 130%, #7a140f 0deg 7.5deg, #b5291f 7.5deg 15deg);
-  text-shadow: 0 1px 3px rgba(0,0,0,.45);
+  background-color: #5c0e09;
+  background-image: repeating-conic-gradient(from 0deg at 50% 130%, #4a0b07 0deg 7.5deg, #de5233 7.5deg 15deg);
+  text-shadow: 0 1px 4px rgba(0,0,0,.6), 0 0 2px rgba(0,0,0,.5);
   box-shadow: 0 2px 5px rgba(0,0,0,.12);
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px));
 }

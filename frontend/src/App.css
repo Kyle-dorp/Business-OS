@@ -1612,9 +1612,9 @@ body {
 .menu-add-item-btn:hover { background: #faf5ec; }
 
 /* Title block */
-.menu-title-block { text-align: center; margin-bottom: 28px; border-bottom: 2px solid #14203a; padding-bottom: 16px; }
-.menu-title { font-size: 1.7rem; font-weight: 900; color: #14203a; margin: 0 0 3px; letter-spacing: -.02em; }
-.menu-subtitle { color: var(--muted); font-size: .84rem; margin: 0; }
+.menu-title-block { text-align: center; margin-bottom: 28px; border-bottom: 2px solid rgba(127,47,13,.42); padding-bottom: 16px; }
+.menu-title { font-family: "Kaushan Script", cursive; font-size: 2.4rem; font-weight: 400; color: #7f2f0d; margin: 0 0 4px; }
+.menu-subtitle { font-family: Georgia, "Times New Roman", serif; color: #7a4c35; font-size: .92rem; margin: 0; }
 
 /* Panels — explicit fold columns (left to right = panel 1, 2, 3) so front/back line up when folded */
 .menu-panels { display: flex; align-items: stretch; }
@@ -1677,15 +1677,15 @@ body {
 .menu-size-header { display: flex; justify-content: flex-end; margin-bottom: 2px; }
 .menu-size-header-cols { display: flex; gap: 8px; }
 .menu-size-col { display: inline-block; width: 44px; text-align: right; font-size: .64rem; font-weight: 700; text-transform: uppercase; color: #7a6050; }
-.menu-price-col { display: inline-block; width: 44px; text-align: right; font-weight: 800; font-size: .82rem; color: #14203a; }
+.menu-price-col { display: inline-block; width: 44px; text-align: right; font-weight: 800; font-size: .82rem; color: #151515; }
 .menu-item { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
 .menu-item-main { display: flex; flex-direction: column; gap: 0; flex: 1; min-width: 0; }
-.menu-item-name { font-weight: 700; font-size: .82rem; color: #14203a; }
+.menu-item-name { font-weight: 700; font-size: .82rem; color: #151515; }
 .menu-item-desc { font-size: .68rem; color: #6b7a8d; line-height: 1.25; }
 .menu-item-prices { display: flex; gap: 8px; flex-shrink: 0; white-space: nowrap; align-items: baseline; }
 .menu-price-pair { display: flex; align-items: center; gap: 3px; }
 .menu-size { font-size: .64rem; color: #7a6050; font-weight: 700; text-transform: uppercase; }
-.menu-price { font-weight: 800; font-size: .82rem; color: #14203a; }
+.menu-price { font-weight: 800; font-size: .82rem; color: #151515; }
 
 /* Leader-dot compact list — for description-less categories (Sub Salads, Delivery) */
 .menu-item-leader { align-items: baseline; }

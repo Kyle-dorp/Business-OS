@@ -10,7 +10,6 @@ const DEFAULT_MENU = {
   columns: 3,
   print_landscape: true,
   preset: "pamphlet",
-  theme: {},
   categories: [],
 };
 
@@ -61,7 +60,6 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
   const [menu, setMenu] = useState(() => withIds({ ...DEFAULT_MENU, ...(rawConfig || {}) }));
   const [editMode, setEditMode] = useState(false);
   const [editingKey, setEditingKey] = useState(null);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const sensors = useSensors(
@@ -73,13 +71,9 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
     if (!editMode) setMenu(withIds({ ...DEFAULT_MENU, ...(rawConfig || {}) }));
   }, [rawConfig]); // eslint-disable-line
 
-  const theme = menu.theme || {};
-  const titleStyle = theme.title_color ? { color: theme.title_color } : {};
-  const sheetStyle = theme.bg ? { background: theme.bg } : {};
   const preset = menu.preset === "list" ? "list" : "pamphlet";
 
   function setField(key, val) { setMenu((m) => ({ ...m, [key]: val })); }
-  function setTheme(key, val) { setMenu((m) => ({ ...m, theme: { ...(m.theme || {}), [key]: val } })); }
 
   function setCatField(gi, key, val) {
     setMenu((m) => ({ ...m, categories: m.categories.map((c, i) => i === gi ? { ...c, [key]: val } : c) }));
@@ -192,14 +186,12 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
     setSaving(false);
     setEditMode(false);
     setEditingKey(null);
-    setSettingsOpen(false);
   }
 
   function handleCancel() {
     setMenu(withIds({ ...DEFAULT_MENU, ...(rawConfig || {}) }));
     setEditMode(false);
     setEditingKey(null);
-    setSettingsOpen(false);
   }
 
   function renderItem(gi, ii, item, sizeKeys, leaderStyle) {
@@ -468,7 +460,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
           return (
             <div className="menu-panel" key={p}>
               {side === "front" && (
-                <div className="menu-panel-title" style={titleStyle}>{menu.title || businessName || "Menu"}</div>
+                <div className="menu-panel-title">{menu.title || businessName || "Menu"}</div>
               )}
               <SortableContext items={catSortIds} strategy={verticalListSortingStrategy}>
                 {indices.map((gi) => renderCategory(gi, side, p))}
@@ -506,12 +498,8 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
           </div>
         ) : (
           <>
-            <h1 className="menu-title" style={titleStyle}>{menu.title || businessName || "Menu"}</h1>
-            {menu.subtitle && (
-              <p className="menu-subtitle" style={theme.subtitle_color ? { color: theme.subtitle_color } : {}}>
-                {menu.subtitle}
-              </p>
-            )}
+            <h1 className="menu-title">{menu.title || businessName || "Menu"}</h1>
+            {menu.subtitle && <p className="menu-subtitle">{menu.subtitle}</p>}
           </>
         )}
         {editMode && (
@@ -593,9 +581,6 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
                   <option value="list">Simple list (one page)</option>
                 </select>
               )}
-              {editMode && (
-                <button className="secondary-btn compact" onClick={() => setSettingsOpen((v) => !v)}>⚙ Theme</button>
-              )}
               {editMode ? (
                 <>
                   <button className="secondary-btn compact" onClick={handleCancel}>Cancel</button>
@@ -611,21 +596,8 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
           )}
         </div>
 
-        {settingsOpen && editMode && (
-          <div className="menu-settings-panel no-print">
-            <div className="menu-settings-colors">
-              {[["title_color", "Title"], ["subtitle_color", "Subtitle"], ["bg", "Background"]].map(([key, label]) => (
-                <label className="menu-color-field" key={key}>
-                  <input type="color" value={theme[key] || "#111111"} onChange={(e) => setTheme(key, e.target.value)} />
-                  <span>{label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-        )}
-
         {preset === "list" ? (
-          <div className="menu-sheet menu-list-sheet" style={sheetStyle}>
+          <div className="menu-sheet menu-list-sheet">
             {renderTitleBlock()}
 
             <div className="menu-list-categories">
@@ -646,7 +618,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
           <>
             {/* ── FRONT PAGE ── */}
             {(hasFront || editMode) && (
-              <div className="menu-sheet menu-pamphlet menu-page-front" style={sheetStyle}>
+              <div className="menu-sheet menu-pamphlet menu-page-front">
                 {renderTitleBlock()}
                 {renderPanels("front")}
               </div>
@@ -654,7 +626,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
 
             {/* ── BACK PAGE ── */}
             {(hasBack || editMode) && (
-              <div className="menu-sheet menu-pamphlet menu-page-back" style={sheetStyle}>
+              <div className="menu-sheet menu-pamphlet menu-page-back">
                 {editMode && (
                   <div className="menu-back-label no-print">Back side — prints on page 2 · panels = fold columns left to right</div>
                 )}

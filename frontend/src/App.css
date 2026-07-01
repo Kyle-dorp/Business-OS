@@ -1631,8 +1631,10 @@ body {
   padding: 12px 16px;
   border: 1px solid rgba(84,26,4,.35);
   background:
-    radial-gradient(circle, rgba(255,255,255,.5) 0 1px, transparent 1.4px) 0 0 / 12px 12px,
-    linear-gradient(180deg, #c66d29, #97420f);
+    linear-gradient(180deg, rgba(255,255,255,.1), rgba(0,0,0,.18)),
+    url('/textures/banner-orange.jpg');
+  background-repeat: repeat;
+  background-size: 100% 100%, 260px 104px;
   box-shadow: inset 0 -2px 0 rgba(90,28,5,.25), 0 2px 5px rgba(0,0,0,.12);
   text-shadow:
     -1px -1px 0 #2f180d, 1px -1px 0 #2f180d, -1px 1px 0 #2f180d, 1px 1px 0 #2f180d,

@@ -202,7 +202,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
     setSettingsOpen(false);
   }
 
-  function renderItem(gi, ii, item, sizeKeys) {
+  function renderItem(gi, ii, item, sizeKeys, leaderStyle) {
     const cat = menu.categories[gi];
     const key = `${gi}-item-${ii}`;
     const isEditing = editingKey === key;
@@ -213,7 +213,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
         {({ setNodeRef, attributes, listeners, transform, transition, isDragging }) => (
           <div
             ref={setNodeRef}
-            className={`menu-item${editMode ? " menu-item-editable" : ""}`}
+            className={`menu-item${leaderStyle ? " menu-item-leader" : ""}${editMode ? " menu-item-editable" : ""}`}
             style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1, zIndex: isDragging ? 5 : "auto", position: "relative" }}
           >
             {isEditing ? (
@@ -271,6 +271,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
                   <span className="menu-item-name">{item.name}</span>
                   {item.description && <span className="menu-item-desc">{item.description}</span>}
                 </div>
+                {leaderStyle && <span className="menu-item-leader-fill" aria-hidden="true" />}
                 <div className="menu-item-prices">
                   {item.sizes
                     ? sizeKeys.map((sz) => (
@@ -311,6 +312,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
     const sizeKeys = Array.from(new Set((cat.items || []).flatMap((it) => it.sizes ? Object.keys(it.sizes) : [])));
     const sortId = `cat-${cat.id}`;
     const itemSortIds = (cat.items || []).map((it) => `item-${cat.id}-${it.id}`);
+    const leaderStyle = (cat.items || []).length > 0 && (cat.items || []).every((it) => !it.description);
 
     return (
       <SortableCategory sortId={sortId} key={cat.id}>
@@ -363,6 +365,14 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
                     ))}
                   </span>
                 )}
+                <button
+                  type="button"
+                  className={`menu-plain-btn${cat.plain ? " active" : ""}`}
+                  onClick={() => setCatField(gi, "plain", !cat.plain)}
+                  title="Toggle between banner header and plain script header (for info panels like Hours)"
+                >
+                  {cat.plain ? "banner" : "plain"}
+                </button>
                 <button type="button" className="menu-remove-btn" onClick={() => removeCategory(gi)}>×</button>
               </div>
             )}
@@ -414,14 +424,14 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
               </div>
             ) : (
               <>
-                <h2 className="menu-cat-name">
+                <h2 className={cat.plain ? "menu-cat-name-plain" : "menu-cat-name"}>
                   {cat.name}
                 </h2>
                 {cat.description && <p className="menu-cat-desc">{cat.description}</p>}
               </>
             )}
 
-            <div className="menu-items">
+            <div className={cat.plain ? "menu-items menu-items-boxed" : "menu-items"}>
               {sizeKeys.length > 0 && (
                 <div className="menu-size-header">
                   <span className="menu-size-header-cols">
@@ -430,7 +440,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
                 </div>
               )}
               <SortableContext items={itemSortIds} strategy={verticalListSortingStrategy}>
-                {(cat.items || []).map((item, ii) => renderItem(gi, ii, item, sizeKeys))}
+                {(cat.items || []).map((item, ii) => renderItem(gi, ii, item, sizeKeys, leaderStyle))}
               </SortableContext>
             </div>
             {editMode && (

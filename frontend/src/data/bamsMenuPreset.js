@@ -1,26 +1,32 @@
 /**
- * Bam's Sub Shoppe - Pamphlet Menu Preset
- * Tri-fold vintage menu with fixed 11" × 8.5" landscape layout
+ * Bam's Sub Shoppe printable tri-fold preset.
+ *
+ * Page 1 (inside): Classic Subs | Specialty Subs + Sub Salads | Dressings + photos/quote
+ * Page 2 (outside): Combos/Breads/Desserts | Soups/Extras/Catering | shop cover
+ *
+ * All menu copy remains normal editable data. Empty image slots only appear while editing
+ * and collapse completely in the printed/read-only menu until a real image is added.
  */
-
 export const BAMS_MENU_PRESET = {
   title: "Bam's Sub Shoppe",
-  subtitle: "203 W. Main Street\nRangely, CO • (970) 572-0136",
-  footer: '"Our goal is to give our customers the best sub possible."',
+  subtitle: "203 W. Main Street · Rangely, CO · (970) 572-0136",
+  footer: '“Our goal is to give our customers the best sub possible.”',
+  closingQuote: '“Our goal is to give our customers the best sub possible.”',
+  ingredientStatement:
+    "All of our meats are top quality, paired with real cheese. Our veggies are from a fresh local vendor to top off any sub.",
   print_landscape: true,
   preset: "pamphlet",
-
-  // Special fields for pamphlet layout
-  ingredientStatement: "All of our meats are top quality, paired with real cheese.",
-  closingQuote: '"Our goal is to give our customers the best sub possible."',
+  logo_url: "",
 
   categories: [
-    // LEFT PANEL: CLASSIC SUBS
     {
       id: "cat-classic",
       name: "Classic Subs",
+      side: "front",
       panel: "left",
+      layout: "classic",
       description: "All of our meats are top quality with real cheese and fresh local veggies.",
+      images: [{ id: "classic-main-photo", url: "" }],
       items: [
         {
           id: "item-turkey-club",
@@ -66,7 +72,7 @@ export const BAMS_MENU_PRESET = {
         },
         {
           id: "item-ham-cheese",
-          name: "Ham n' Cheese",
+          name: "Ham N' Cheese",
           description: "Ham, American Cheese, Lettuce, Spinach, Tomato, Onion, Bell Peppers, Ranch Dressing",
           sizes: { '6"': "8.50", '12"': "14.49" },
         },
@@ -79,11 +85,12 @@ export const BAMS_MENU_PRESET = {
       ],
     },
 
-    // MIDDLE PANEL: SPECIALTY SUBS
     {
       id: "cat-specialty",
       name: "Specialty Subs",
+      side: "front",
       panel: "middle",
+      layout: "specialty",
       description: "House creations — each one a flavor experience.",
       items: [
         {
@@ -94,13 +101,13 @@ export const BAMS_MENU_PRESET = {
         },
         {
           id: "item-miss-pauline",
-          name: '"Miss Pauline"',
-          description: "Roast Beef, Mushrooms, Onion, Provolone, Homemade Aioli — Toasted",
+          name: '“Miss Pauline”',
+          description: "Roast Beef, Mushrooms, Onion, Provolone, Homemade Aju — Toasted",
           sizes: { '6"': "12.50", '12"': "17.49" },
         },
         {
           id: "item-bams",
-          name: 'Bam\'s"',
+          name: '“Bam\'s”',
           description: "Roast Beef, Swiss, Horseradish, Lettuce, Tomato, Onion",
           sizes: { '6"': "11.50", '12"': "16.49" },
         },
@@ -111,7 +118,7 @@ export const BAMS_MENU_PRESET = {
           sizes: { '6"': "8.50", '12"': "14.49" },
         },
         {
-          id: "item-mosquite",
+          id: "item-mesquite",
           name: "Mesquite Chicken Melt",
           description: "Mesquite Chicken, Swiss, Lettuce, Spinach, Bell Peppers, Onion, Mayo — Toasted",
           sizes: { '6"': "12.50", '12"': "17.49" },
@@ -124,14 +131,14 @@ export const BAMS_MENU_PRESET = {
         },
         {
           id: "item-dagwood",
-          name: "Dagwood Sub",
-          description: "Turkey, Roast Beef, Bacon, Ham, Genoa Salami, Pepperoni, Hard Salami, American & Provolone Cheese, Choice of Veggies, Italian Dressing",
+          name: '“Dagwood” Sub',
+          description: "Turkey, Roast Beef, Bacon, Ham, Genoa Salami, Pepperoni, Hard Salami, American & Provolone Cheese, Choice of Veggies, Mayo, Italian Dressing",
           sizes: { '6"': "18.25", '12"': "27.25" },
         },
         {
           id: "item-roast-beef",
           name: "Roast Beef Sub",
-          description: "Your choice of toppings",
+          description: "Roast Beef with your choice of toppings",
           sizes: { '6"': "8.50", '12"': "14.49" },
         },
         {
@@ -149,42 +156,34 @@ export const BAMS_MENU_PRESET = {
       ],
     },
 
-    // MIDDLE PANEL: SUB SALADS (at bottom)
     {
       id: "cat-salads",
       name: "Sub Salads",
+      side: "front",
       panel: "middle",
+      layout: "salads",
+      size_order: ['12"', '6"'],
       description: "A specialty sub salad made daily each week upon availability.",
       items: [
-        {
-          id: "item-tuna",
-          name: "Tuna",
-          sizes: { '12"': "14.49", '6"': "9.49" },
-        },
-        {
-          id: "item-chicken",
-          name: "Chicken",
-          sizes: { '12"': "14.49", '6"': "9.49" },
-        },
-        {
-          id: "item-egg",
-          name: "Egg",
-          sizes: { '12"': "15.00", '6"': "10.00" },
-        },
-        {
-          id: "item-seafood",
-          name: "Seafood",
-          sizes: { '12"': "15.49", '6"': "10.49" },
-        },
+        { id: "item-tuna", name: "Tuna", sizes: { '12"': "14.49", '6"': "9.49" } },
+        { id: "item-chicken", name: "Chicken", sizes: { '12"': "14.49", '6"': "9.49" } },
+        { id: "item-egg", name: "Egg", sizes: { '12"': "15.00", '6"': "10.00" } },
+        { id: "item-seafood", name: "Seafood", sizes: { '12"': "15.49", '6"': "10.49" } },
       ],
     },
 
-    // RIGHT PANEL: DRESSINGS
     {
       id: "cat-dressings",
       name: "Dressings",
+      side: "front",
       panel: "right",
+      layout: "dressings",
       description: "Available on any sub.",
+      images: [
+        { id: "dressings-hero", url: "" },
+        { id: "dressings-small-left", url: "" },
+        { id: "dressings-small-right", url: "" },
+      ],
       items: [
         { id: "d-mayo", name: "Mayo" },
         { id: "d-ranch", name: "Ranch" },
@@ -199,52 +198,25 @@ export const BAMS_MENU_PRESET = {
       ],
     },
 
-    // RIGHT PANEL: EXTRAS
-    {
-      id: "cat-extras",
-      name: "Extras",
-      panel: "right",
-      items: [
-        {
-          id: "item-extra-cheese",
-          name: "Extra Cheese",
-          description: "Per type",
-          sizes: { '6"': "1.50", '12"': "2.50" },
-        },
-        {
-          id: "item-extra-meat",
-          name: "Extra Meat",
-          sizes: { '6"': "2.50", '12"': "4.50" },
-        },
-        {
-          id: "item-specialty-bread",
-          name: "Specialty Bread",
-          sizes: { '6"': "1.50", '12"': null },
-        },
-      ],
-    },
-
-    // RIGHT PANEL: COMBOS
     {
       id: "cat-combos",
       name: "Sub Combos",
-      panel: "right",
+      side: "back",
+      panel: "left",
+      layout: "combos",
       description: "Complete your sub with a meal deal — combo, chips & a soda.",
+      images: [{ id: "combo-photo", url: "" }],
       items: [
-        {
-          id: "item-combo-meal",
-          name: "Combo Meal",
-          description: "Chips & a soda",
-          sizes: { '6"': "2.75", '12"': null },
-        },
+        { id: "item-combo-meal", name: "Combo Meal", description: "Chips & a soda", price: "2.75" },
       ],
     },
 
-    // RIGHT PANEL: BREADS
     {
       id: "cat-breads",
       name: "Breads",
-      panel: "right",
+      side: "back",
+      panel: "left",
+      layout: "simple",
       description: "Our breads are baked daily. Try a different flavor each time you visit!",
       items: [
         { id: "b-italian", name: "Italian" },
@@ -254,65 +226,73 @@ export const BAMS_MENU_PRESET = {
       ],
     },
 
-    // RIGHT PANEL: DESSERTS
     {
       id: "cat-desserts",
       name: "Desserts",
-      panel: "right",
+      side: "back",
+      panel: "left",
+      layout: "desserts",
       description: "Tastes like homemade.",
+      images: [{ id: "dessert-photo", url: "" }],
       items: [
         { id: "des-brownies", name: "Brownies (2 pack)", price: "1.50" },
-        { id: "des-chips", name: "Chips", price: null },
-        { id: "des-soda", name: "Soda", price: null },
-        { id: "des-water", name: "Water", price: null },
+        { id: "des-chips", name: "Chips" },
+        { id: "des-soda", name: "Soda" },
+        { id: "des-water", name: "Water" },
       ],
     },
 
-    // RIGHT PANEL: SOUPS
     {
       id: "cat-soups",
       name: "Soups",
-      panel: "right",
+      side: "back",
+      panel: "middle",
+      layout: "soups",
       description: "Our specialty soups are homemade fresh from the kitchen. Ask which soup we have on special this week!",
+      items: [{ id: "item-soup", name: "12 oz Cup of Soup", price: "4.10" }],
+    },
+
+    {
+      id: "cat-extras",
+      name: "Extras",
+      side: "back",
+      panel: "middle",
+      layout: "extras",
       items: [
-        {
-          id: "item-soup",
-          name: "12 oz Cup of Soup",
-          price: "4.10",
-        },
+        { id: "item-extra-cheese", name: "Extra Cheese", description: "Per type", sizes: { '6"': "1.50", '12"': "2.50" } },
+        { id: "item-extra-meat", name: "Extra Meat", sizes: { '6"': "2.50", '12"': "4.50" } },
+        { id: "item-specialty-bread", name: "Specialty Bread", price: "1.50" },
       ],
     },
 
-    // RIGHT PANEL: CATERING
     {
       id: "cat-catering",
       name: "Catering",
-      panel: "right",
-      description: "Sporting events\nMeetings\nParties\nEvents\n\nContact Bam for pricing\n(970) 572-0136",
+      side: "back",
+      panel: "middle",
+      layout: "catering",
+      description: "Sporting events\nMeetings\nParties\nEvents\n\nContact Bam for pricing\n970-572-0136",
       items: [],
     },
   ],
 
-  // Hours (for front cover or info section)
   hours: {
-    monday: "11am - 7pm",
-    tuesday: "11am - 7pm",
+    monday: "11am – 7pm",
+    tuesday: "11am – 7pm",
     wednesday: "CLOSED",
-    thursday: "11am - 7pm",
-    friday: "11am - 7pm",
-    saturday: "11am - 7pm",
+    thursday: "11am – 7pm",
+    friday: "11am – 7pm",
+    saturday: "11am – 7pm",
     sunday: "CLOSED",
   },
 
-  // Delivery info
   delivery: [
     { location: "Rangely", surcharge: "$2.50" },
     { location: "Dinosaur", surcharge: "$10.00" },
     { location: "Deserado Mine", surcharge: "$10.00" },
   ],
 
-  // Address and contact
   address: "203 W. Main Street",
   city: "Rangely, CO",
-  phone: "(970) 572-0136",
+  phone: "970-572-0136",
 };

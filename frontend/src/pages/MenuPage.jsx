@@ -45,21 +45,6 @@ function MoveIcon() {
   );
 }
 
-function SunburstIcon({ className = "" }) {
-  const longRays = Array.from({ length: 8 }, (_, i) => i * 45);
-  const shortRays = Array.from({ length: 8 }, (_, i) => i * 45 + 22.5);
-  return (
-    <svg className={`menu-cat-sun ${className}`.trim()} viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-      {longRays.map((a) => (
-        <line key={`l${a}`} x1="12" y1="12" x2="12" y2="1" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" transform={`rotate(${a} 12 12)`} />
-      ))}
-      {shortRays.map((a) => (
-        <line key={`s${a}`} x1="12" y1="12" x2="12" y2="4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" transform={`rotate(${a} 12 12)`} />
-      ))}
-      <circle cx="12" cy="12" r="3" fill="currentColor" />
-    </svg>
-  );
-}
 
 // Thin wrappers so useSortable() (a hook) lives in a real component, while the
 // render-prop callback stays a plain closure that can still reach MenuPage's
@@ -431,9 +416,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
             ) : (
               <>
                 <h2 className="menu-cat-name" style={headerStyle}>
-                  <SunburstIcon />
                   {cat.name}
-                  <SunburstIcon className="menu-cat-sun-right" />
                 </h2>
                 {cat.description && <p className="menu-cat-desc">{cat.description}</p>}
               </>

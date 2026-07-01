@@ -1620,16 +1620,9 @@ body {
   margin-left: calc(-1 * var(--menu-pad-x, 13px)); margin-right: calc(-1 * var(--menu-pad-x, 13px));
   width: calc(100% + 2 * var(--menu-pad-x, 13px));
   padding: 9px 16px;
-  background-color: #b0221c;
-  background-image:
-    radial-gradient(circle at 12% 28%, rgba(255,255,255,.4) 1.4px, transparent 1.6px),
-    radial-gradient(circle at 32% 72%, rgba(255,255,255,.32) 1.1px, transparent 1.3px),
-    radial-gradient(circle at 52% 22%, rgba(255,255,255,.36) 1.3px, transparent 1.5px),
-    radial-gradient(circle at 68% 78%, rgba(255,255,255,.3) 1.1px, transparent 1.3px),
-    radial-gradient(circle at 84% 35%, rgba(255,255,255,.34) 1.3px, transparent 1.5px),
-    radial-gradient(circle at 94% 70%, rgba(255,255,255,.28) 1px, transparent 1.2px),
-    radial-gradient(circle at 22% 92%, rgba(255,255,255,.26) 1px, transparent 1.2px);
-  background-size: 100% 100%;
+  background-color: #7a140f;
+  background-image: repeating-conic-gradient(from 0deg at 50% 130%, #7a140f 0deg 7.5deg, #b5291f 7.5deg 15deg);
+  text-shadow: 0 1px 3px rgba(0,0,0,.45);
   box-shadow: 0 2px 5px rgba(0,0,0,.12);
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px));
 }

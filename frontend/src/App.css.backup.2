@@ -1455,334 +1455,269 @@ body {
 }
 
 /* ── Menu Page ─────────────────────────────────────────────────────────────── */
-/* VINTAGE BAM'S PAMPHLET MENU - FINAL IMPLEMENTATION */
+/* ─────────────────────────────────────────────────────────────────────
+   VINTAGE PAMPHLET MENU REDESIGN
+   11" × 8.5" landscape tri-fold with aged paper aesthetic
+   ───────────────────────────────────────────────────────────────────── */
 
-@import url('https://fonts.googleapis.com/css2?family=Lobster+Two:wght@700&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Lora:ital@0;1&family=Poppins:wght@400;500;700&display=swap');
 
-:root {
-  --paper: #f5ead2;
-  --paper-light: #fbf4e4;
-  --ink: #201710;
-  --muted-ink: #5f5045;
-  --sepia: #783b20;
-  --banner-dark: #8d3d18;
-  --banner-mid: #a94c1e;
-  --gold: #e1a713;
-}
-
+/* ─ Paper & Canvas ────────────────────────────────────────────────────── */
+.menu-page { padding: 0 !important; }
+.menu-page.page { padding: 0 !important; }
 .menu-page-header { display: none !important; }
 
-.menu-page {
-  position: relative;
+.menu-sheet {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  max-width: none !important;
+}
+
+.menu-pamphlet {
+  /* Fixed 11" × 8.5" landscape canvas */
   width: 11in;
   height: 8.5in;
   max-width: 11in;
-  max-height: 8.5in;
-  margin: 24px auto;
+  margin: 20px auto;
   padding: 0;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  overflow: hidden;
-  box-sizing: border-box;
-  background-color: var(--paper);
-  background-image:
-    radial-gradient(circle at 18% 22%, rgba(108, 60, 23, 0.05), transparent 25%),
-    radial-gradient(circle at 82% 74%, rgba(108, 60, 23, 0.04), transparent 27%);
-  border: 1px solid rgba(82, 43, 18, 0.45);
-  border-radius: 0;
+  background:
+    /* Fine paper grain texture */
+    repeating-linear-gradient(90deg, transparent 0, transparent 1px, rgba(139,90,43, 0.02) 1px, rgba(139,90,43, 0.02) 2px),
+    repeating-linear-gradient(0deg, transparent 0, transparent 1px, rgba(139,90,43, 0.015) 1px, rgba(139,90,43, 0.015) 2px),
+    /* Aged stain spots */
+    radial-gradient(ellipse 400px 300px at 8% 12%, rgba(151,85,24, 0.08) 0%, transparent 40%),
+    radial-gradient(ellipse 300px 250px at 92% 85%, rgba(180,110,50, 0.06) 0%, transparent 35%),
+    radial-gradient(ellipse 250px 200px at 50% 95%, rgba(139,90,43, 0.04) 0%, transparent 50%),
+    /* Warm ivory base */
+    linear-gradient(135deg, #fbf8f0 0%, #f7f1e5 50%, #faf6ed 100%);
+  border: 3px solid #8b5a2b;
+  border-radius: 2px;
   box-shadow:
-    0 10px 26px rgba(46, 25, 10, 0.2),
-    inset 0 0 28px rgba(91, 50, 18, 0.08);
+    inset 0 1px 3px rgba(0,0,0, 0.05),
+    inset 3px 3px 8px rgba(0,0,0, 0.08),
+    0 15px 35px rgba(0,0,0, 0.15),
+    0 0 0 1px rgba(139,90,43, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   page-break-after: always;
   break-after: page;
 }
 
-@media screen {
-  .menu-page {
-    transform: scale(0.85);
-    transform-origin: top center;
-  }
+.menu-page-back {
+  margin-bottom: 0;
 }
 
-@page {
-  size: letter landscape;
-  margin: 0;
-}
-
-@media print {
-  html, body { margin: 0; padding: 0; }
-  .menu-page {
-    width: 11in;
-    height: 8.5in;
-    transform: none !important;
-    box-shadow: none;
-    margin: 0;
-  }
-}
-
-.menu-panel {
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
+.menu-list-sheet {
+  width: 11in;
+  height: 8.5in;
+  max-width: 11in;
+  margin: 20px auto;
   padding: 0;
-  border-right: 1px solid rgba(100, 58, 26, 0.32);
-  box-shadow: inset 1px 0 rgba(255, 255, 255, 0.32);
-  box-sizing: border-box;
-}
-
-.menu-panel:last-child {
-  border-right: none;
-  box-shadow: none;
-}
-
-.menu-panel-inner {
-  padding: 0.14in 0.14in;
+  background:
+    repeating-linear-gradient(90deg, transparent 0, transparent 1px, rgba(139,90,43, 0.02) 1px, rgba(139,90,43, 0.02) 2px),
+    repeating-linear-gradient(0deg, transparent 0, transparent 1px, rgba(139,90,43, 0.015) 1px, rgba(139,90,43, 0.015) 2px),
+    radial-gradient(ellipse 400px 300px at 8% 12%, rgba(151,85,24, 0.08) 0%, transparent 40%),
+    radial-gradient(ellipse 300px 250px at 92% 85%, rgba(180,110,50, 0.06) 0%, transparent 35%),
+    linear-gradient(135deg, #fbf8f0 0%, #f7f1e5 50%, #faf6ed 100%);
+  border: 3px solid #8b5a2b;
+  border-radius: 2px;
+  box-shadow:
+    inset 0 1px 3px rgba(0,0,0, 0.05),
+    inset 3px 3px 8px rgba(0,0,0, 0.08),
+    0 15px 35px rgba(0,0,0, 0.15);
   display: flex;
   flex-direction: column;
-  gap: 0.1in;
+  overflow: hidden;
+  --menu-pad-x: 0.5in;
 }
 
+/* ─ Tri-Fold Panel Layout ──────────────────────────────────────────────── */
 .menu-panels {
   display: flex;
+  align-items: stretch;
   width: 100%;
   height: 100%;
 }
 
-.section-banner {
-  min-height: 0.52in;
-  padding: 0.06in 0.14in 0.08in;
-  display: grid;
-  grid-template-columns: 0.5in 1fr 0.5in;
-  align-items: center;
-  margin: 0 -0.14in 0.12in -0.14in;
-  background: linear-gradient(rgba(91, 35, 11, 0.28), rgba(91, 35, 11, 0.28)), linear-gradient(135deg, #a94c1e, #8d3d18);
-  border-top: 1px solid rgba(76, 31, 11, 0.75);
-  border-bottom: 2px solid rgba(76, 31, 11, 0.8);
-  box-shadow: inset 0 1px rgba(255, 239, 198, 0.2), 0 2px 3px rgba(45, 21, 8, 0.18);
+.menu-panel {
+  flex: 1;
+  min-width: 0;
+  padding: 0.35in 0.25in;
+  border-right: 2px solid rgba(139,90,43, 0.25);
+  overflow-y: auto;
+  overflow-x: hidden;
+  --menu-pad-x: 0.25in;
 }
 
-.section-banner h2 {
-  margin: 0;
-  text-align: center;
-  color: #fff2d5;
-  font-family: "Lobster Two", cursive;
-  font-size: 25pt;
-  font-weight: 700;
-  line-height: 1;
-  -webkit-text-stroke: 1px #2e170b;
-  text-shadow: 1px 2px 0 #2e170b, 0 3px 2px rgba(38, 17, 6, 0.42);
-  grid-column: 2;
+.menu-panel:last-child {
+  border-right: none;
 }
 
-.sunburst {
-  color: var(--gold);
-  font-size: 18pt;
-  text-align: center;
-  opacity: 0.85;
+.menu-panel-title {
+  display: none !important;
 }
 
-.section-intro {
-  text-align: center;
-  font-family: 'Crimson Text', serif;
-  font-size: 9pt;
-  font-style: italic;
-  color: var(--sepia);
-  margin: 0.05in 0 0.08in;
-  line-height: 1.4;
-}
-
-.price-header {
-  display: grid;
-  grid-template-columns: 1fr 0.48in 0.48in;
-  column-gap: 0.07in;
-  font-family: Inter, sans-serif;
-  font-size: 7pt;
-  font-weight: 700;
-  color: var(--ink);
-  margin-bottom: 0.06in;
-  padding-bottom: 0.05in;
-  border-bottom: 1px solid rgba(82, 43, 18, 0.3);
-}
-
-.price-header-6in, .price-header-12in {
-  text-align: right;
-  white-space: nowrap;
-}
-
-.menu-items-list {
+/* Front cover special layout (panel 1 of front side) */
+.menu-page-front .menu-panel:first-child {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+  padding: 0.5in 0.3in;
+  border-right: 2px solid rgba(139,90,43, 0.25);
 }
 
-.menu-item {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 0.48in 0.48in;
-  column-gap: 0.07in;
-  margin-bottom: 0.055in;
-  break-inside: avoid;
+/* ─ Title Block (Front Cover) ──────────────────────────────────────────── */
+.menu-title-block {
+  text-align: center;
+  padding: 0;
+  margin: 0;
+  border: none !important;
+  margin-top: 0.2in;
 }
 
-.menu-item-name {
-  grid-column: 1;
-  font-family: Inter, sans-serif;
-  font-size: 11pt;
+.menu-page-front .menu-title-block {
+  flex: 0 1 auto;
+}
+
+.menu-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 3rem;
   font-weight: 800;
-  color: var(--ink);
-  line-height: 1.2;
+  color: #8b5a2b;
+  margin: 0 0 0.15in;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  text-shadow: 2px 2px 4px rgba(0,0,0, 0.1);
 }
 
-.menu-item-description {
-  grid-column: 1;
-  font-family: 'Crimson Text', serif;
-  font-size: 9pt;
-  color: var(--muted-ink);
-  line-height: 1.3;
-  margin-top: 0.01in;
+.menu-page-front .menu-title {
+  font-size: 2.8rem;
+  margin: 0 0 0.3in;
 }
 
-.menu-price-6 {
-  grid-column: 2;
-  text-align: right;
-  white-space: nowrap;
-  font-family: Inter, sans-serif;
-  font-size: 11pt;
-  font-weight: 800;
-  color: var(--ink);
+.menu-subtitle {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 0.75rem;
+  color: #6b4423;
+  margin: 0;
+  line-height: 1.4;
+  font-weight: 500;
 }
 
-.menu-price-12 {
-  grid-column: 3;
-  text-align: right;
-  white-space: nowrap;
-  font-family: Inter, sans-serif;
-  font-size: 11pt;
-  font-weight: 800;
-  color: var(--ink);
-}
-
-.menu-cat-img {
-  width: 100%;
-  max-height: 1.3in;
-  object-fit: cover;
-  border: 1px solid rgba(83, 44, 18, 0.28);
-  display: block;
-  margin: 0.1in 0;
-}
-
-.menu-cat-img-wrap { margin: 0.1in 0; }
-
+/* ─ Category Headers (Section Banners) ──────────────────────────────────── */
 .menu-cat-name {
-  background: linear-gradient(180deg, #8b5a2b 0%, #6b4423 100%);
-  padding: 0.3in 0.2in;
-  margin: 0.15in calc(-1 * var(--menu-pad-x, 0.25in)) 0.15in;
+  background: linear-gradient(135deg, #8b5a2b 0%, #6b4423 100%);
+  box-shadow: inset 0 1px 2px rgba(0,0,0, 0.3), 0 3px 8px rgba(0,0,0, 0.2);
+  padding: 0.25in 0.15in;
+  margin: calc(-1 * var(--menu-pad-x, 0.25in)) calc(-1 * var(--menu-pad-x, 0.25in)) 0.15in;
   width: calc(100% + 2 * var(--menu-pad-x, 0.25in));
   text-align: center;
-  color: #fef6e8;
-  font-family: "Lobster Two", cursive;
-  font-size: 22pt;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  text-shadow: 2px 2px 3px rgba(0,0,0,0.4);
-  border: none;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+  color: #fef5e7;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  font-style: italic;
+  text-shadow: 2px 2px 3px rgba(0,0,0, 0.4);
   position: relative;
+  border-top: 2px solid rgba(255,255,255, 0.15);
+  border-bottom: 2px solid rgba(255,255,255, 0.15);
+  margin-left: calc(-1 * var(--menu-pad-x, 0.25in));
+  margin-right: calc(-1 * var(--menu-pad-x, 0.25in));
+  width: calc(100% + 2 * var(--menu-pad-x, 0.25in));
 }
 
+/* Vintage sunburst decoration */
 .menu-cat-name::before,
 .menu-cat-name::after {
   content: '✦';
   position: absolute;
+  color: #f4c430;
+  font-size: 0.85rem;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--gold);
-  font-size: 0.9rem;
-  opacity: 0.9;
+  text-shadow: 1px 1px 2px rgba(0,0,0, 0.3);
 }
 
-.menu-cat-name::before { left: 0.1in; }
-.menu-cat-name::after { right: 0.1in; }
+.menu-cat-name::before { left: 0.15in; }
+.menu-cat-name::after { right: 0.15in; }
 
 .menu-cat-desc {
-  font-family: 'Crimson Text', serif;
+  font-family: 'Lora', Georgia, serif;
   font-style: italic;
   font-size: 0.65rem;
   color: #8b6f47;
   margin: 0.08in 0 0.1in;
-  line-height: 1.35;
+  padding: 0 0.05in;
+  line-height: 1.3;
 }
 
 .menu-cat-name-plain {
   background: transparent;
-  border: none;
-  padding: 0;
-  margin: 0;
-  font-family: 'Crimson Text', serif;
-  font-size: 0.9rem;
-  color: var(--sepia);
+  border: 2px solid #8b5a2b;
+  border-radius: 4px;
+  padding: 0.2in 0.15in;
+  margin: 0.1in 0 0.1in;
+  width: auto;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #8b5a2b;
   text-shadow: none;
   box-shadow: none;
 }
 
-.no-print { display: none !important; }
-
-@media print {
-  .no-print, .menu-editor, .edit-controls { display: none !important; }
-}
-
-/* ═════════════════════════════════════════════════════════════════════
-   MENU ITEMS (FOOD ENTRIES)
-   ═════════════════════════════════════════════════════════════════════ */
-
+/* ─ Menu Items ──────────────────────────────────────────────────────────── */
 .menu-items {
   display: flex;
   flex-direction: column;
-  gap: 0.1in;
+  gap: 0.12in;
   margin-top: 0.08in;
 }
 
 .menu-items-boxed {
-  border: 2px solid #8b5a2b;
+  border: 1px solid #d4c9b0;
   border-radius: 3px;
-  padding: 0.12in 0.1in;
-  background: linear-gradient(135deg,
-    rgba(254,245,231, 0.85),
-    rgba(247,241,229, 0.85));
+  padding: 0.1in 0.08in;
   gap: 0.08in;
 }
 
 .menu-size-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.08in;
-  padding-bottom: 0.08in;
-  border-bottom: 2px solid #d4c9b0;
+  margin-bottom: 0.05in;
+  padding-bottom: 0.05in;
+  border-bottom: 1px solid #d4c9b0;
 }
 
 .menu-size-header-cols {
   display: flex;
-  gap: 0.35in;
+  gap: 0.3in;
   width: 100%;
   justify-content: flex-end;
 }
 
 .menu-size-col {
   font-family: 'Poppins', sans-serif;
-  font-size: 0.58rem;
-  font-weight: 800;
+  font-size: 0.55rem;
+  font-weight: 700;
   color: #6b4423;
-  width: 0.45in;
+  width: 0.4in;
   text-align: right;
-  letter-spacing: 0.01em;
 }
 
 .menu-item {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 0.12in;
-  padding: 0.05in 0;
-  position: relative;
+  gap: 0.1in;
+  padding: 0.04in 0;
 }
 
 .menu-item-main {
@@ -1795,149 +1730,102 @@ body {
 
 .menu-item-name {
   font-family: 'Poppins', sans-serif;
-  font-size: 0.82rem;
-  font-weight: 800;
+  font-size: 0.78rem;
+  font-weight: 700;
   color: #2d1810;
-  line-height: 1.15;
+  line-height: 1.2;
   letter-spacing: -0.01em;
-  display: block;
 }
 
 .menu-item-desc {
-  font-family: 'Crimson Text', Georgia, serif;
-  font-size: 0.65rem;
+  font-family: 'Lora', Georgia, serif;
+  font-size: 0.62rem;
   color: #8b6f47;
-  line-height: 1.3;
+  line-height: 1.25;
   font-style: italic;
-  font-weight: 500;
 }
 
 .menu-item-prices {
   display: flex;
-  gap: 0.35in;
+  gap: 0.3in;
   flex-shrink: 0;
   justify-content: flex-end;
-  align-items: baseline;
 }
 
 .menu-price-col,
 .menu-price {
   font-family: 'Poppins', sans-serif;
-  font-size: 0.82rem;
-  font-weight: 800;
+  font-size: 0.78rem;
+  font-weight: 700;
   color: #2d1810;
-  width: 0.45in;
+  width: 0.4in;
   text-align: right;
-  letter-spacing: 0.01em;
 }
 
-/* Leader dots - only for items without descriptions */
+/* Leader dots for items without descriptions */
 .menu-item-leader {
   position: relative;
 }
 
 .menu-item-leader-fill {
   flex: 1;
-  min-width: 0.08in;
+  min-width: 0.1in;
   border-bottom: 1px dotted #c4b5a0;
-  height: 0;
-  margin: 0 0.06in;
-  order: 2;
+  height: 0.05in;
+  margin: 0 0.05in;
 }
 
-/* ═════════════════════════════════════════════════════════════════════
-   IMAGES & PLACEHOLDERS
-   ═════════════════════════════════════════════════════════════════════ */
-
+/* ─ Images ──────────────────────────────────────────────────────────────── */
 .menu-cat-img-wrap {
   position: relative;
-  margin-bottom: 0.12in;
+  margin-bottom: 0.1in;
   border-radius: 2px;
   overflow: hidden;
-  border: 2px solid #d4c9b0;
-  background: linear-gradient(135deg, #f5f0e8, #f0ebe0);
 }
 
 .menu-cat-img {
   width: 100%;
-  max-height: 1.3in;
+  max-height: 1.2in;
   object-fit: cover;
-  border-radius: 0;
+  border-radius: 2px;
   display: block;
-  border: none;
 }
 
 .menu-cat-emoji {
   display: none !important;
 }
 
-/* Image removal button */
-.menu-img-remove {
-  display: none !important;
-}
-
-/* ═════════════════════════════════════════════════════════════════════
-   HOURS & INFO BLOCKS (Hand-Drawn Pamphlet Style)
-   ═════════════════════════════════════════════════════════════════════ */
-
+/* ─ Hours & Info Blocks ────────────────────────────────────────────────── */
 .menu-items-boxed {
-  border-style: solid;
-  border-width: 2px;
-  border-radius: 4px;
-  box-shadow:
-    inset 0 1px 2px rgba(255,255,255, 0.5),
-    0 2px 4px rgba(0,0,0, 0.08);
+  border: 2px solid #8b5a2b;
+  border-radius: 3px;
   padding: 0.15in 0.12in;
-  background: linear-gradient(135deg,
-    rgba(254,245,231, 0.92),
-    rgba(247,241,229, 0.88));
-}
-
-.menu-items-boxed .menu-item {
-  padding: 0.04in 0;
+  background: linear-gradient(135deg, rgba(254,245,231,.8), rgba(247,241,229,.8));
   gap: 0.08in;
 }
 
-.menu-items-boxed .menu-item-name {
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
-.menu-items-boxed .menu-item-desc {
-  display: none;
-}
-
-/* ═════════════════════════════════════════════════════════════════════
-   FOOTER & CLOSING MESSAGE
-   ═════════════════════════════════════════════════════════════════════ */
-
+/* ─ Footer & Closing Message ───────────────────────────────────────────── */
 .menu-footer {
-  font-family: 'Crimson Text', Georgia, serif;
+  font-family: 'Lora', Georgia, serif;
   font-style: italic;
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   color: #6b4423;
   text-align: center;
-  margin: auto 0 0;
-  padding: 0.15in 0.2in 0.1in;
+  margin: 0.15in 0 0;
+  padding: 0.12in 0.2in 0;
   border-top: 2px solid #8b5a2b;
-  line-height: 1.45;
-  font-weight: 500;
+  line-height: 1.4;
 }
 
 .menu-footer::before,
 .menu-footer::after {
   content: '✦';
   display: inline-block;
-  margin: 0 0.12in;
+  margin: 0 0.1in;
   color: #f4c430;
-  font-size: 0.85rem;
 }
 
-/* ═════════════════════════════════════════════════════════════════════
-   EDITING INTERFACE (Hidden in Print)
-   ═════════════════════════════════════════════════════════════════════ */
-
-.no-print,
+/* ─ Editor Controls (Hidden in Print) ──────────────────────────────────– */
 .menu-cat-toolbar,
 .menu-item-controls,
 .menu-add-cat-btn,
@@ -1951,16 +1839,15 @@ body {
 .menu-plain-btn,
 .menu-panel-picker,
 .menu-drag-handle,
-.menu-img-remove,
-.menu-back-label,
-.menu-preset-select {
+.menu-img-remove {
   display: none !important;
 }
 
-/* ═════════════════════════════════════════════════════════════════════
-   PRINT STYLESHEET
-   ═════════════════════════════════════════════════════════════════════ */
+.no-print {
+  display: none !important;
+}
 
+/* ─ Print Styles ────────────────────────────────────────────────────────── */
 @page {
   size: 11in 8.5in landscape;
   margin: 0;
@@ -1968,28 +1855,20 @@ body {
 }
 
 @media print {
-  body,
-  html {
+  body {
     background: white;
     margin: 0;
     padding: 0;
-    width: 11in;
-    height: 8.5in;
   }
 
   .menu-page {
     padding: 0 !important;
-    width: 11in;
-    height: 8.5in;
   }
 
   .menu-pamphlet,
   .menu-list-sheet {
     box-shadow: none !important;
     margin: 0 !important;
-    width: 11in;
-    height: 8.5in;
-    transform: scale(1) !important;
     page-break-after: always;
   }
 
@@ -1999,43 +1878,17 @@ body {
 
   .menu-category {
     break-inside: avoid;
-    margin-bottom: 0.12in !important;
-  }
-
-  .menu-item {
-    break-inside: avoid;
   }
 }
 
-/* ═════════════════════════════════════════════════════════════════════
-   RESPONSIVE SCALING FOR SCREEN PREVIEW
-   ═════════════════════════════════════════════════════════════════════ */
-
-@media screen and (min-width: 768px) {
+/* ─ Canvas Scaling (Display in Browser) ────────────────────────────────– */
+@media screen {
   .menu-pamphlet,
   .menu-list-sheet {
-    transform: scale(0.9);
-  }
-}
-
-@media screen and (max-width: 1024px) {
-  .menu-pamphlet,
-  .menu-list-sheet {
-    transform: scale(0.75);
-  }
-}
-
-@media screen and (max-width: 768px) {
-  .menu-pamphlet,
-  .menu-list-sheet {
-    transform: scale(0.5);
-    width: 100%;
+    /* Scale to fit reasonable browser preview */
+    max-width: calc(11in * 0.9);
     height: auto;
-    margin: 12px auto;
-  }
-
-  .menu-panel {
-    padding: 0.25in 0.15in;
+    aspect-ratio: 11 / 8.5;
   }
 }
 .cfe-cat-name { font-weight: 600; font-size: .88rem; color: #14203a; }

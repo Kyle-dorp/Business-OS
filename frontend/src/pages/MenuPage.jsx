@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { BAMS_MENU_PRESET } from "../data/bamsMenuPreset";
 
 const DEFAULT_MENU = {
   title: "Menu",
@@ -12,6 +13,9 @@ const DEFAULT_MENU = {
   preset: "pamphlet",
   categories: [],
 };
+
+// Bam's menu preset with three-panel layout
+const BAMS_DEFAULT = BAMS_MENU_PRESET;
 
 const PANELS = [1, 2, 3];
 
@@ -57,7 +61,11 @@ function SortableItem({ sortId, children }) {
 
 export default function MenuPage({ config: rawConfig, businessName, onSaveConfig }) {
   const canEdit = typeof onSaveConfig === "function";
-  const [menu, setMenu] = useState(() => withIds({ ...DEFAULT_MENU, ...(rawConfig || {}) }));
+
+  // Use Bam's preset if no config provided, otherwise use provided config
+  const initialConfig = rawConfig || (!rawConfig && !businessName ? BAMS_DEFAULT : DEFAULT_MENU);
+
+  const [menu, setMenu] = useState(() => withIds({ ...DEFAULT_MENU, ...initialConfig }));
   const [editMode, setEditMode] = useState(false);
   const [editingKey, setEditingKey] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -68,8 +76,11 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
   );
 
   useEffect(() => {
-    if (!editMode) setMenu(withIds({ ...DEFAULT_MENU, ...(rawConfig || {}) }));
-  }, [rawConfig]); // eslint-disable-line
+    if (!editMode) {
+      const config = rawConfig || (!rawConfig && !businessName ? BAMS_DEFAULT : DEFAULT_MENU);
+      setMenu(withIds({ ...DEFAULT_MENU, ...config }));
+    }
+  }, [rawConfig, businessName]); // eslint-disable-line
 
   const preset = menu.preset === "list" ? "list" : "pamphlet";
 
@@ -257,6 +268,23 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
                   </div>
                 )}
               </div>
+            ) : preset === "pamphlet" ? (
+              <>
+                <span className="menu-item-name">{item.name}</span>
+                {item.sizes && (
+                  <>
+                    <span className="menu-price-6">${item.sizes["6\""] || "—"}</span>
+                    <span className="menu-price-12">${item.sizes["12\""] || "—"}</span>
+                  </>
+                )}
+                {item.price && !item.sizes && (
+                  <>
+                    <span className="menu-price-6">${item.price}</span>
+                    <span className="menu-price-12"></span>
+                  </>
+                )}
+                {item.description && <span className="menu-item-description">{item.description}</span>}
+              </>
             ) : (
               <>
                 <div className="menu-item-main">
@@ -306,6 +334,10 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
     const itemSortIds = (cat.items || []).map((it) => `item-${cat.id}-${it.id}`);
     const leaderStyle = (cat.items || []).length > 0 && (cat.items || []).every((it) => !it.description);
 
+    // In pamphlet mode, use panel names instead of numbers
+    const panelDisplay = preset === "pamphlet" ? panel : panel;
+    const panelOptions = preset === "pamphlet" ? ["left", "middle", "right"] : PANELS;
+
     return (
       <SortableCategory sortId={sortId} key={cat.id}>
         {({ setNodeRef, attributes, listeners, transform, transition, isDragging }) => (
@@ -334,22 +366,12 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
                   {isEditing ? "✓" : "✎"}
                 </button>
                 {preset === "pamphlet" && (
-                  <button
-                    type="button"
-                    className="menu-side-btn"
-                    onClick={() => setCatField(gi, "side", side === "front" ? "back" : "front")}
-                    title={`Move to ${side === "front" ? "back" : "front"} side`}
-                  >
-                    {side === "front" ? "→ back" : "← front"}
-                  </button>
-                )}
-                {preset === "pamphlet" && (
-                  <span className="menu-panel-picker" title="Which fold panel (column) this lands in">
-                    {PANELS.map((p) => (
+                  <span className="menu-panel-picker" title={`Which panel: ${panelOptions.join(", ")}`}>
+                    {panelOptions.map((p) => (
                       <button
                         key={p}
                         type="button"
-                        className={`menu-panel-btn${panel === p ? " active" : ""}`}
+                        className={`menu-panel-btn${panelDisplay === p ? " active" : ""}`}
                         onClick={() => setCatField(gi, "panel", p)}
                       >
                         {p}
@@ -361,7 +383,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
                   type="button"
                   className={`menu-plain-btn${cat.plain ? " active" : ""}`}
                   onClick={() => setCatField(gi, "plain", !cat.plain)}
-                  title="Toggle between banner header and plain script header (for info panels like Hours)"
+                  title="Toggle between banner header and plain header"
                 >
                   {cat.plain ? "banner" : "plain"}
                 </button>
@@ -414,6 +436,15 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
                   placeholder="Description (optional)"
                 />
               </div>
+            ) : preset === "pamphlet" ? (
+              <>
+                <header className={cat.plain ? "menu-cat-name-plain" : "section-banner"}>
+                  {!cat.plain && <span className="sunburst" aria-hidden="true">✦</span>}
+                  <h2>{cat.name}</h2>
+                  {!cat.plain && <span className="sunburst" aria-hidden="true">✦</span>}
+                </header>
+                {cat.description && <p className="section-intro">{cat.description}</p>}
+              </>
             ) : (
               <>
                 <h2 className={cat.plain ? "menu-cat-name-plain" : "menu-cat-name"}>
@@ -423,12 +454,19 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
               </>
             )}
 
-            <div className={cat.plain ? "menu-items menu-items-boxed" : "menu-items"}>
+            <div className={cat.plain ? "menu-items menu-items-boxed" : preset === "pamphlet" && !cat.plain ? "menu-items-list" : "menu-items"}>
               {sizeKeys.length > 0 && (
-                <div className="menu-size-header">
-                  <span className="menu-size-header-cols">
-                    {sizeKeys.map((sz) => <span className="menu-size-col" key={sz}>{sz}</span>)}
-                  </span>
+                <div className={preset === "pamphlet" && !cat.plain ? "price-header" : "menu-size-header"}>
+                  {preset === "pamphlet" && !cat.plain ? (
+                    <>
+                      <span></span>
+                      {sizeKeys.map((sz) => <span key={sz} className="price-header-6in">{sz}</span>)}
+                    </>
+                  ) : (
+                    <span className="menu-size-header-cols">
+                      {sizeKeys.map((sz) => <span className="menu-size-col" key={sz}>{sz}</span>)}
+                    </span>
+                  )}
                 </div>
               )}
               <SortableContext items={itemSortIds} strategy={verticalListSortingStrategy}>
@@ -447,6 +485,39 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
   }
 
   function renderPanels(side) {
+    // For pamphlet mode, render as three vertical fixed panels
+    if (preset === "pamphlet") {
+      return (
+        <div className="menu-panels">
+          {["left", "middle", "right"].map((panelName) => {
+            const indices = menu.categories
+              .map((_, i) => i)
+              .filter((i) => (menu.categories[i].panel || "left") === panelName);
+            const catSortIds = indices.map((gi) => `cat-${menu.categories[gi].id}`);
+            return (
+              <div className="menu-panel" key={panelName}>
+                <div className="menu-panel-inner">
+                  <SortableContext items={catSortIds} strategy={verticalListSortingStrategy}>
+                    {indices.map((gi) => renderCategory(gi, side, panelName))}
+                  </SortableContext>
+                  {editMode && (
+                    <button
+                      type="button"
+                      className="menu-add-cat-btn no-print"
+                      onClick={() => addCategory(side, panelName)}
+                    >
+                      + Add to {panelName} panel
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // Original list mode behavior
     return (
       <div className="menu-panels">
         {PANELS.map((p) => {

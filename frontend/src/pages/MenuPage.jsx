@@ -75,7 +75,6 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
 
   const theme = menu.theme || {};
   const titleStyle = theme.title_color ? { color: theme.title_color } : {};
-  const headerStyle = theme.header_color ? { background: theme.header_color } : {};
   const sheetStyle = theme.bg ? { background: theme.bg } : {};
   const preset = menu.preset === "list" ? "list" : "pamphlet";
 
@@ -415,7 +414,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
               </div>
             ) : (
               <>
-                <h2 className="menu-cat-name" style={headerStyle}>
+                <h2 className="menu-cat-name">
                   {cat.name}
                 </h2>
                 {cat.description && <p className="menu-cat-desc">{cat.description}</p>}
@@ -605,7 +604,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
         {settingsOpen && editMode && (
           <div className="menu-settings-panel no-print">
             <div className="menu-settings-colors">
-              {[["title_color", "Title"], ["header_color", "Headers"], ["subtitle_color", "Subtitle"], ["bg", "Background"]].map(([key, label]) => (
+              {[["title_color", "Title"], ["subtitle_color", "Subtitle"], ["bg", "Background"]].map(([key, label]) => (
                 <label className="menu-color-field" key={key}>
                   <input type="color" value={theme[key] || "#111111"} onChange={(e) => setTheme(key, e.target.value)} />
                   <span>{label}</span>

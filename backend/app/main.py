@@ -2365,6 +2365,21 @@ def apply_assistant_actions(
 
 # In production the React build is served by the API, giving Railway one secure
 # public service and avoiding cross-origin configuration for every deployment.
+#
+# index.html must never be cached by the browser: it's what points at the current
+# hashed asset filenames, so a stale cached copy makes every future deploy look like
+# it didn't take effect. The hashed /assets/* files change name whenever their
+# content changes, so those are safe to cache indefinitely.
+class SPAStaticFiles(StaticFiles):
+    async def get_response(self, path: str, scope):
+        response = await super().get_response(path, scope)
+        if path == "index.html" or path == "" or response.media_type == "text/html":
+            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        elif path.startswith("assets/"):
+            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        return response
+
+
 frontend_dist = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 if frontend_dist.is_dir():
-    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
+    app.mount("/", SPAStaticFiles(directory=frontend_dist, html=True), name="frontend")

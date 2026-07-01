@@ -1431,13 +1431,14 @@ body {
   .menu-title { font-size: 1.55rem !important; margin-bottom: 2px !important; }
   .menu-subtitle { font-size: .72rem !important; }
   .menu-panel-title { font-size: .66rem !important; margin-bottom: 7px !important; padding-bottom: 5px !important; }
-  .menu-panel { padding: 0 10px !important; }
+  .menu-panel { padding: 0 10px !important; --menu-pad-x: 10px !important; }
+  .menu-list-sheet { padding: 18px 22px 22px !important; --menu-pad-x: 22px !important; }
   .menu-category { margin-bottom: 18px !important; }
   .menu-cat-name {
     font-size: .85rem !important; letter-spacing: .07em !important;
     padding: 8px 10px !important; margin: 0 0 7px !important;
-    margin-left: -10px !important; margin-right: -10px !important;
-    width: calc(100% + 20px) !important;
+    margin-left: calc(-1 * var(--menu-pad-x, 10px)) !important; margin-right: calc(-1 * var(--menu-pad-x, 10px)) !important;
+    width: calc(100% + 2 * var(--menu-pad-x, 10px)) !important;
   }
   .menu-cat-desc { font-size: .64rem !important; margin-bottom: 5px !important; }
   .menu-items { gap: 6px !important; margin-top: 6px !important; }
@@ -1485,6 +1486,24 @@ body {
   border-bottom-color: #d4c9b0;
 }
 .menu-pamphlet .menu-footer { padding: 8px 18px; margin-top: 6px; border-top-color: #d4c9b0; }
+
+/* Simple list preset — single column, one continuous page, no fold panels */
+.menu-list-sheet {
+  max-width: 820px;
+  border-radius: 12px;
+  border: 1px solid #e4dfd0;
+  box-shadow: 0 2px 10px rgba(0,0,0,.07);
+  padding: 30px 36px 34px;
+  margin: 0 auto 20px;
+  background: #fffdf8;
+  --menu-pad-x: 36px;
+}
+.menu-list-categories { display: flex; flex-direction: column; gap: 20px; }
+.menu-list-categories .menu-category { padding: 0; }
+.menu-preset-select {
+  border: 1px solid #d0dae9; border-radius: 7px; padding: 6px 9px;
+  font-size: .82rem; color: #14203a; background: #f9fbfe; cursor: pointer;
+}
 
 /* Inline edit controls */
 .menu-cat-toolbar { display: flex; align-items: center; gap: 5px; margin-bottom: 6px; }
@@ -1583,7 +1602,7 @@ body {
 
 /* Panels — explicit fold columns (left to right = panel 1, 2, 3) so front/back line up when folded */
 .menu-panels { display: flex; align-items: stretch; }
-.menu-panel { flex: 1 1 0; min-width: 0; border-right: 1.5px solid #d4c9b0; padding: 0 13px; }
+.menu-panel { flex: 1 1 0; min-width: 0; border-right: 1.5px solid #d4c9b0; padding: 0 13px; --menu-pad-x: 13px; }
 .menu-panel:last-child { border-right: none; }
 .menu-panel-title {
   text-align: center; font-weight: 800; font-size: .76rem; letter-spacing: .06em;
@@ -1597,8 +1616,9 @@ body {
   display: flex; align-items: center; justify-content: center; gap: 6px;
   font-size: 1rem; font-weight: 800; color: #fff;
   text-transform: uppercase; letter-spacing: .1em; text-align: center;
-  margin: 0 0 8px; margin-left: -13px; margin-right: -13px;
-  width: calc(100% + 26px);
+  margin: 0 0 8px;
+  margin-left: calc(-1 * var(--menu-pad-x, 13px)); margin-right: calc(-1 * var(--menu-pad-x, 13px));
+  width: calc(100% + 2 * var(--menu-pad-x, 13px));
   padding: 9px 16px;
   background-color: #b0221c;
   background-image:

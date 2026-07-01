@@ -6,6 +6,7 @@ const DEFAULT_MENU = {
   footer: "",
   columns: 3,
   print_landscape: true,
+  preset: "pamphlet",
   theme: {},
   categories: [],
 };
@@ -58,6 +59,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
   const titleStyle = theme.title_color ? { color: theme.title_color } : {};
   const headerStyle = theme.header_color ? { background: theme.header_color } : {};
   const sheetStyle = theme.bg ? { background: theme.bg } : {};
+  const preset = menu.preset === "list" ? "list" : "pamphlet";
 
   function setField(key, val) { setMenu((m) => ({ ...m, [key]: val })); }
   function setTheme(key, val) { setMenu((m) => ({ ...m, theme: { ...(m.theme || {}), [key]: val } })); }
@@ -334,7 +336,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
                 e.dataTransfer.effectAllowed = "move";
                 e.stopPropagation();
               }}
-              title="Drag to reorder within this panel"
+              title={preset === "list" ? "Drag to reorder" : "Drag to reorder within this panel"}
             >
               <MoveIcon />
             </span>
@@ -345,26 +347,30 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
             >
               {isEditing ? "✓" : "✎"}
             </button>
-            <button
-              type="button"
-              className="menu-side-btn"
-              onClick={() => setCatField(gi, "side", side === "front" ? "back" : "front")}
-              title={`Move to ${side === "front" ? "back" : "front"} side`}
-            >
-              {side === "front" ? "→ back" : "← front"}
-            </button>
-            <span className="menu-panel-picker" title="Which fold panel (column) this lands in">
-              {PANELS.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  className={`menu-panel-btn${panel === p ? " active" : ""}`}
-                  onClick={() => setCatField(gi, "panel", p)}
-                >
-                  {p}
-                </button>
-              ))}
-            </span>
+            {preset === "pamphlet" && (
+              <button
+                type="button"
+                className="menu-side-btn"
+                onClick={() => setCatField(gi, "side", side === "front" ? "back" : "front")}
+                title={`Move to ${side === "front" ? "back" : "front"} side`}
+              >
+                {side === "front" ? "→ back" : "← front"}
+              </button>
+            )}
+            {preset === "pamphlet" && (
+              <span className="menu-panel-picker" title="Which fold panel (column) this lands in">
+                {PANELS.map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    className={`menu-panel-btn${panel === p ? " active" : ""}`}
+                    onClick={() => setCatField(gi, "panel", p)}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </span>
+            )}
             <button type="button" className="menu-remove-btn" onClick={() => removeCategory(gi)}>×</button>
           </div>
         )}
@@ -471,6 +477,76 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
     );
   }
 
+  function renderTitleBlock() {
+    return (
+      <div className="menu-title-block">
+        {editingKey === "title" ? (
+          <div className="menu-title-edit-wrap">
+            <input
+              className="edl-input menu-title-input"
+              value={menu.title || ""}
+              onChange={(e) => setField("title", e.target.value)}
+              placeholder="Menu title"
+              autoFocus
+            />
+            <input
+              className="edl-input menu-subtitle-input"
+              value={menu.subtitle || ""}
+              onChange={(e) => setField("subtitle", e.target.value)}
+              placeholder="Subtitle — address, phone…"
+            />
+          </div>
+        ) : (
+          <>
+            <h1 className="menu-title" style={titleStyle}>{menu.title || businessName || "Menu"}</h1>
+            {menu.subtitle && (
+              <p className="menu-subtitle" style={theme.subtitle_color ? { color: theme.subtitle_color } : {}}>
+                {menu.subtitle}
+              </p>
+            )}
+          </>
+        )}
+        {editMode && (
+          <button
+            type="button"
+            className="menu-edit-btn no-print"
+            style={{ marginTop: "8px" }}
+            onClick={() => setEditingKey(editingKey === "title" ? null : "title")}
+          >
+            {editingKey === "title" ? "✓ Done" : "✎ Edit title & subtitle"}
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  function renderFooterBlock() {
+    return (
+      <>
+        {editingKey === "footer" ? (
+          <input
+            className="edl-input menu-footer-input no-print"
+            value={menu.footer || ""}
+            onChange={(e) => setField("footer", e.target.value)}
+            placeholder="Footer text…"
+          />
+        ) : menu.footer ? (
+          <p className="menu-footer">{menu.footer}</p>
+        ) : null}
+        {editMode && (
+          <button
+            type="button"
+            className="menu-edit-btn no-print"
+            style={{ display: "block", margin: "6px auto 0" }}
+            onClick={() => setEditingKey(editingKey === "footer" ? null : "footer")}
+          >
+            {editingKey === "footer" ? "✓ Done" : "✎ footer"}
+          </button>
+        )}
+      </>
+    );
+  }
+
   const hasFront = menu.categories.some((c) => (c.side || "front") === "front");
   const hasBack = menu.categories.some((c) => c.side === "back");
   const landscape = menu.print_landscape !== false;
@@ -489,12 +565,25 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
 
   return (
     <div className="page menu-page">
-      {landscape && <style>{`@page { size: letter landscape; margin: 0.2in; }`}</style>}
+      {preset === "pamphlet"
+        ? (landscape && <style>{`@page { size: letter landscape; margin: 0.2in; }`}</style>)
+        : <style>{`@page { size: letter portrait; margin: 0.4in; }`}</style>}
 
       <div className="page-header menu-page-header no-print">
         <div><span className="eyebrow">PRINTABLE</span><h1>Menu</h1></div>
         {canEdit && (
           <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+            {editMode && (
+              <select
+                className="menu-preset-select"
+                value={preset}
+                onChange={(e) => setField("preset", e.target.value)}
+                title="Menu layout preset"
+              >
+                <option value="pamphlet">Pamphlet (fold, front/back)</option>
+                <option value="list">Simple list (one page)</option>
+              </select>
+            )}
             {editMode && (
               <button className="secondary-btn compact" onClick={() => setSettingsOpen((v) => !v)}>⚙ Theme</button>
             )}
@@ -526,82 +615,43 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
         </div>
       )}
 
-      {/* ── FRONT PAGE ── */}
-      {(hasFront || editMode) && (
-        <div className="menu-sheet menu-pamphlet menu-page-front" style={sheetStyle}>
-          <div className="menu-title-block">
-            {editingKey === "title" ? (
-              <div className="menu-title-edit-wrap">
-                <input
-                  className="edl-input menu-title-input"
-                  value={menu.title || ""}
-                  onChange={(e) => setField("title", e.target.value)}
-                  placeholder="Menu title"
-                  autoFocus
-                />
-                <input
-                  className="edl-input menu-subtitle-input"
-                  value={menu.subtitle || ""}
-                  onChange={(e) => setField("subtitle", e.target.value)}
-                  placeholder="Subtitle — address, phone…"
-                />
-              </div>
-            ) : (
-              <>
-                <h1 className="menu-title" style={titleStyle}>{menu.title || businessName || "Menu"}</h1>
-                {menu.subtitle && (
-                  <p className="menu-subtitle" style={theme.subtitle_color ? { color: theme.subtitle_color } : {}}>
-                    {menu.subtitle}
-                  </p>
-                )}
-              </>
-            )}
-            {editMode && (
-              <button
-                type="button"
-                className="menu-edit-btn no-print"
-                style={{ marginTop: "8px" }}
-                onClick={() => setEditingKey(editingKey === "title" ? null : "title")}
-              >
-                {editingKey === "title" ? "✓ Done" : "✎ Edit title & subtitle"}
-              </button>
-            )}
+      {preset === "list" ? (
+        <div className="menu-sheet menu-list-sheet" style={sheetStyle}>
+          {renderTitleBlock()}
+
+          <div className="menu-list-categories">
+            {menu.categories.map((_, gi) => renderCategory(gi, "list", 1))}
           </div>
 
-          {renderPanels("front")}
-        </div>
-      )}
-
-      {/* ── BACK PAGE ── */}
-      {(hasBack || editMode) && (
-        <div className="menu-sheet menu-pamphlet menu-page-back" style={sheetStyle}>
           {editMode && (
-            <div className="menu-back-label no-print">Back side — prints on page 2 · panels = fold columns left to right</div>
-          )}
-
-          {renderPanels("back")}
-
-          {editingKey === "footer" ? (
-            <input
-              className="edl-input menu-footer-input no-print"
-              value={menu.footer || ""}
-              onChange={(e) => setField("footer", e.target.value)}
-              placeholder="Footer text…"
-            />
-          ) : menu.footer ? (
-            <p className="menu-footer">{menu.footer}</p>
-          ) : null}
-          {editMode && (
-            <button
-              type="button"
-              className="menu-edit-btn no-print"
-              style={{ display: "block", margin: "6px auto 0" }}
-              onClick={() => setEditingKey(editingKey === "footer" ? null : "footer")}
-            >
-              {editingKey === "footer" ? "✓ Done" : "✎ footer"}
+            <button type="button" className="menu-add-cat-btn no-print" onClick={() => addCategory("list", 1)}>
+              + Add category
             </button>
           )}
+
+          {renderFooterBlock()}
         </div>
+      ) : (
+        <>
+          {/* ── FRONT PAGE ── */}
+          {(hasFront || editMode) && (
+            <div className="menu-sheet menu-pamphlet menu-page-front" style={sheetStyle}>
+              {renderTitleBlock()}
+              {renderPanels("front")}
+            </div>
+          )}
+
+          {/* ── BACK PAGE ── */}
+          {(hasBack || editMode) && (
+            <div className="menu-sheet menu-pamphlet menu-page-back" style={sheetStyle}>
+              {editMode && (
+                <div className="menu-back-label no-print">Back side — prints on page 2 · panels = fold columns left to right</div>
+              )}
+              {renderPanels("back")}
+              {renderFooterBlock()}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

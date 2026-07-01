@@ -25,6 +25,22 @@ function MoveIcon() {
   );
 }
 
+function SunburstIcon() {
+  const longRays = Array.from({ length: 8 }, (_, i) => i * 45);
+  const shortRays = Array.from({ length: 8 }, (_, i) => i * 45 + 22.5);
+  return (
+    <svg className="menu-cat-sun" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+      {longRays.map((a) => (
+        <line key={`l${a}`} x1="12" y1="12" x2="12" y2="1" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" transform={`rotate(${a} 12 12)`} />
+      ))}
+      {shortRays.map((a) => (
+        <line key={`s${a}`} x1="12" y1="12" x2="12" y2="4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" transform={`rotate(${a} 12 12)`} />
+      ))}
+      <circle cx="12" cy="12" r="3" fill="currentColor" />
+    </svg>
+  );
+}
+
 export default function MenuPage({ config: rawConfig, businessName, onSaveConfig }) {
   const canEdit = typeof onSaveConfig === "function";
   const [menu, setMenu] = useState(() => ({ ...DEFAULT_MENU, ...(rawConfig || {}) }));
@@ -155,7 +171,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
     setSettingsOpen(false);
   }
 
-  function renderItem(gi, ii, item) {
+  function renderItem(gi, ii, item, sizeKeys) {
     const key = `${gi}-item-${ii}`;
     const isEditing = editingKey === key;
     return (
@@ -238,10 +254,9 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
             </div>
             <div className="menu-item-prices">
               {item.sizes
-                ? Object.entries(item.sizes).map(([sz, price]) => (
-                    <span className="menu-price-pair" key={sz}>
-                      <span className="menu-size">{sz}</span>
-                      <span className="menu-price">{price ? `$${price}` : "—"}</span>
+                ? sizeKeys.map((sz) => (
+                    <span className="menu-price-col" key={sz}>
+                      {item.sizes[sz] ? `$${item.sizes[sz]}` : "—"}
                     </span>
                   ))
                 : item.price ? <span className="menu-price">${item.price}</span> : null}
@@ -281,6 +296,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
     const cat = menu.categories[gi];
     const catKey = String(gi);
     const isEditing = editingKey === catKey;
+    const sizeKeys = Array.from(new Set((cat.items || []).flatMap((it) => it.sizes ? Object.keys(it.sizes) : [])));
     return (
       <div
         className="menu-category"
@@ -401,7 +417,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
         ) : (
           <>
             <h2 className="menu-cat-name" style={headerStyle}>
-              <span className="menu-cat-sun" aria-hidden="true">✺</span>
+              <SunburstIcon />
               {cat.name}
             </h2>
             {cat.description && <p className="menu-cat-desc">{cat.description}</p>}
@@ -409,7 +425,14 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
         )}
 
         <div className="menu-items">
-          {(cat.items || []).map((item, ii) => renderItem(gi, ii, item))}
+          {sizeKeys.length > 0 && (
+            <div className="menu-size-header">
+              <span className="menu-size-header-cols">
+                {sizeKeys.map((sz) => <span className="menu-size-col" key={sz}>{sz}</span>)}
+              </span>
+            </div>
+          )}
+          {(cat.items || []).map((item, ii) => renderItem(gi, ii, item, sizeKeys))}
         </div>
         {editMode && (
           <button type="button" className="menu-add-item-btn no-print" onClick={() => addItem(gi)}>
@@ -432,6 +455,9 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
             });
           return (
             <div className="menu-panel" key={p}>
+              {side === "front" && (
+                <div className="menu-panel-title" style={titleStyle}>{menu.title || businessName || "Menu"}</div>
+              )}
               {indices.map((gi) => renderCategory(gi, side, p))}
               {editMode && (
                 <button type="button" className="menu-add-cat-btn no-print" onClick={() => addCategory(side, p)}>

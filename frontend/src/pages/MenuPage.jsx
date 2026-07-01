@@ -271,7 +271,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
                   <span className="menu-item-name">{item.name}</span>
                   {item.description && <span className="menu-item-desc">{item.description}</span>}
                 </div>
-                {leaderStyle && (item.sizes || item.price) && <span className="menu-item-leader-fill" aria-hidden="true" />}
+                {leaderStyle && <span className="menu-item-leader-fill" aria-hidden="true" />}
                 <div className="menu-item-prices">
                   {item.sizes
                     ? sizeKeys.map((sz) => (

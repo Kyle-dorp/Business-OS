@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Kaushan+Script&display=swap');
+
 * { box-sizing: border-box; }
 
 :root {
@@ -1435,7 +1437,7 @@ body {
   .menu-list-sheet { padding: 18px 22px 22px !important; --menu-pad-x: 22px !important; }
   .menu-category { margin-bottom: 18px !important; }
   .menu-cat-name {
-    font-size: .85rem !important; letter-spacing: .07em !important;
+    font-size: 1.15rem !important;
     padding: 8px 10px !important; margin: 0 0 7px !important;
     margin-left: calc(-1 * var(--menu-pad-x, 10px)) !important; margin-right: calc(-1 * var(--menu-pad-x, 10px)) !important;
     width: calc(100% + 2 * var(--menu-pad-x, 10px)) !important;
@@ -1613,20 +1615,31 @@ body {
 .menu-cat-img { width: 100%; max-height: 100px; object-fit: cover; border-radius: 6px; margin-bottom: 6px; }
 .menu-cat-emoji { display: none; }
 .menu-cat-name {
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  font-size: 1rem; font-weight: 800; color: #fff;
-  text-transform: uppercase; letter-spacing: .1em; text-align: center;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-family: "Kaushan Script", cursive; font-size: 1.5rem; font-weight: 400; color: #fff;
+  letter-spacing: .01em; text-align: center;
   margin: 0 0 8px;
   margin-left: calc(-1 * var(--menu-pad-x, 13px)); margin-right: calc(-1 * var(--menu-pad-x, 13px));
   width: calc(100% + 2 * var(--menu-pad-x, 13px));
-  padding: 9px 16px;
-  background-color: #5c0e09;
-  background-image: repeating-conic-gradient(from 0deg at 50% 130%, #4a0b07 0deg 7.5deg, #de5233 7.5deg 15deg);
-  text-shadow: 0 1px 4px rgba(0,0,0,.6), 0 0 2px rgba(0,0,0,.5);
+  padding: 10px 16px;
+  background-color: #b5652f;
+  background-image:
+    radial-gradient(circle at 6% 30%, rgba(255,255,255,.35) 1.3px, transparent 1.6px),
+    radial-gradient(circle at 14% 70%, rgba(0,0,0,.15) 1.1px, transparent 1.4px),
+    radial-gradient(circle at 24% 20%, rgba(255,255,255,.3) 1.2px, transparent 1.5px),
+    radial-gradient(circle at 33% 65%, rgba(0,0,0,.12) 1px, transparent 1.3px),
+    radial-gradient(circle at 44% 40%, rgba(255,255,255,.32) 1.3px, transparent 1.6px),
+    radial-gradient(circle at 55% 75%, rgba(0,0,0,.14) 1.1px, transparent 1.4px),
+    radial-gradient(circle at 66% 25%, rgba(255,255,255,.3) 1.2px, transparent 1.5px),
+    radial-gradient(circle at 76% 60%, rgba(0,0,0,.15) 1px, transparent 1.3px),
+    radial-gradient(circle at 86% 35%, rgba(255,255,255,.34) 1.3px, transparent 1.6px),
+    radial-gradient(circle at 94% 72%, rgba(0,0,0,.13) 1.1px, transparent 1.4px);
+  text-shadow: 0 1px 0 rgba(0,0,0,.55), 0 2px 3px rgba(0,0,0,.4);
   box-shadow: 0 2px 5px rgba(0,0,0,.12);
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px));
 }
 .menu-cat-sun { color: #ffd84a; flex-shrink: 0; filter: drop-shadow(0 0 1px rgba(0,0,0,.35)); }
+.menu-cat-sun.menu-cat-sun-right { transform: scaleX(-1); }
 .menu-cat-desc { font-size: .72rem; color: var(--muted); margin: 0 0 5px; font-style: italic; padding: 0 2px; }
 
 /* Items */

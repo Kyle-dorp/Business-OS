@@ -95,6 +95,12 @@ export default function App() {
   const [businesses, setBusinesses] = useState([]);
   const [workspace, setWorkspace] = useState(null);
   const [uiConfig, setUiConfig] = useState(null);
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("business-os.dark-mode") === "1");
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", darkMode ? "dark" : "light");
+    localStorage.setItem("business-os.dark-mode", darkMode ? "1" : "0");
+  }, [darkMode]);
   const tabs = useMemo(() => {
     if (user?.role !== "manager") return EMPLOYEE_TABS;
     const configured = new Map((workspace?.modules || []).map((item) => [item.module_key, item.enabled]));
@@ -207,7 +213,7 @@ export default function App() {
       <div className="drawer-footer account-footer"><div className="account-avatar">{user.username[0].toUpperCase()}</div><div><strong>{user.username}</strong><span>{workspace?.role || user.role}</span></div><button title="Log out" onClick={logout}>↪</button></div>
     </aside>
     <main className="main">
-      <header className="topbar"><button className="hamburger" aria-label="Toggle navigation" onClick={() => setDrawerOpen((v) => !v)}><span /><span /><span /></button><div className="topbar-copy"><span>{workspace?.business?.name || "Business workspace"}</span><strong>{currentLabel}</strong></div><div className="topbar-actions">{user.role === "manager" && <button className="topbar-notification" onClick={() => changeTab("notifications")}>●{notificationCount > 0 && <b>{notificationCount}</b>}</button>}<button className="topbar-profile" onClick={() => changeTab("settings")}><span>{user.username[0].toUpperCase()}</span><div><strong>{user.username}</strong><small>{workspace?.role || user.role}</small></div></button></div></header>
+      <header className="topbar"><button className="hamburger" aria-label="Toggle navigation" onClick={() => setDrawerOpen((v) => !v)}><span /><span /><span /></button><div className="topbar-copy"><span>{workspace?.business?.name || "Business workspace"}</span><strong>{currentLabel}</strong></div><div className="topbar-actions"><button className="topbar-notification dark-toggle-btn" title={darkMode ? "Switch to light mode" : "Switch to dark mode"} onClick={() => setDarkMode((v) => !v)}>{darkMode ? "☀" : "☾"}</button>{user.role === "manager" && <button className="topbar-notification" onClick={() => changeTab("notifications")}>●{notificationCount > 0 && <b>{notificationCount}</b>}</button>}<button className="topbar-profile" onClick={() => changeTab("settings")}><span>{user.username[0].toUpperCase()}</span><div><strong>{user.username}</strong><small>{workspace?.role || user.role}</small></div></button></div></header>
       <PageErrorBoundary pageKey={activeTab}>
         {user.role === "manager" ? <>
           {activeTab === "home" && <PlatformPage section="overview" />}

@@ -1717,3 +1717,72 @@ body {
 .cfe-toggle-price { border: 1px solid #d0dae9; background: #fff; border-radius: 6px; padding: 3px 8px; font-size: .72rem; color: #4a6a90; cursor: pointer; }
 .cfe-toggle-price:hover { background: #eef3f9; }
 .cfe-add-cat { width: 100%; text-align: center; margin-top: 4px; }
+
+/* ── Dark mode ────────────────────────────────────────────────────────────────
+   Scoped to [data-theme="dark"] on <html>. The printable Menu page keeps its
+   own light theme regardless (it's meant to be printed on paper), so .menu-*
+   classes are deliberately left out of this section. Per-business brand
+   colors (buttons, active nav, sidebar, page_bg) still come from the theme
+   set in Settings/AI Assistant via buildThemeStyle() in App.jsx; dark mode
+   only changes surface/text/border so the two systems can combine. */
+:root[data-theme="dark"] {
+  color: var(--text);
+  --text: #e7ecf5;
+  --muted: #98a6bf;
+  --line: #34405a;
+  --surface: #1c2434;
+  --ink: #f2f5fb;
+  --shadow: 0 1px 3px rgba(0,0,0,.5), 0 4px 18px rgba(0,0,0,.4);
+}
+[data-theme="dark"] body { background: #121722 !important; }
+[data-theme="dark"] .card,
+[data-theme="dark"] .schedule-day-card,
+[data-theme="dark"] .department-panel,
+[data-theme="dark"] .labor-day-card,
+[data-theme="dark"] .assistant-shell {
+  border-color: var(--line) !important;
+}
+[data-theme="dark"] .os-field input, [data-theme="dark"] .os-field select,
+[data-theme="dark"] .setup-disclosure, [data-theme="dark"] .ops-disclosure,
+[data-theme="dark"] .preset-grid button,
+[data-theme="dark"] .recommendation, [data-theme="dark"] .preset-recommendation,
+[data-theme="dark"] .employee-body, [data-theme="dark"] .position-choice,
+[data-theme="dark"] .detail-toggle, [data-theme="dark"] .check-chip,
+[data-theme="dark"] .crew-target-card, [data-theme="dark"] .version-btn,
+[data-theme="dark"] .message-bubble, [data-theme="dark"] .proposal-card,
+[data-theme="dark"] .typing-bubble, [data-theme="dark"] .composer,
+[data-theme="dark"] .generate-card select, [data-theme="dark"] .hero-action,
+[data-theme="dark"] .sales-block-editor,
+[data-theme="dark"] .proposal-preview-panel, [data-theme="dark"] .proposal-preview-close,
+[data-theme="dark"] .employee-week-card, [data-theme="dark"] .employee-shift-day,
+[data-theme="dark"] .filter-pills button, [data-theme="dark"] .notification-card,
+[data-theme="dark"] .danger-outline-btn,
+[data-theme="dark"] .cc-date-input, [data-theme="dark"] .cc-notes,
+[data-theme="dark"] .cfe-panel, [data-theme="dark"] .edl-input,
+[data-theme="dark"] .cfe-toggle-price, [data-theme="dark"] .cfe-item-row,
+[data-theme="dark"] .cfe-cat-header, [data-theme="dark"] .disclosure-body,
+[data-theme="dark"] .empty-inline, [data-theme="dark"] .blank-rule,
+[data-theme="dark"] input, [data-theme="dark"] select, [data-theme="dark"] textarea {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+[data-theme="dark"] select option { background: var(--surface) !important; color: var(--text) !important; }
+[data-theme="dark"] .os-table th { background: #232c40 !important; color: var(--muted) !important; border-color: var(--line) !important; }
+[data-theme="dark"] .os-table td { color: var(--text) !important; border-color: var(--line) !important; }
+[data-theme="dark"] .os-heading h1, [data-theme="dark"] .page-header h1,
+[data-theme="dark"] .cfe-header strong, [data-theme="dark"] .cfe-cat-name,
+[data-theme="dark"] .drawer-brand strong, [data-theme="dark"] .topbar-copy strong,
+[data-theme="dark"] .module-toggle-row strong, [data-theme="dark"] .empty-state h2 {
+  color: var(--ink) !important;
+}
+[data-theme="dark"] .commercial-shell .topbar {
+  background: rgba(18,23,34,.86) !important;
+  box-shadow: 0 1px 0 rgba(52,64,90,.6), 0 8px 30px rgba(0,0,0,.3) !important;
+}
+[data-theme="dark"] .topbar-notification {
+  background: var(--surface) !important; color: var(--muted) !important; border-color: var(--line) !important;
+}
+[data-theme="dark"] .topbar-profile:hover { background: var(--surface) !important; }
+[data-theme="dark"] .commercial-shell .hamburger span { background: var(--text) !important; }
+[data-theme="dark"] .dark-toggle-btn { background: var(--surface) !important; color: var(--muted) !important; border-color: var(--line) !important; }

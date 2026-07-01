@@ -119,30 +119,6 @@ export default function SettingsPage({ user, workspaceRole, modules = [], onModu
     <div className="page-header"><div><span className="eyebrow">WORKSPACE CONTROLS</span><h1>Settings</h1><p>Choose what appears, manage your sign-in, and control access.</p></div>{saved && <div className="save-toast">✓ {saved}</div>}</div>
     {error && <div className="alert error">{error}</div>}
 
-    {user.role === "manager" && ["owner", "admin"].includes(workspaceRole) && <>
-      <section className="card os-form" style={{ borderTop: "3px solid var(--blue, #2f6fed)" }}>
-        <span className="eyebrow">BUSINESS PROFILE</span>
-        <h2 style={{ marginTop: "4px" }}>Business name</h2>
-        <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "8px" }}>
-          <input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="e.g. Bam's Sub Shoppe" style={{ flex: 1 }} />
-          <button className="primary-btn" onClick={saveBusinessName} disabled={!businessName.trim()}>Save</button>
-        </div>
-      </section>
-
-      <details className="card ops-disclosure setup-disclosure" defaultOpen>
-        <summary><div><span className="eyebrow">QUICK SETUP</span><h2>What kind of business is this?</h2><p>A preset configures the right tools, departments, closing checklist, and branding in one click.</p></div><b>⌄</b></summary>
-        <div className="disclosure-body">
-          <div className="preset-grid">{presets.map((preset) => <button key={preset.key} disabled={modulesBusy} onClick={() => choosePreset(preset.key)} style={preset.key === "sub_shop" ? { borderColor: "var(--blue,#2f6fed)", background: "var(--blue,#2f6fed)11" } : undefined}><strong>{preset.label}</strong><span>{preset.description}</span></button>)}</div>
-          <div className="ai-preset-box"><div><span className="eyebrow">LET CLAUDE CHOOSE</span><h3>Describe the business normally</h3><p>Claude will recommend a preset. Nothing changes until you approve it.</p></div><textarea placeholder="Example: We run a warehouse that receives pallets, stores inventory, and ships customer orders." value={businessDescription} onChange={(event) => setBusinessDescription(event.target.value)} /><button className="primary-btn" disabled={modulesBusy || !businessDescription.trim()} onClick={askAiForPreset}>Recommend my setup</button>{recommendation && <div className="preset-recommendation"><div><strong>{recommendation.label}</strong><span>{recommendation.description}</span></div><button className="small-btn" onClick={() => choosePreset(recommendation.key)}>Apply this setup</button></div>}</div>
-        </div>
-      </details>
-
-      <details className="card ops-disclosure module-settings-card">
-        <summary><div><span className="eyebrow">CUSTOM SETUP</span><h2>Choose tools one by one</h2><p>Open this only when you want precise control over the menu.</p></div><b>⌄</b></summary>
-        <div className="disclosure-body"><div className="module-preset-actions"><button className="secondary-btn compact" disabled={modulesBusy} onClick={() => applyPreset(true)}>Use a simple menu</button><button className="secondary-btn compact" disabled={modulesBusy} onClick={() => applyPreset(false)}>Show everything</button></div><div className="module-toggle-grid">{MODULE_OPTIONS.map(([key, label, description]) => <label className="module-toggle-row" key={key}><div><strong>{label}</strong><span>{description}</span></div><input type="checkbox" checked={moduleState[key] !== false} disabled={modulesBusy} onChange={(event) => setModule(key, event.target.checked)} /></label>)}</div><p className="module-safety-note">Overview and Settings always remain visible.</p></div>
-      </details>
-    </>}
-
     <div className="settings-layout">
       <form className="card account-card" onSubmit={saveAccount}>
         <div className="section-title"><div><span className="eyebrow">MY ACCOUNT</span><h2>Sign-in details</h2></div><span className={`role-chip ${user.role}`}>{user.role}</span></div>
@@ -164,5 +140,29 @@ export default function SettingsPage({ user, workspaceRole, modules = [], onModu
         <div className="team-account-list">{users.map((row) => <article className="team-account-row" key={row.id}><div className="account-avatar">{row.username[0].toUpperCase()}</div><div><strong>{row.username}</strong><span>{row.role}</span></div><span className={row.active ? "account-state active" : "account-state"}>{row.active ? "Active" : "Disabled"}</span><button className="secondary-btn compact" disabled={row.id === user.id} onClick={() => toggleUser(row)}>{row.active ? "Disable" : "Enable"}</button></article>)}</div>
       </section>}
     </div>
+
+    {user.role === "manager" && ["owner", "admin"].includes(workspaceRole) && <>
+      <section className="card os-form" style={{ borderTop: "3px solid var(--blue, #2f6fed)" }}>
+        <span className="eyebrow">BUSINESS PROFILE</span>
+        <h2 style={{ marginTop: "4px" }}>Business name</h2>
+        <div style={{ display: "flex", gap: "8px", alignItems: "center", marginTop: "8px" }}>
+          <input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="e.g. Bam's Sub Shoppe" style={{ flex: 1 }} />
+          <button className="primary-btn" onClick={saveBusinessName} disabled={!businessName.trim()}>Save</button>
+        </div>
+      </section>
+
+      <details className="card ops-disclosure setup-disclosure">
+        <summary><div><span className="eyebrow">QUICK SETUP</span><h2>What kind of business is this?</h2><p>A preset configures the right tools, departments, closing checklist, and branding in one click.</p></div><b>⌄</b></summary>
+        <div className="disclosure-body">
+          <div className="preset-grid">{presets.map((preset) => <button key={preset.key} disabled={modulesBusy} onClick={() => choosePreset(preset.key)} style={preset.key === "sub_shop" ? { borderColor: "var(--blue,#2f6fed)", background: "var(--blue,#2f6fed)11" } : undefined}><strong>{preset.label}</strong><span>{preset.description}</span></button>)}</div>
+          <div className="ai-preset-box"><div><span className="eyebrow">LET CLAUDE CHOOSE</span><h3>Describe the business normally</h3><p>Claude will recommend a preset. Nothing changes until you approve it.</p></div><textarea placeholder="Example: We run a warehouse that receives pallets, stores inventory, and ships customer orders." value={businessDescription} onChange={(event) => setBusinessDescription(event.target.value)} /><button className="primary-btn" disabled={modulesBusy || !businessDescription.trim()} onClick={askAiForPreset}>Recommend my setup</button>{recommendation && <div className="preset-recommendation"><div><strong>{recommendation.label}</strong><span>{recommendation.description}</span></div><button className="small-btn" onClick={() => choosePreset(recommendation.key)}>Apply this setup</button></div>}</div>
+        </div>
+      </details>
+
+      <details className="card ops-disclosure module-settings-card">
+        <summary><div><span className="eyebrow">CUSTOM SETUP</span><h2>Choose tools one by one</h2><p>Open this only when you want precise control over the menu.</p></div><b>⌄</b></summary>
+        <div className="disclosure-body"><div className="module-preset-actions"><button className="secondary-btn compact" disabled={modulesBusy} onClick={() => applyPreset(true)}>Use a simple menu</button><button className="secondary-btn compact" disabled={modulesBusy} onClick={() => applyPreset(false)}>Show everything</button></div><div className="module-toggle-grid">{MODULE_OPTIONS.map(([key, label, description]) => <label className="module-toggle-row" key={key}><div><strong>{label}</strong><span>{description}</span></div><input type="checkbox" checked={moduleState[key] !== false} disabled={modulesBusy} onChange={(event) => setModule(key, event.target.checked)} /></label>)}</div><p className="module-safety-note">Overview and Settings always remain visible.</p></div>
+      </details>
+    </>}
   </div>;
 }

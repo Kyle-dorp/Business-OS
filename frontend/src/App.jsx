@@ -194,7 +194,7 @@ export default function App() {
       <nav className="drawer-nav">
         <div className="workspace-switcher"><select className="workspace-select" value={workspace?.business?.id || ""} onChange={(e) => switchBusiness(e.target.value)}>{businesses.map((x) => <option key={x.business.id} value={x.business.id}>{x.business.name}</option>)}</select>{user.role === "manager" && <button title="Create another business" onClick={createBusiness}>+</button>}</div>
         <span className="drawer-section-label">WORKSPACE</span>
-        {user.role !== "manager" ? resolvedTabs.map(tabButton) : <>
+        {user.role !== "manager" ? resolvedTabs.filter((tab) => tab.id !== "settings").map(tabButton) : <>
           {resolvedTabs.filter((tab) => tab.id === "home").map(tabButton)}
           {drawerOpen && !navFlat ? <>
             {MANAGER_NAV_GROUPS.map((group) => {
@@ -205,9 +205,8 @@ export default function App() {
                 <div>{groupTabs.map(tabButton)}</div>
               </details>;
             })}
-            {resolvedTabs.filter((tab) => !groupedTabIds.has(tab.id) && !["home", "settings"].includes(tab.id)).map(tabButton)}
-          </> : resolvedTabs.filter((tab) => !["home", "settings"].includes(tab.id)).map(tabButton)}
-          {resolvedTabs.filter((tab) => tab.id === "settings").map(tabButton)}
+            {resolvedTabs.filter((tab) => !groupedTabIds.has(tab.id) && !["home", "settings", "notifications"].includes(tab.id)).map(tabButton)}
+          </> : resolvedTabs.filter((tab) => !["home", "settings", "notifications"].includes(tab.id)).map(tabButton)}
         </>}
       </nav>
       <div className="drawer-footer account-footer"><div className="account-avatar">{user.username[0].toUpperCase()}</div><div><strong>{user.username}</strong><span>{workspace?.role || user.role}</span></div><button title="Log out" onClick={logout}>↪</button></div>

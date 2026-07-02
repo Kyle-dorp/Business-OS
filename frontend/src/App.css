@@ -2891,29 +2891,34 @@ body {
 
   .menu-page {
     padding: 0 !important;
-    width: 11in;
-    height: 8.5in;
+    width: 11in !important;
+    height: 8.5in !important;
     display: flex !important;
     flex-direction: row !important;
+    background: white !important;
+    border: 1px solid #ddd !important;
   }
 
   .menu-panel {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border-right: 1px solid #ddd;
+    flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    border-right: 1px solid #ccc !important;
+    min-width: 0 !important;
   }
 
   .menu-panel:last-child {
-    border-right: none;
+    border-right: none !important;
   }
 
   .menu-panel-inner {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0.3in;
-    font-size: 11pt;
+    flex: 1 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 0.25in 0.2in !important;
+    font-size: 10pt !important;
+    line-height: 1.3 !important;
   }
 
   .menu-pamphlet,

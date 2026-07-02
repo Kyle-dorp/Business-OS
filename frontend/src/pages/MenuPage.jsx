@@ -67,20 +67,20 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
         }
       `}</style>
 
-      {/* Editing toolbar - hidden on print */}
-      {canEdit && (
-        <div className="no-print menu-toolbar">
-          <h2>Menu</h2>
-          <div className="menu-toolbar-actions">
+      {/* Toolbar - always show with print, edit only if canEdit */}
+      <div className="no-print menu-toolbar">
+        <h2>Menu</h2>
+        <div className="menu-toolbar-actions">
+          {canEdit && (
             <button className="secondary" onClick={() => setEditMode(!editMode)}>
               {editMode ? "Done Editing" : "✏️ Edit Menu"}
             </button>
-            <button className="secondary" onClick={() => window.print()}>
-              🖨️ Print
-            </button>
-          </div>
+          )}
+          <button className="secondary" onClick={() => window.print()}>
+            🖨️ Print
+          </button>
         </div>
-      )}
+      </div>
 
       {/* Edit mode */}
       {editMode && canEdit && (

@@ -880,31 +880,33 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
       <div className="bams-menu-root">
         <style>{`@page { size: letter landscape; margin: 0; }`}</style>
 
-        <div className="bams-toolbar no-print">
-          <div>
-            <span className="bams-toolbar-kicker">PRINTABLE TRI-FOLD</span>
-            <h1>Bam’s Menu</h1>
+        {canEdit && (
+          <div className="bams-toolbar no-print">
+            <div>
+              <span className="bams-toolbar-kicker">PRINTABLE TRI-FOLD</span>
+              <h1>Bam’s Menu</h1>
+            </div>
+            <div className="bams-toolbar-actions">
+              {editMode && (
+                <select value={preset} onChange={(event) => setMenuField("preset", event.target.value)}>
+                  <option value="pamphlet">Pamphlet</option>
+                  <option value="list">Simple list</option>
+                </select>
+              )}
+              {editMode ? (
+                <>
+                  <button type="button" onClick={cancelEditing}>Cancel</button>
+                  <button type="button" className="bams-primary-button" disabled={saving} onClick={saveMenu}>
+                    {saving ? "Saving…" : "Done editing"}
+                  </button>
+                </>
+              ) : (
+                <button type="button" onClick={() => setEditMode(true)}>✎ Edit menu</button>
+              )}
+              <button type="button" onClick={() => window.print()}>Print / Save PDF</button>
+            </div>
           </div>
-          <div className="bams-toolbar-actions">
-            {canEdit && editMode && (
-              <select value={preset} onChange={(event) => setMenuField("preset", event.target.value)}>
-                <option value="pamphlet">Pamphlet</option>
-                <option value="list">Simple list</option>
-              </select>
-            )}
-            {canEdit && (editMode ? (
-              <>
-                <button type="button" onClick={cancelEditing}>Cancel</button>
-                <button type="button" className="bams-primary-button" disabled={saving} onClick={saveMenu}>
-                  {saving ? "Saving…" : "Done editing"}
-                </button>
-              </>
-            ) : (
-              <button type="button" onClick={() => setEditMode(true)}>✎ Edit menu</button>
-            ))}
-            <button type="button" onClick={() => window.print()}>Print / Save PDF</button>
-          </div>
-        </div>
+        )}
 
         <main className="bams-preview-stack">
           {preset === "list" ? renderListMode() : (

@@ -72,24 +72,24 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
       </div>
 
       {/* Print Layout */}
-      <div style={{ pageBreakInside: "avoid" }}>
-        {frontImage && (
-          <div style={{ pageBreakAfter: "always", width: "100%", height: "11in", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", backgroundColor: "#fff" }}>
-            <img src={frontImage} alt="Front" style={{ width: "8.5in", height: "11in", objectFit: "contain" }} />
-          </div>
-        )}
-        {backImage && (
-          <div style={{ width: "100%", height: "11in", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", backgroundColor: "#fff" }}>
-            <img src={backImage} alt="Back" style={{ width: "8.5in", height: "11in", objectFit: "contain" }} />
-          </div>
-        )}
-      </div>
+      {frontImage && (
+        <div style={{ width: "8.5in", height: "11in", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", pageBreakAfter: "always" }}>
+          <img src={frontImage} alt="Front" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+        </div>
+      )}
+      {backImage && (
+        <div style={{ width: "8.5in", height: "11in", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+          <img src={backImage} alt="Back" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+        </div>
+      )}
 
       <style>{`
         @media print {
-          body { margin: 0; padding: 0; }
+          body { margin: 0; padding: 0; background: white; }
+          html { margin: 0; padding: 0; }
           .no-print { display: none !important; }
-          * { margin: 0; padding: 0; }
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          @page { size: letter; margin: 0; }
         }
       `}</style>
     </div>

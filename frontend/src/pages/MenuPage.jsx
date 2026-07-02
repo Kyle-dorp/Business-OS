@@ -120,7 +120,7 @@ function money(value) {
 }
 
 export default function MenuPage({ config: rawConfig, businessName, onSaveConfig }) {
-  const canEdit = typeof onSaveConfig === "function";
+  const canEdit = true; // Force toolbar to show for debugging
   const initialConfig = rawConfig || (!businessName ? BAMS_MENU_PRESET : DEFAULT_MENU);
 
   const [menu, setMenu] = useState(() => normalizeMenu(initialConfig));

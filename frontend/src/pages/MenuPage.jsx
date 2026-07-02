@@ -29,10 +29,20 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
   };
 
   return (
-    <div style={{ width: "100%", maxWidth: "1200px", margin: "0 auto" }}>
-      {/* Toolbar */}
+    <>
+      <style>{`
+        @media print {
+          * { margin: 0; padding: 0; border: 0; }
+          html, body { width: 100%; height: 100%; }
+          .no-print { display: none !important; }
+          @page { size: letter; margin: 0; }
+          img { width: 100%; height: 100%; object-fit: contain; display: block; }
+        }
+      `}</style>
+
+      {/* Editing toolbar - hidden on print */}
       {canEdit && (
-        <div style={{ padding: "16px", borderBottom: "1px solid #ddd", marginBottom: "16px", display: "flex", gap: "12px", alignItems: "center", justifyContent: "space-between", backgroundColor: "#f9f9f9" }}>
+        <div className="no-print" style={{ padding: "16px", borderBottom: "1px solid #ddd", display: "flex", gap: "12px", alignItems: "center", justifyContent: "space-between", backgroundColor: "#f9f9f9" }}>
           <h2 style={{ margin: 0 }}>Menu</h2>
           <div style={{ display: "flex", gap: "12px" }}>
             <label style={{ cursor: "pointer", padding: "8px 12px", border: "1px solid #ccc", borderRadius: "6px", backgroundColor: "#fff", fontSize: "14px", fontWeight: "600" }}>
@@ -53,7 +63,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
         </div>
       )}
 
-      {/* Preview (hidden on print) */}
+      {/* Preview - hidden on print */}
       <div className="no-print" style={{ padding: "20px" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
           {frontImage && (
@@ -71,27 +81,19 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
         </div>
       </div>
 
-      {/* Print Layout */}
+      {/* PRINT ONLY - Page 1: Front */}
       {frontImage && (
-        <div style={{ width: "8.5in", height: "11in", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", pageBreakAfter: "always" }}>
-          <img src={frontImage} alt="Front" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-        </div>
-      )}
-      {backImage && (
-        <div style={{ width: "8.5in", height: "11in", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-          <img src={backImage} alt="Back" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+        <div style={{ width: "8.5in", height: "11in", pageBreakAfter: "always", display: "block" }}>
+          <img src={frontImage} alt="Front" />
         </div>
       )}
 
-      <style>{`
-        @media print {
-          body { margin: 0; padding: 0; background: white; }
-          html { margin: 0; padding: 0; }
-          .no-print { display: none !important; }
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          @page { size: letter; margin: 0; }
-        }
-      `}</style>
-    </div>
+      {/* PRINT ONLY - Page 2: Back */}
+      {backImage && (
+        <div style={{ width: "8.5in", height: "11in", display: "block" }}>
+          <img src={backImage} alt="Back" />
+        </div>
+      )}
+    </>
   );
 }

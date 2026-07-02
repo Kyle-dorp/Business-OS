@@ -137,7 +137,9 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
     if (!editMode) {
       setMenu(normalizeMenu(rawConfig || (!businessName ? BAMS_MENU_PRESET : DEFAULT_MENU)));
     }
-  }, [rawConfig, businessName]);
+  }, [rawConfig, businessName]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const preset = menu.preset === "list" ? "list" : "pamphlet";
 
   function setMenuField(key, value) {
     setMenu((current) => ({ ...current, [key]: value }));
@@ -251,19 +253,58 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
           ? category
           : {
               ...category,
-              items: category.items.filter((_, itemIdx) => itemIdx !== itemIndex),
+              items: category.items.filter((_, currentItemIndex) => currentItemIndex !== itemIndex),
             }
       ),
     }));
+    setEditingKey(null);
   }
 
-  function setCategoryImage(categoryIndex, imageIndex, dataUrl) {
+  function addCategory(side, panel) {
+    const id = nextId("cat");
+    setMenu((current) => ({
+      ...current,
+      categories: [
+        ...current.categories,
+        {
+          id,
+          name: "New Category",
+          description: "",
+          side,
+          panel,
+          layout: "priced",
+          items: [],
+          images: [],
+        },
+      ],
+    }));
+    setEditingKey(`category:${id}`);
+  }
+
+  function removeCategory(categoryIndex) {
+    if (!window.confirm("Remove this category and all of its items?")) return;
+    setMenu((current) => ({
+      ...current,
+      categories: current.categories.filter((_, index) => index !== categoryIndex),
+    }));
+    setEditingKey(null);
+  }
+
+  function ensureImageSlot(category, imageIndex) {
+    const images = [...(category.images || [])];
+    while (images.length <= imageIndex) {
+      images.push({ id: nextId("image"), url: "" });
+    }
+    return images;
+  }
+
+  function setCategoryImage(categoryIndex, imageIndex, url) {
     setMenu((current) => ({
       ...current,
       categories: current.categories.map((category, index) => {
         if (index !== categoryIndex) return category;
-        const images = [...(category.images || [])];
-        images[imageIndex] = { ...(images[imageIndex] || {}), id: images[imageIndex]?.id || nextId("img"), url: dataUrl };
+        const images = ensureImageSlot(category, imageIndex);
+        images[imageIndex] = { ...images[imageIndex], url };
         return { ...category, images };
       }),
     }));
@@ -276,6 +317,13 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
     reader.readAsDataURL(file);
   }
 
+  function readMenuImage(file, field) {
+    if (!file || !file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = (event) => setMenuField(field, event.target.result);
+    reader.readAsDataURL(file);
+  }
+
   function handleDragEnd(event) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -284,49 +332,51 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
     const overId = String(over.id);
 
     if (activeId.startsWith("cat:") && overId.startsWith("cat:")) {
+      const activeCategoryId = activeId.slice(4);
+      const overCategoryId = overId.slice(4);
       setMenu((current) => {
-        const activeIdx = current.categories.findIndex((c) => categorySortId(c) === activeId);
-        const overIdx = current.categories.findIndex((c) => categorySortId(c) === overId);
-        if (activeIdx < 0 || overIdx < 0) return current;
-        return {
-          ...current,
-          categories: arrayMove([...current.categories], activeIdx, overIdx),
-        };
+        const fromIndex = current.categories.findIndex((category) => category.id === activeCategoryId);
+        const toIndex = current.categories.findIndex((category) => category.id === overCategoryId);
+        if (fromIndex < 0 || toIndex < 0) return current;
+        return { ...current, categories: arrayMove(current.categories, fromIndex, toIndex) };
       });
-    } else if (activeId.startsWith("item:") && overId.startsWith("item:")) {
-      const [, activeCatId, activeItemId] = activeId.split(":");
-      const [, overCatId, overItemId] = overId.split(":");
-      if (activeCatId !== overCatId) return;
+      return;
+    }
 
-      setMenu((current) => {
-        const catIdx = current.categories.findIndex((c) => c.id === activeCatId);
-        if (catIdx < 0) return current;
-        const activeIdx = current.categories[catIdx].items.findIndex((i) => i.id === activeItemId);
-        const overIdx = current.categories[catIdx].items.findIndex((i) => i.id === overItemId);
-        if (activeIdx < 0 || overIdx < 0) return current;
+    if (activeId.startsWith("item:") && overId.startsWith("item:")) {
+      const [, activeCategoryId, activeItemId] = activeId.split(":");
+      const [, overCategoryId, overItemId] = overId.split(":");
+      if (activeCategoryId !== overCategoryId) return;
 
-        return {
-          ...current,
-          categories: current.categories.map((cat, idx) =>
-            idx !== catIdx
-              ? cat
-              : { ...cat, items: arrayMove([...cat.items], activeIdx, overIdx) }
-          ),
-        };
-      });
+      setMenu((current) => ({
+        ...current,
+        categories: current.categories.map((category) => {
+          if (category.id !== activeCategoryId) return category;
+          const fromIndex = category.items.findIndex((item) => item.id === activeItemId);
+          const toIndex = category.items.findIndex((item) => item.id === overItemId);
+          if (fromIndex < 0 || toIndex < 0) return category;
+          return { ...category, items: arrayMove(category.items, fromIndex, toIndex) };
+        }),
+      }));
     }
   }
 
-  async function handleSave() {
+  async function saveMenu() {
+    if (!canEdit) return;
     setSaving(true);
-    await onSaveConfig(menu);
-    setSaving(false);
-    setEditMode(false);
+    try {
+      await onSaveConfig(menu);
+      setEditMode(false);
+      setEditingKey(null);
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function handleCancel() {
+  function cancelEditing() {
     setMenu(normalizeMenu(rawConfig || (!businessName ? BAMS_MENU_PRESET : DEFAULT_MENU)));
     setEditMode(false);
+    setEditingKey(null);
   }
 
   function renderImageSlot(categoryIndex, imageIndex, className, label) {
@@ -448,9 +498,15 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
               </>
             ) : (
               <>
-                <div className="bams-item-row1">
+                <div className="bams-item-heading">
                   <strong className="bams-item-name">{item.name}</strong>
-                  <span className="bams-item-prices">
+                  <span
+                    className="bams-item-prices"
+                    style={{
+                      gridTemplateColumns: `repeat(${item.sizes ? Math.max(sizeOrder.length, 1) : 1}, 4.8cqw)`,
+                      width: `${(item.sizes ? Math.max(sizeOrder.length, 1) : 1) * 4.8 + (item.sizes ? Math.max(sizeOrder.length - 1, 0) : 0) * 0.35}cqw`,
+                    }}
+                  >
                     {item.sizes
                       ? sizeOrder.map((size) => (
                           <span key={size} className="bams-item-price">
@@ -458,7 +514,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
                           </span>
                         ))
                       : item.price
-                        ? <span className="bams-item-price">{money(item.price)}</span>
+                        ? <span className="bams-item-price bams-item-price-single">{money(item.price)}</span>
                         : null}
                   </span>
                 </div>
@@ -512,24 +568,28 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
     const simpleList = layout === "simple";
     const sizeOrder = category.size_order?.length
       ? category.size_order
-      : (category.items?.[0]?.sizes ? Object.keys(category.items[0].sizes) : []);
+      : Array.from(
+          new Set(category.items.flatMap((item) => (item.sizes ? Object.keys(item.sizes) : [])))
+        );
+    const sortableItems = category.items.map((item) => itemSortId(category, item));
+    const sortableId = categorySortId(category);
 
     return (
-      <SortableCategory id={categorySortId(category)}>
+      <SortableCategory id={sortableId} key={category.id}>
         {({ setNodeRef, attributes, listeners, transform, transition, isDragging }) => (
           <section
             ref={setNodeRef}
-            className={`bams-category bams-category-${layout}`}
+            className={`bams-category bams-category-${layout}${options.className ? ` ${options.className}` : ""}`}
             style={{
               transform: CSS.Transform.toString(transform),
               transition,
               opacity: isDragging ? 0.45 : 1,
-              zIndex: isDragging ? 10 : "auto",
+              zIndex: isDragging ? 5 : "auto",
             }}
           >
             {editMode && (
-              <div className="bams-category-edit-toolbar no-print">
-                <button {...attributes} {...listeners} type="button" className="bams-icon-button" title="Drag">
+              <div className="bams-category-toolbar no-print">
+                <button type="button" className="bams-icon-button" {...attributes} {...listeners} title="Drag category">
                   <MoveIcon />
                 </button>
                 <button
@@ -542,21 +602,12 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
                 <button
                   type="button"
                   className="bams-icon-button bams-danger"
-                  onClick={() => {
-                    if (confirm(`Remove ${category.name}?`)) {
-                      setMenu((current) => ({
-                        ...current,
-                        categories: current.categories.filter((_, idx) => idx !== categoryIndex),
-                      }));
-                    }
-                  }}
+                  onClick={() => removeCategory(categoryIndex)}
                 >
                   ×
                 </button>
               </div>
             )}
-
-            {!simpleList && renderBanner(category)}
 
             {isEditing ? (
               <div className="bams-category-edit no-print">
@@ -570,16 +621,32 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
                 <textarea
                   className="edl-input"
                   value={category.description || ""}
-                  onChange={(event) => setCategoryField(categoryIndex, "description", event.target.value)}
-                  placeholder="Description"
+                  onChange={(event) =>
+                    setCategoryField(categoryIndex, "description", event.target.value)
+                  }
+                  placeholder="Category description"
+                  rows={2}
                 />
               </div>
             ) : (
-              category.description && <p className="bams-section-intro">{category.description}</p>
+              <>
+                {renderBanner(category)}
+                {category.description && <p className="bams-section-intro">{category.description}</p>}
+              </>
             )}
 
-            <div className="bams-items">
-              <SortableContext items={category.items.map((item) => itemSortId(category, item))} strategy={verticalListSortingStrategy}>
+            {!simpleList && sizeOrder.length > 0 && (
+              <div
+                className="bams-size-header"
+                style={{ "--bams-price-count": Math.max(sizeOrder.length, 1) }}
+              >
+                <span />
+                {sizeOrder.map((size) => <span key={size}>{size}</span>)}
+              </div>
+            )}
+
+            <div className={`bams-items${simpleList ? " bams-simple-list" : ""}`}>
+              <SortableContext items={sortableItems} strategy={verticalListSortingStrategy}>
                 {category.items.map((item, itemIndex) =>
                   renderItem(categoryIndex, itemIndex, item, sizeOrder, simpleList)
                 )}
@@ -616,19 +683,19 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
     return (
       <section className="bams-sheet bams-inside-sheet" aria-label="Inside menu">
         <div className="bams-panels">
-          <div className="bams-panel">
+          <div className="bams-panel bams-panel-left">
             {classicIndex >= 0 && renderCategory(classicIndex, {
               afterItems: (categoryIndex) =>
                 renderImageSlot(categoryIndex, 0, "bams-photo-wide bams-classic-photo", "Classic sub photo"),
             })}
           </div>
 
-          <div className="bams-panel">
+          <div className="bams-panel bams-panel-middle">
             {specialtyIndex >= 0 && renderCategory(specialtyIndex)}
-            {saladsIndex >= 0 && renderCategory(saladsIndex)}
+            {saladsIndex >= 0 && renderCategory(saladsIndex, { className: "bams-salads-block" })}
           </div>
 
-          <div className="bams-panel">
+          <div className="bams-panel bams-panel-right">
             {dressingsIndex >= 0 && renderCategory(dressingsIndex, {
               afterItems: (categoryIndex) => (
                 <div className="bams-dressings-feature">
@@ -647,7 +714,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
                   </div>
 
                   <blockquote className="bams-closing-quote">
-                    {menu.closingQuote || menu.footer || '"Our goal is to give our customers the best sub possible."'}
+                    {menu.closingQuote || menu.footer || '“Our goal is to give our customers the best sub possible.”'}
                   </blockquote>
                   <div className="bams-quote-flourish" aria-hidden="true">
                     <span />
@@ -680,7 +747,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
           const addPhoto = category.layout === "combos" || category.layout === "desserts";
           return renderCategory(categoryIndex, {
             afterItems: addPhoto
-              ? (idx) => renderImageSlot(idx, 0, "bams-photo-wide", `${category.name} photo`)
+              ? (index) => renderImageSlot(index, 0, "bams-photo-wide bams-back-photo", `${category.name} photo`)
               : undefined,
           });
         })}
@@ -688,58 +755,122 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
     );
   }
 
+  function renderCoverPanel() {
+    const hours = menu.hours || {};
+    const dayRows = [
+      ["Monday", hours.monday],
+      ["Tuesday", hours.tuesday],
+      ["Wednesday", hours.wednesday],
+      ["Thursday", hours.thursday],
+      ["Friday", hours.friday],
+      ["Saturday", hours.saturday],
+      ["Sunday", hours.sunday],
+    ];
+
+    return (
+      <div className="bams-cover-panel">
+        <div className="bams-cover-brand">
+          {menu.logo_url ? (
+            <div className="bams-logo-wrap">
+              <img src={menu.logo_url} alt={`${menu.title || "Bam's"} logo`} className="bams-logo" />
+              {editMode && (
+                <button type="button" className="bams-logo-remove no-print" onClick={() => setMenuField("logo_url", "")}>×</button>
+              )}
+            </div>
+          ) : editMode ? (
+            <label className="bams-logo-upload no-print">
+              Add shop logo
+              <input type="file" accept="image/*" onChange={(event) => readMenuImage(event.target.files?.[0], "logo_url")} />
+            </label>
+          ) : (
+            <div className="bams-logo-lettering" aria-hidden="true">
+              <span>Bam’s</span>
+              <small>Sub Shoppe</small>
+            </div>
+          )}
+
+          <h1>{menu.title || businessName || "Bam’s Sub Shoppe"}</h1>
+          <p className="bams-cover-address">
+            {menu.address || "203 W. Main Street"}<br />
+            {menu.city || "Rangely, CO"}
+          </p>
+          <p className="bams-cover-phone">{menu.phone || "970-572-0136"}</p>
+        </div>
+
+        <section className="bams-hours-card">
+          <h2><span />Hours<span /></h2>
+          <div className="bams-hours-list">
+            {dayRows.map(([day, value]) => (
+              <div className="bams-hours-row" key={day}>
+                <strong>{day}</strong>
+                <span>{value || ""}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="bams-delivery-block">
+          <h2><span />We Deliver<span /></h2>
+          <p>Gas surcharge</p>
+          <div className="bams-delivery-list">
+            {(menu.delivery || []).map((entry, index) => (
+              <div className="bams-delivery-row" key={`${entry.location}-${index}`}>
+                <strong>{entry.location}</strong>
+                <i aria-hidden="true" />
+                <span>{entry.surcharge}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   function renderOutsidePage() {
     return (
       <section className="bams-sheet bams-outside-sheet" aria-label="Outside menu">
         <div className="bams-panels">
-          <div className="bams-panel">
+          <div className="bams-panel bams-panel-left bams-back-column">
             {renderBackPanel("back", "left")}
+            {editMode && (
+              <button type="button" className="bams-add-button no-print" onClick={() => addCategory("back", "left")}>+ Add section</button>
+            )}
           </div>
 
-          <div className="bams-panel">
+          <div className="bams-panel bams-panel-middle bams-back-column">
             {renderBackPanel("back", "middle")}
+            {editMode && (
+              <button type="button" className="bams-add-button no-print" onClick={() => addCategory("back", "middle")}>+ Add section</button>
+            )}
           </div>
 
-          <div className="bams-panel bams-cover-panel">
-            <div className="bams-cover-content">
-              <div className="bams-cover-logo">◆</div>
-              <h1 className="bams-cover-title">{menu.title}</h1>
-              <div className="bams-cover-address">
-                <p>{menu.address}</p>
-                <p>{menu.city}</p>
-              </div>
-              <div className="bams-cover-phone">{menu.phone}</div>
-              <div className="bams-cover-hours">
-                <h3>Hours</h3>
-                {menu.hours && Object.entries(menu.hours).map(([day, time]) => (
-                  <div key={day} className="bams-hours-row">
-                    <span>{day}</span>
-                    <span>{time}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="bams-cover-delivery">
-                <h3>We Deliver</h3>
-                {menu.delivery && menu.delivery.map((d, idx) => (
-                  <div key={idx} className="bams-delivery-row">
-                    <span>{d.location}</span>
-                    <span>{d.surcharge}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+          <div className="bams-panel bams-panel-right bams-cover-column">
+            {renderCoverPanel()}
           </div>
         </div>
       </section>
     );
   }
 
-  if (!menu.categories?.length && !canEdit) {
+  function renderListMode() {
     return (
-      <div className="bams-menu-root">
-        <div className="bams-empty-state">
-          <p>No menu configured.</p>
+      <section className="bams-sheet bams-list-sheet">
+        <header className="bams-list-title">
+          <h1>{menu.title || businessName || "Menu"}</h1>
+          {menu.subtitle && <p>{menu.subtitle}</p>}
+        </header>
+        <div className="bams-list-grid">
+          {menu.categories.map((_, categoryIndex) => renderCategory(categoryIndex))}
         </div>
+      </section>
+    );
+  }
+
+  if (!menu.categories.length && !canEdit) {
+    return (
+      <div className="bams-empty-state">
+        <strong>No menu items yet.</strong>
+        <span>Use the menu editor or AI Assistant to add categories and items.</span>
       </div>
     );
   }
@@ -747,42 +878,42 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <div className="bams-menu-root">
-        {canEdit && (
-          <div className="bams-toolbar">
-            <div>
-              <h1>Bam's Sub Shoppe Menu</h1>
-              <span className="bams-toolbar-kicker">PRINTABLE</span>
-            </div>
-            <div className="bams-toolbar-actions">
-              {editMode ? (
-                <>
-                  <button className="secondary-btn" onClick={handleCancel}>
-                    Cancel
-                  </button>
-                  <button
-                    className="primary-btn"
-                    disabled={saving}
-                    onClick={handleSave}
-                  >
-                    {saving ? "Saving…" : "Done editing"}
-                  </button>
-                </>
-              ) : (
-                <button className="secondary-btn" onClick={() => setEditMode(true)}>
-                  ✎ Edit
-                </button>
-              )}
-              <button className="secondary-btn" onClick={() => window.print()}>
-                🖨 Print
-              </button>
-            </div>
-          </div>
-        )}
+        <style>{`@page { size: letter landscape; margin: 0; }`}</style>
 
-        <div className="bams-preview-stack">
-          {renderInsidePage()}
-          {renderOutsidePage()}
+        <div className="bams-toolbar no-print">
+          <div>
+            <span className="bams-toolbar-kicker">PRINTABLE TRI-FOLD</span>
+            <h1>Bam’s Menu</h1>
+          </div>
+          <div className="bams-toolbar-actions">
+            {canEdit && editMode && (
+              <select value={preset} onChange={(event) => setMenuField("preset", event.target.value)}>
+                <option value="pamphlet">Pamphlet</option>
+                <option value="list">Simple list</option>
+              </select>
+            )}
+            {canEdit && (editMode ? (
+              <>
+                <button type="button" onClick={cancelEditing}>Cancel</button>
+                <button type="button" className="bams-primary-button" disabled={saving} onClick={saveMenu}>
+                  {saving ? "Saving…" : "Done editing"}
+                </button>
+              </>
+            ) : (
+              <button type="button" onClick={() => setEditMode(true)}>✎ Edit menu</button>
+            ))}
+            <button type="button" onClick={() => window.print()}>Print / Save PDF</button>
+          </div>
         </div>
+
+        <main className="bams-preview-stack">
+          {preset === "list" ? renderListMode() : (
+            <>
+              {renderInsidePage()}
+              {renderOutsidePage()}
+            </>
+          )}
+        </main>
       </div>
     </DndContext>
   );

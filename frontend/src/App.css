@@ -2944,6 +2944,16 @@ body {
    RESPONSIVE SCALING FOR SCREEN PREVIEW
    ═════════════════════════════════════════════════════════════════════ */
 
+/* Menu display wrapper */
+.menu-page-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+  background: #f5f5f5;
+  min-height: 100vh;
+}
+
 @media screen and (min-width: 768px) {
   .menu-pamphlet,
   .menu-list-sheet {
@@ -2968,7 +2978,7 @@ body {
   }
 
   .menu-panel {
-    padding: 0.25in 0.15in;
+    flex: 1 !important;
   }
 }
 .cfe-cat-name { font-weight: 600; font-size: .88rem; color: #14203a; }

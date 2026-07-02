@@ -135,11 +135,13 @@ export default function MenuDisplay({ config }) {
 
       <style>{`
         @media print {
-          * { margin: 0; padding: 0; border: 0; }
-          html, body { width: 100%; height: 100%; background: white; }
-          .no-print { display: none !important; }
+          * { margin: 0 !important; padding: 0 !important; border: 0 !important; }
+          html, body { width: 100% !important; height: 100% !important; background: white !important; margin: 0 !important; padding: 0 !important; }
+          body { color: #000; }
+          .no-print { display: none !important; visibility: hidden !important; }
           @page { size: letter; margin: 0; }
-          body { background: white; }
+          img { max-width: 100%; height: auto; display: block; }
+          div { page-break-inside: avoid; }
         }
       `}</style>
     </div>

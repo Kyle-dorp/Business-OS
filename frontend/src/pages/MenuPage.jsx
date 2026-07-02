@@ -1,5 +1,5 @@
 import { useState } from "react";
-import MenuPagePamphlet from "./MenuPagePamphlet";
+import MenuDisplay from "./MenuDisplay";
 import MenuEditor from "../components/MenuEditor";
 import { BAMS_MENU_PRESET } from "../data/bamsMenuPreset";
 
@@ -26,7 +26,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
           * { margin: 0; padding: 0; border: 0; }
           html, body { width: 100%; height: 100%; }
           .no-print { display: none !important; }
-          @page { size: letter landscape; margin: 0; }
+          @page { size: 11in 8.5in landscape; margin: 0; }
         }
         .menu-toolbar {
           padding: 16px;
@@ -93,11 +93,7 @@ export default function MenuPage({ config: rawConfig, businessName, onSaveConfig
 
       {/* Menu display */}
       {!editMode && (
-        <MenuPagePamphlet
-          config={menuConfig}
-          businessName={businessName}
-          onSaveConfig={canEdit ? handleSaveMenu : undefined}
-        />
+        <MenuDisplay config={menuConfig} />
       )}
     </>
   );

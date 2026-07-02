@@ -19,9 +19,35 @@ export default function MenuDisplay({ config }) {
   };
 
   return (
-    <div style={{ padding: "20px", backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
+    <div style={{ padding: "0", backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
+      {/* Toolbar */}
+      <div style={{
+        padding: "16px 20px",
+        backgroundColor: "#fff",
+        borderBottom: "1px solid #ddd",
+        display: "flex",
+        gap: "12px",
+        justifyContent: "space-between",
+        alignItems: "center"
+      }}>
+        <h2 style={{ margin: 0, fontSize: "18px" }}>Menu</h2>
+        <button onClick={() => window.print()} style={{
+          padding: "8px 16px",
+          backgroundColor: "#2f6fed",
+          color: "white",
+          border: "none",
+          borderRadius: "6px",
+          cursor: "pointer",
+          fontWeight: "600",
+          fontSize: "14px"
+        }}>
+          🖨️ Print
+        </button>
+      </div>
+
       {/* Upload controls - hidden on print */}
       <div className="no-print" style={{
+        padding: "20px",
         marginBottom: "20px",
         display: "flex",
         gap: "12px",

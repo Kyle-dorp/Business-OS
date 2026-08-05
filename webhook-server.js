@@ -201,6 +201,23 @@ app.post('/webhook/cake/register-close', async (req, res) => {
 });
 
 // ========================================
+// ROOT ENDPOINT
+// ========================================
+
+app.get('/', (req, res) => {
+  res.json({
+    name: 'BAMs CAKE POS → Google Sheets Integration',
+    status: sheets ? '✓ Ready' : '✗ Not ready',
+    endpoints: {
+      health: '/health',
+      webhook: '/webhook/cake/register-close (POST)',
+      manual: '/manual-close (POST)',
+    },
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// ========================================
 // HEALTH CHECK ENDPOINT
 // ========================================
 

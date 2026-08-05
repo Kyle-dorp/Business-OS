@@ -40,7 +40,25 @@ let sheets = null;
 
 async function initializeSheets() {
   try {
-    const credentials = JSON.parse(CONFIG.GOOGLE_CREDENTIALS || '{}');
+    let credentials;
+
+    if (!CONFIG.GOOGLE_CREDENTIALS) {
+      throw new Error('GOOGLE_CREDENTIALS environment variable not set');
+    }
+
+    // Try to parse as JSON
+    try {
+      credentials = JSON.parse(CONFIG.GOOGLE_CREDENTIALS);
+    } catch (parseError) {
+      // If parsing fails, log debug info
+      console.error('✗ Failed to parse GOOGLE_CREDENTIALS as JSON');
+      console.error('First 50 chars:', CONFIG.GOOGLE_CREDENTIALS.substring(0, 50));
+      throw parseError;
+    }
+
+    if (!credentials || !credentials.private_key) {
+      throw new Error('GOOGLE_CREDENTIALS missing or invalid - no private_key found');
+    }
 
     const auth = new google.auth.GoogleAuth({
       credentials,

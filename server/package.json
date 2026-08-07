@@ -1,0 +1,37 @@
+{
+  "name": "bams-dashboard-server",
+  "version": "2.0.0",
+  "description": "BAMs Dashboard Backend - Payroll, Tips, Secure Certificate Auth",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "setup:db": "tsx src/scripts/setup-db.ts",
+    "gen:certs": "tsx src/scripts/generate-certs.ts"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "pg": "^8.11.3",
+    "axios": "^1.6.2",
+    "googleapis": "^118.0.0",
+    "dotenv": "^16.3.1",
+    "passport": "^0.7.0",
+    "passport-client-cert": "^1.0.1",
+    "express-session": "^1.17.3",
+    "uuid": "^9.0.1",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.10.6",
+    "@types/pg": "^8.11.3",
+    "typescript": "^5.3.3",
+    "tsx": "^4.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

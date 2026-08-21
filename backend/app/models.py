@@ -181,8 +181,9 @@ class UserAccount(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     username: str = Field(index=True)
     password_hash: str
-    role: str = "employee"  # manager or employee
+    role: str = "employee"  # manager, employee, or admin
     employee_id: Optional[int] = Field(default=None, index=True)
+    is_admin: bool = False  # True if this is a platform admin
     active: bool = True
     created_at: str = Field(default_factory=utc_now_iso)
     updated_at: str = Field(default_factory=utc_now_iso)
@@ -236,6 +237,12 @@ class Business(SQLModel, table=True):
     industry: str = "general"
     currency: str = "USD"
     fiscal_year_start_month: int = 1
+    # Plan & Pricing
+    plan: str = "starter"  # starter, professional, enterprise, custom
+    monthly_price_cents: int = 0  # Price in cents
+    # Usage tracking
+    claude_api_tokens_used: int = 0  # Total tokens used this month
+    claude_api_cost_cents: int = 0  # Cost of tokens in cents
     active: bool = True
     created_at: str = Field(default_factory=utc_now_iso)
 
@@ -482,6 +489,18 @@ class PayrollRun(SQLModel, table=True):
     payment_account_id: int = Field(index=True)
     notes: str = ""
     created_by_user_id: int = Field(index=True)
+    created_at: str = Field(default_factory=utc_now_iso)
+
+
+# API Usage Tracking
+class ApiUsage(SQLModel, table=True):
+    """Track Claude API usage per customer"""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    business_id: int = Field(index=True)
+    date: str = Field(index=True)  # YYYY-MM-DD
+    tokens_used: int = 0
+    cost_cents: int = 0  # Cost in cents
+    feature: str = ""  # Which feature used the API (e.g., "assistant", "scheduling")
     created_at: str = Field(default_factory=utc_now_iso)
 
 

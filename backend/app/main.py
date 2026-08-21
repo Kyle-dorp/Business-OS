@@ -318,7 +318,7 @@ def _user_dict(user: UserAccount) -> dict:
         "id": user.id,
         "username": user.username,
         "role": user.role,
-        "is_admin": user.is_admin,
+        "is_admin": getattr(user, "is_admin", False),  # Default to False for old records
         "employee_id": user.employee_id,
         "active": user.active,
         "created_at": user.created_at,

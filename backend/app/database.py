@@ -116,7 +116,7 @@ def apply_lightweight_migrations() -> None:
     _add_column_if_missing("assistantmessage", "applied", "BOOLEAN", "0")
 
     # Admin user support.
-    _add_column_if_missing("useraccount", "is_admin", "BOOLEAN", "0")
+    _add_column_if_missing("useraccount", "is_admin", "BOOLEAN", "false")
 
     # Business plan/pricing tracking.
     _add_column_if_missing("business", "plan", "VARCHAR", "'starter'")

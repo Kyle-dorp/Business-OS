@@ -6,7 +6,7 @@ python-dotenv
 anthropic
 bcrypt
 PyJWT
-psycopg2-binary
+psycopg2-binary==2.9.9
 alembic
 pytest
 httpx

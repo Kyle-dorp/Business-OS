@@ -14,6 +14,10 @@ TENANT_MODELS = (
     models.Schedule, models.ScheduleShift, models.ScheduleWarning,
     models.AssistantMessage, models.AvailabilityRequest,
     models.AssistantThread, models.AssistantMemory,
+    models.Contact, models.LedgerAccount, models.Invoice, models.Bill, models.Payment, models.Expense,
+    models.TaskItem, models.InventoryItem, models.InventoryMovement, models.AuditEvent,
+    models.Budget, models.PayrollRun,
+    models.Service, models.Booking, models.BookingAvailability,
 )
 
 

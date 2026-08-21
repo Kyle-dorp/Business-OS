@@ -2634,14 +2634,24 @@ def apply_assistant_actions(
 # Mount static files (built frontend)
 static_dir = pathlib.Path(__file__).parent.parent.parent / "static"
 if static_dir.exists():
-    app.mount("/assets", StaticFiles(directory=static_dir / "assets"), name="assets")
+    # Mount all static assets
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
-# Catch-all route: serve index.html for frontend routing
-@app.get("/{full_path:path}")
-def serve_frontend(full_path: str):
-    index_file = static_dir / "index.html"
-    if full_path.startswith("api/") or full_path in PUBLIC_PATHS:
+    # Catch-all route: serve index.html for SPA routing
+    @app.get("/{full_path:path}")
+    def serve_spa(full_path: str):
+        # Don't intercept API calls or special paths
+        if full_path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="Not found")
+
+        # Check if it's a real file (CSS, JS, images, etc.)
+        requested_file = static_dir / full_path
+        if requested_file.exists() and requested_file.is_file():
+            return FileResponse(requested_file)
+
+        # Otherwise serve index.html for client-side routing
+        index_file = static_dir / "index.html"
+        if index_file.exists():
+            return FileResponse(index_file)
+
         raise HTTPException(status_code=404, detail="Not found")
-    if index_file.exists():
-        return FileResponse(index_file)
-    raise HTTPException(status_code=404, detail="Not found")

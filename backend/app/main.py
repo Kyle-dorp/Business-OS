@@ -1131,6 +1131,12 @@ def on_startup() -> None:
 
 @app.get("/")
 def home():
+    """Serve frontend index.html or API message"""
+    import pathlib
+    static_dir = pathlib.Path(__file__).parent.parent.parent / "static"
+    index_file = static_dir / "index.html"
+    if index_file.exists():
+        return FileResponse(index_file)
     return {"message": "Scheduling Assistant backend is running"}
 
 

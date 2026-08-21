@@ -89,6 +89,7 @@ from backend.app.routers import (
     analytics_router,
     booking_router,
 )
+from backend.app.admin_routes import admin_router
 
 
 app = FastAPI(title="Business EOS API", version="1.0.0")
@@ -101,6 +102,7 @@ app.include_router(payroll_router)
 app.include_router(team_comm_router)
 app.include_router(analytics_router)
 app.include_router(booking_router)
+app.include_router(admin_router)
 
 cors_origins = [item.strip() for item in os.getenv(
     "CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"

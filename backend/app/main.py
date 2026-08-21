@@ -476,6 +476,17 @@ def seed_businesses(request: Request):
             session.delete(biz)
         session.commit()
 
+        # Create admin account
+        admin = UserAccount(
+            username="admin",
+            password_hash=hash_password("Admin123!"),
+            role="admin",
+            is_admin=True,
+            active=True,
+        )
+        session.add(admin)
+        session.flush()
+
         # Seed data
         businesses_data = [
             {
@@ -550,7 +561,15 @@ def seed_businesses(request: Request):
                 "modules": biz_config["modules"],
             })
 
-        return {"message": "Businesses seeded successfully", "businesses": created}
+        return {
+            "message": "Businesses seeded successfully",
+            "admin": {
+                "username": "admin",
+                "password": "Admin123!",
+                "note": "Use this to access the admin panel"
+            },
+            "businesses": created
+        }
 
 
 @app.get("/auth/me")

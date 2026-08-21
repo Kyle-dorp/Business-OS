@@ -8,15 +8,15 @@ from backend.app import models  # noqa: F401
 from backend.app.tenancy import current_business_id
 
 TENANT_MODELS = (
+    # Scheduling module
     models.Employee, models.Position, models.Department, models.EmployeePosition,
     models.RecurringAvailability, models.TemporaryUnavailability,
     models.ManagerSettings, models.LaborProjection, models.CoverageRule,
     models.Schedule, models.ScheduleShift, models.ScheduleWarning,
+    # AI Assistant
     models.AssistantMessage, models.AvailabilityRequest,
     models.AssistantThread, models.AssistantMemory,
-    models.Contact, models.LedgerAccount, models.Invoice, models.Bill, models.Payment, models.Expense,
-    models.TaskItem, models.InventoryItem, models.InventoryMovement, models.AuditEvent,
-    models.Budget, models.PayrollRun,
+    # Booking module
     models.Service, models.Booking, models.BookingAvailability,
 )
 

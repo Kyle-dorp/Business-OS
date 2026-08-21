@@ -3,7 +3,8 @@ import { create } from 'zustand'
 interface User {
   id: number
   username: string
-  role: 'manager' | 'employee'
+  role: 'manager' | 'employee' | 'admin'
+  is_admin: boolean
   employee_id?: number
   active: boolean
 }

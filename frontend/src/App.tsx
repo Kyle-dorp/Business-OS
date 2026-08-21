@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './stores/auth'
 import { LoginPage } from './pages/Login'
 import { Dashboard } from './pages/Dashboard'
+import { AdminDashboard } from './pages/AdminDashboard'
 import { CustomersPage } from './pages/Customers'
 import { InventoryPage } from './pages/Inventory'
 import { InvoicingPage } from './pages/Invoicing'
@@ -20,6 +21,14 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/"
           element={

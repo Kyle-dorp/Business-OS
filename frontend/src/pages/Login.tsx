@@ -22,12 +22,19 @@ export const LoginPage = () => {
     try {
       const res = await api.post('/auth/login', { username, password })
       const { token, user } = res.data
-      
+
+      // Check if user is admin
+      if (user.is_admin) {
+        setAuth(token, user, 0) // Admin has no specific business_id
+        navigate('/admin')
+        return
+      }
+
       // Get the user's business memberships
       const membershipsRes = await api.get('/auth/memberships', {
         headers: { Authorization: `Bearer ${token}` }
       })
-      
+
       const businessId = membershipsRes.data[0]?.business_id || user.id
       setAuth(token, user, businessId)
       navigate('/dashboard')

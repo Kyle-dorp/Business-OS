@@ -22,6 +22,7 @@ from backend.app.modules.invoicing import Invoice, InvoiceLineItem, Payment, Rec
 from backend.app.modules.customers import Customer, CustomerPreferences, PurchaseHistory, LoyaltyAccount, CommunicationLog
 from backend.app.modules.team_communication import TeamChannel, ChannelMessage, DirectMessage, ShiftNote, Announcement, ShiftSwapRequest, FileShare
 from backend.app.modules.analytics import DailyMetrics, StaffPerformance, RevenueByService, CustomerInsight, Forecast, CustomReport, Dashboard
+from backend.app.modules.booking import Service, Booking, BookingAvailability
 
 from pydantic import BaseModel
 from typing import Optional
@@ -500,3 +501,80 @@ def get_dashboard(session: Session = Depends(get_session)):
         "dashboards": dashboards,
         "default": dashboards[0] if dashboards else None
     }
+
+# ============================================================================
+# BOOKING ROUTER
+# ============================================================================
+
+booking_router = APIRouter(prefix="/booking", tags=["booking"])
+
+class ServiceCreate(BaseModel):
+    name: str
+    description: str = ""
+    duration_minutes: int = 30
+    price: float
+    stripe_price_id: Optional[str] = None
+
+class BookingCreate(BaseModel):
+    customer_name: str
+    customer_email: str
+    customer_phone: str
+    service_id: int
+    booking_date: str
+    booking_time: str
+    notes: str = ""
+
+@booking_router.get("/services")
+def list_services(session: Session = Depends(get_session)):
+    business_id = current_business_id()
+    return session.exec(
+        select(Service).where(Service.business_id == business_id, Service.active == True)
+    ).all()
+
+@booking_router.post("/services")
+def create_service(payload: ServiceCreate, request: Request, session: Session = Depends(get_session)):
+    manager_from_request(request)
+    service = Service(
+        business_id=current_business_id(),
+        **payload.model_dump()
+    )
+    session.add(service)
+    session.commit()
+    session.refresh(service)
+    return service
+
+@booking_router.get("/bookings")
+def list_bookings(status: Optional[str] = None, session: Session = Depends(get_session)):
+    business_id = current_business_id()
+    query = select(Booking).where(Booking.business_id == business_id)
+    if status:
+        query = query.where(Booking.status == status)
+    return session.exec(query.order_by(Booking.booking_date.desc())).all()
+
+@booking_router.post("/bookings")
+def create_booking(payload: BookingCreate, session: Session = Depends(get_session)):
+    service = session.get(Service, payload.service_id)
+    if not service or service.business_id != current_business_id():
+        raise HTTPException(status_code=404, detail="Service not found")
+    
+    booking = Booking(
+        business_id=current_business_id(),
+        **payload.model_dump(),
+        duration_minutes=service.duration_minutes,
+        price=service.price
+    )
+    session.add(booking)
+    session.commit()
+    session.refresh(booking)
+    return booking
+
+@booking_router.get("/availability")
+def get_availability(day_of_week: int, session: Session = Depends(get_session)):
+    business_id = current_business_id()
+    return session.exec(
+        select(BookingAvailability).where(
+            BookingAvailability.business_id == business_id,
+            BookingAvailability.day_of_week == day_of_week,
+            BookingAvailability.active == True
+        )
+    ).all()

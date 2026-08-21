@@ -84,6 +84,7 @@ from backend.app.routers import (
     payroll_router,
     team_comm_router,
     analytics_router,
+    booking_router,
 )
 
 
@@ -96,6 +97,7 @@ app.include_router(invoicing_router)
 app.include_router(payroll_router)
 app.include_router(team_comm_router)
 app.include_router(analytics_router)
+app.include_router(booking_router)
 
 cors_origins = [item.strip() for item in os.getenv(
     "CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"

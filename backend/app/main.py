@@ -329,6 +329,7 @@ PUBLIC_PATHS = {
     "/auth/setup-status",
     "/auth/setup",
     "/auth/login",
+    "/auth/seed-businesses",  # Development only
 }
 
 
@@ -456,6 +457,97 @@ def login(payload: LoginRequest):
         if not user or not user.active or not verify_password(payload.password, user.password_hash):
             raise HTTPException(status_code=401, detail="Incorrect username or password")
         return {"token": create_access_token(user), "user": _user_dict(user)}
+
+
+@app.post("/auth/seed-businesses")
+def seed_businesses(request: Request):
+    """DEVELOPMENT ONLY: Seed three business profiles with test users"""
+    if request.headers.get("X-Seed-Key") != "seed-three-businesses-now":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+
+    with Session(engine) as session:
+        # Clear existing
+        for user in session.exec(select(UserAccount)).all():
+            session.delete(user)
+        for biz in session.exec(select(Business)).all():
+            session.delete(biz)
+        session.commit()
+
+        # Seed data
+        businesses_data = [
+            {
+                "name": "McAlister's",
+                "legal_name": "McAlister's LLC",
+                "industry": "barbershop",
+                "username": "mcalister",
+                "password": "Password1",
+                "modules": ["scheduler", "team", "assistant"],
+            },
+            {
+                "name": "BAMS",
+                "legal_name": "Boutique Artisan Markets & Sales",
+                "industry": "retail",
+                "username": "bams.manager",
+                "password": "Password1",
+                "modules": ["sales", "inventory", "assistant"],
+            },
+            {
+                "name": "PupCuts",
+                "legal_name": "PupCuts Grooming",
+                "industry": "services",
+                "username": "pupcuts",
+                "password": "Password1",
+                "modules": ["booking", "sales", "team", "assistant"],
+            },
+        ]
+
+        created = []
+        for biz_config in businesses_data:
+            business = Business(
+                name=biz_config["name"],
+                legal_name=biz_config["legal_name"],
+                industry=biz_config["industry"],
+                currency="USD",
+                active=True,
+            )
+            session.add(business)
+            session.flush()
+
+            user = UserAccount(
+                username=biz_config["username"],
+                password_hash=hash_password(biz_config["password"]),
+                role="manager",
+                active=True,
+            )
+            session.add(user)
+            session.flush()
+
+            membership = Membership(
+                business_id=business.id,
+                user_id=user.id,
+                role="owner",
+                active=True,
+            )
+            session.add(membership)
+            session.flush()
+
+            for module_key in biz_config["modules"]:
+                module = BusinessModule(
+                    business_id=business.id,
+                    module_key=module_key,
+                    enabled=True,
+                )
+                session.add(module)
+
+            session.commit()
+            created.append({
+                "business": biz_config["name"],
+                "username": biz_config["username"],
+                "password": biz_config["password"],
+                "modules": biz_config["modules"],
+            })
+
+        return {"message": "Businesses seeded successfully", "businesses": created}
 
 
 @app.get("/auth/me")

@@ -92,6 +92,9 @@ from backend.app.routers import (
 from backend.app.admin_routes import admin_router
 
 
+# Track startup errors for debugging
+startup_errors = []
+
 app = FastAPI(title="Business EOS API", version="1.0.0")
 app.include_router(platform_router)
 app.include_router(finance_router)
@@ -328,6 +331,7 @@ def _user_dict(user: UserAccount) -> dict:
 PUBLIC_PATHS = {
     "/",
     "/health",
+    "/debug/status",  # Development debugging
     "/openapi.json",
     "/docs",
     "/docs/oauth2-redirect",
@@ -1140,6 +1144,8 @@ def on_startup() -> None:
     except Exception as e:
         print(f"⚠ Error creating database tables: {e}")
         import traceback
+        error_str = traceback.format_exc()
+        startup_errors.append({"stage": "db_init", "error": str(e), "traceback": error_str})
         traceback.print_exc()
 
     try:
@@ -1148,6 +1154,8 @@ def on_startup() -> None:
     except Exception as e:
         print(f"⚠ Error seeding defaults: {e}")
         import traceback
+        error_str = traceback.format_exc()
+        startup_errors.append({"stage": "seed_defaults", "error": str(e), "traceback": error_str})
         traceback.print_exc()
 
 
@@ -1164,7 +1172,15 @@ def home():
 
 @app.get("/health")
 def health_check():
-    return {"status": "ok", "ai_configured": ai_is_configured()}
+    return {"status": "ok", "ai_configured": ai_is_configured(), "startup_errors": startup_errors}
+
+@app.get("/debug/status")
+def debug_status():
+    """Debug endpoint - shows startup status and any errors"""
+    return {
+        "status": "running" if not startup_errors else "running_with_errors",
+        "startup_errors": startup_errors,
+    }
 
 
 # ---------------------------------------------------------------------------

@@ -183,7 +183,7 @@ class UserAccount(SQLModel, table=True):
     password_hash: str
     role: str = "employee"  # manager, employee, or admin
     employee_id: Optional[int] = Field(default=None, index=True)
-    is_admin: bool = False  # True if this is a platform admin
+    is_admin: bool = Field(default=False)  # True if this is a platform admin
     active: bool = True
     created_at: str = Field(default_factory=utc_now_iso)
     updated_at: str = Field(default_factory=utc_now_iso)

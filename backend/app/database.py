@@ -115,6 +115,15 @@ def apply_lightweight_migrations() -> None:
     _add_column_if_missing("assistantmessage", "actions_json", "VARCHAR", "'[]'")
     _add_column_if_missing("assistantmessage", "applied", "BOOLEAN", "0")
 
+    # Admin user support.
+    _add_column_if_missing("useraccount", "is_admin", "BOOLEAN", "0")
+
+    # Business plan/pricing tracking.
+    _add_column_if_missing("business", "plan", "VARCHAR", "'starter'")
+    _add_column_if_missing("business", "monthly_price_cents", "INTEGER", "0")
+    _add_column_if_missing("business", "claude_api_tokens_used", "INTEGER", "0")
+    _add_column_if_missing("business", "claude_api_cost_cents", "INTEGER", "0")
+
 
 def create_db_and_tables() -> None:
     SQLModel.metadata.create_all(engine)

@@ -1,26 +1,12 @@
 """
 Inventory Management Module
 Tracks stock, reorders, costs, and multi-location inventory
+
+Note: InventoryItem is defined in backend.app.models to avoid duplication
 """
 
 from sqlmodel import SQLModel, Field
 from typing import Optional
-
-class InventoryItem(SQLModel, table=True):
-    """Product/item in inventory"""
-    id: Optional[int] = Field(default=None, primary_key=True)
-    business_id: int = Field(index=True)
-    location_id: Optional[int] = Field(index=True)  # null = all locations
-    name: str
-    sku: str = Field(unique=True, index=True)
-    category: str
-    quantity: int = 0
-    reorder_level: int = 10
-    reorder_quantity: int = 50
-    unit_cost: float
-    unit_price: float
-    supplier_id: Optional[int] = None
-    active: bool = True
 
 class InventoryTransaction(SQLModel, table=True):
     """Track inventory changes"""

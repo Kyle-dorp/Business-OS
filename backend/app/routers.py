@@ -16,10 +16,10 @@ from typing import Optional
 from backend.app.database import get_session
 from backend.app.auth import manager_from_request
 from backend.app.tenancy import current_business_id
-from backend.app.models import Service, Booking, BookingAvailability
-from backend.app.modules.inventory import InventoryItem, InventoryTransaction, Supplier
+from backend.app.models import Service, Booking, BookingAvailability, InventoryItem, Invoice, Payment
+from backend.app.modules.inventory import InventoryTransaction, Supplier
 from backend.app.modules.payroll import PayrollPeriod, EmployeePayroll, TaxWithholding, PayStub
-from backend.app.modules.invoicing import Invoice, InvoiceLineItem, Payment, RecurringBilling
+from backend.app.modules.invoicing import InvoiceLineItem, RecurringBilling
 from backend.app.modules.customers import Customer, CustomerPreferences, PurchaseHistory, LoyaltyAccount, CommunicationLog
 from backend.app.modules.team_communication import TeamChannel, ChannelMessage, DirectMessage, ShiftNote, Announcement, ShiftSwapRequest, FileShare
 from backend.app.modules.analytics import DailyMetrics, StaffPerformance, RevenueByService, CustomerInsight, Forecast, CustomReport, Dashboard

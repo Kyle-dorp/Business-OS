@@ -1112,8 +1112,21 @@ def seed_defaults() -> None:
 
 @app.on_event("startup")
 def on_startup() -> None:
-    create_db_and_tables()
-    seed_defaults()
+    try:
+        create_db_and_tables()
+        print("✓ Database tables created")
+    except Exception as e:
+        print(f"⚠ Error creating database tables: {e}")
+        import traceback
+        traceback.print_exc()
+
+    try:
+        seed_defaults()
+        print("✓ Default data seeded")
+    except Exception as e:
+        print(f"⚠ Error seeding defaults: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 @app.get("/")

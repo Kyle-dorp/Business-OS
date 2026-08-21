@@ -1,7 +1,8 @@
 import axios from 'axios'
 import { useAuthStore } from '../stores/auth'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+// Use environment variable if set, otherwise use current origin (works for both local dev and production)
+const API_BASE = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000')
 
 export const api = axios.create({
   baseURL: API_BASE,

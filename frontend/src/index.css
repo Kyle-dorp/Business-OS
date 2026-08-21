@@ -48,26 +48,37 @@ body {
 
 @layer components {
   .btn-primary {
-    @apply px-6 py-3 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-all duration-300 inline-flex items-center justify-center gap-2 shadow-card hover:shadow-hover hover:-translate-y-0.5;
+    @apply px-6 py-3 bg-blue-500 text-white font-medium rounded-lg hover:bg-blue-600 transition-all duration-300 inline-flex items-center justify-center gap-2 hover:-translate-y-0.5;
+    box-shadow: var(--shadow-card);
   }
-  
+
+  .btn-primary:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
   .btn-secondary {
     @apply px-6 py-3 bg-white border border-gray-300 text-gray-900 font-medium rounded-lg hover:bg-gray-50 transition-all duration-300;
   }
-  
+
   .btn-ghost {
     @apply px-6 py-3 text-gray-900 font-medium hover:bg-gray-100 rounded-lg transition-all duration-300;
   }
-  
+
   .input-base {
     @apply w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white;
   }
-  
+
   .card {
-    @apply bg-white rounded-lg shadow-card p-6 border border-gray-100;
+    @apply bg-white rounded-lg p-6 border border-gray-100;
+    box-shadow: var(--shadow-card);
   }
-  
+
   .card-hover {
-    @apply card hover:shadow-hover transition-all duration-300 hover:-translate-y-1;
+    @apply hover:transition-all duration-300 hover:-translate-y-1;
+    box-shadow: var(--shadow-card);
+  }
+
+  .card-hover:hover {
+    box-shadow: var(--shadow-hover);
   }
 }

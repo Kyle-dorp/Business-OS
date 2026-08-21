@@ -489,7 +489,7 @@ class PayrollRun(SQLModel, table=True):
 class Service(SQLModel, table=True):
     """Service offered (haircut, grooming, etc.)"""
     id: Optional[int] = Field(default=None, primary_key=True)
-    business_id: int = Field(index=True)
+    business_id: int = Field(default_factory=current_business_id, index=True)
     name: str
     description: str = ""
     duration_minutes: int = 30
@@ -501,7 +501,7 @@ class Service(SQLModel, table=True):
 class Booking(SQLModel, table=True):
     """Customer booking/appointment"""
     id: Optional[int] = Field(default=None, primary_key=True)
-    business_id: int = Field(index=True)
+    business_id: int = Field(default_factory=current_business_id, index=True)
     customer_name: str
     customer_email: str
     customer_phone: str
@@ -521,7 +521,7 @@ class Booking(SQLModel, table=True):
 class BookingAvailability(SQLModel, table=True):
     """Business availability for bookings"""
     id: Optional[int] = Field(default=None, primary_key=True)
-    business_id: int = Field(index=True)
+    business_id: int = Field(default_factory=current_business_id, index=True)
     day_of_week: int  # 0=Monday, 6=Sunday
     start_time: str  # HH:MM
     end_time: str    # HH:MM

@@ -7,15 +7,18 @@ RUN npm run build
 
 FROM python:3.11-slim
 WORKDIR /app
-RUN pip install --no-cache-dir poetry
-COPY backend/pyproject.toml backend/poetry.lock* ./
-RUN poetry install --no-dev
 
+# Install Python dependencies
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy backend code
 COPY backend/app ./app
+
+# Copy frontend build
 COPY --from=frontend-builder /app/frontend/dist ./static
 
 ENV PYTHONUNBUFFERED=1
-ENV VITE_API_URL=/api
-
 EXPOSE 8000
-CMD ["poetry", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,25 +1,51 @@
-import React from 'react'
+import React from 'react';
 
-interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  hoverable?: boolean
-  header?: React.ReactNode
-  footer?: React.ReactNode
+interface CardProps {
+  children: React.ReactNode;
+  hover?: boolean;
+  onClick?: () => void;
+  className?: string;
+  style?: React.CSSProperties;
 }
 
-export const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ hoverable = false, header, footer, children, className = '', ...props }, ref) => {
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ children, hover = true, onClick, className = '', style = {} }, ref) => {
     return (
       <div
         ref={ref}
-        className={`card ${hoverable ? 'card-hover' : ''} ${className}`}
-        {...props}
+        onClick={onClick}
+        className={`card ${className}`}
+        style={{
+          background: 'var(--surface)',
+          border: '1px solid #f0f0f0',
+          borderRadius: '8px',
+          padding: '24px',
+          boxShadow: 'var(--shadow-sm)',
+          cursor: onClick ? 'pointer' : 'default',
+          transition: 'all 0.3s ease',
+          ...style,
+        }}
+        onMouseEnter={(e) => {
+          if (hover) {
+            (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)';
+            (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-lg), var(--shadow-glow)';
+            (e.currentTarget as HTMLElement).style.borderColor = 'var(--accent)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (hover) {
+            (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+            (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-sm)';
+            (e.currentTarget as HTMLElement).style.borderColor = '#f0f0f0';
+          }
+        }}
       >
-        {header && <div className="mb-4 pb-4 border-b border-gray-200">{header}</div>}
         {children}
-        {footer && <div className="mt-4 pt-4 border-t border-gray-200">{footer}</div>}
       </div>
-    )
+    );
   }
-)
+);
 
-Card.displayName = 'Card'
+Card.displayName = 'Card';
+
+export default Card;

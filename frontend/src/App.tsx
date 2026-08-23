@@ -1,101 +1,57 @@
-import React from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useAuthStore } from './stores/auth'
-import { LoginPage } from './pages/Login'
-import { Dashboard } from './pages/Dashboard'
-import { AdminDashboard } from './pages/AdminDashboard'
-import { CustomersPage } from './pages/Customers'
-import { InventoryPage } from './pages/Inventory'
-import { InvoicingPage } from './pages/Invoicing'
-import { PayrollPage } from './pages/Payroll'
-import { TeamChatPage } from './pages/TeamChat'
-import { AnalyticsPage } from './pages/Analytics'
+import React, { useState, useEffect } from 'react';
+import Sidebar from './components/Sidebar';
+import ChatBubble from './components/ChatBubble';
+import Dashboard from './pages/Dashboard';
+import AdminPanel from './pages/AdminPanel';
+import { useModules } from './hooks/useModules';
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />
-}
+const App: React.FC = () => {
+  const [user, setUser] = useState<any>(null);
+  const [workspaceId] = useState('1');
+  const [activeTab, setActiveTab] = useState('home');
+  const { modules } = useModules(workspaceId);
 
-function App() {
+  useEffect(() => {
+    setUser({ name: 'Sarah Park', role: 'Manager' });
+  }, []);
+
+  const menuModules = [
+    { id: 'home', name: 'Home', icon: '🏠', enabled: true },
+    ...modules.map((m) => ({ id: m.key, name: m.name, icon: m.icon || '📦', enabled: m.enabled })),
+    { id: 'admin', name: 'Admin', icon: '⚙️', enabled: true },
+  ];
+
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/customers"
-          element={
-            <ProtectedRoute>
-              <CustomersPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/inventory"
-          element={
-            <ProtectedRoute>
-              <InventoryPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/invoicing"
-          element={
-            <ProtectedRoute>
-              <InvoicingPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/payroll"
-          element={
-            <ProtectedRoute>
-              <PayrollPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/team"
-          element={
-            <ProtectedRoute>
-              <TeamChatPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/analytics"
-          element={
-            <ProtectedRoute>
-              <AnalyticsPage />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-    </BrowserRouter>
-  )
-}
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+      {/* Sidebar */}
+      <Sidebar
+        modules={menuModules}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        user={user}
+        workspaceName="Business OS"
+      />
 
-export default App
+      {/* Main Content */}
+      <main style={{ flex: 1, padding: '48px', background: 'var(--bg)', overflowY: 'auto' }}>
+        {activeTab === 'home' && <Dashboard />}
+        {activeTab === 'admin' && <AdminPanel />}
+      </main>
+
+      {/* Chat Bubble */}
+      <ChatBubble
+        title="Ask Claude"
+        messages={[
+          {
+            id: '1',
+            type: 'bot',
+            content: 'Hi! I can help you optimize your business. What can I assist with?',
+            timestamp: new Date(),
+          },
+        ]}
+      />
+    </div>
+  );
+};
+
+export default App;

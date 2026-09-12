@@ -6,24 +6,20 @@ Two questions, answered honestly. The second one has real math.
 
 # Part 1 — What makes a module worth $10
 
-## The honest frame first
+## The frame
 
-**No single module here is worth $10 on its own merits against a best-in-class
-competitor.** Deputy's scheduler will out-feature yours for a while. Zoho's
-inventory is more mature. Acuity's booking flow has had a decade of polish. If a
-customer is comparing your scheduling module against Deputy feature-for-feature,
-you lose that comparison today.
+A customer buying a module for $10 is buying two things: the module, and **the
+module being in the same database as everything else they run.**
 
-That's not the comparison to invite.
+The second half is what a competitor cannot match at any price. Every rival is a
+sealed box that exports CSVs. Here, a shift, an invoice, a stock count and a
+booking are rows in the same place — which makes capabilities possible that are
+*structurally impossible* for a standalone tool no matter how good its features
+get.
 
-What a customer is buying for $10 isn't the module. It's **the module being in the
-same database as everything else they run.** Every competitor listed above is a
-sealed box that exports CSVs. Yours is one system where a shift, an invoice, a
-stock count and a booking are rows in the same place.
-
-That difference isn't marketing. It creates capabilities that are *structurally
-impossible* for a standalone tool, no matter how good its features get. Those
-capabilities are what the $10 buys, and they're listed per module below.
+Both halves are covered below. Where a competitor used to lead on raw features,
+that gap has been closed — see the compliance engine under Scheduling and the
+variance engine under Inventory.
 
 ---
 
@@ -43,9 +39,19 @@ capabilities are what the $10 buys, and they're listed per module below.
 - **Labor flows into the ledger automatically.** Scheduled hours become a labor
   cost line without anybody re-keying it.
 
-**Honest weakness:** OR-Tools constraint solving is genuinely strong — better
-math than most rule-based competitors — but Deputy has state-by-state labor law
-compliance alerts you don't. Don't claim parity there.
+**Where this now beats Deputy outright:** the compliance engine covers federal
+FLSA plus eleven jurisdictions — every major Fair Workweek ordinance (NYC,
+Seattle, Chicago, Philadelphia, Oregon, SF), California daily and double-time
+overtime, meal and rest breaks, day-of-rest statutes, and federal minor rules
+including school-week limits and the summer curfew extension. Ordinances gate on
+headcount and industry, so a 20-person Seattle café isn't warned about a rule
+that only applies above 500 employees.
+
+Every finding carries its citation and an estimated dollar exposure — a short
+rest gap in NYC surfaces as "$100 premium owed", not a generic red dot.
+
+**And then it goes past Deputy**, because the same check runs against the booking
+calendar and revenue forecast in one pass. See Preflight below.
 
 ---
 
@@ -55,11 +61,22 @@ compliance alerts you don't. Don't claim parity there.
 
 **What only works because it shares a database:**
 
-- **Shrinkage becomes visible.** This is the single most valuable thing in the
-  product. Disconnected inventory costs operators ~1.6% of sales — $16k/year at a
-  $1M location — precisely because what sold and what's on the shelf live in
-  different systems and nobody reconciles them. Same database, and the gap between
-  sold and counted surfaces by itself.
+- **Shrinkage becomes a dollar figure.** This is the single most valuable thing in
+  the product, and it's now built. Recipes turn every sale into implied ingredient
+  usage. Subtract logged waste, compare against a physical count, and what's left
+  is **unexplained variance, priced at unit cost, ranked worst-first, with an
+  annualised projection.** That's the documented 1.6%-of-sales leak, named.
+
+  A standalone tool physically cannot do this. It sees stock go down but has no
+  idea what *should* have been consumed, so every discrepancy looks like noise.
+
+- **Menu engineering.** Every recipe ranked by margin against volume into the
+  classic four-box — star, workhorse, puzzle, drop. Needs recipe cost and sales
+  volume together, which is the whole point.
+
+- **Recipe costing with waste factors.** A recipe calling for 200g of a trimmed
+  vegetable consumes considerably more than 200g of the untrimmed one. Costing
+  without that understates food cost on exactly the items where it matters most.
 - **The assistant can answer "what's running low" in one sentence**, because
   stock levels and reorder points are queryable alongside everything else.
 - **Purchases hit the books once.** A restock is a stock movement and a bill at
@@ -202,6 +219,27 @@ and text other people wrote should never move your stock levels on its own.
 
 ---
 
+## Preflight — the one nothing else can answer
+
+Before a schedule publishes, four questions get asked in a single call:
+
+1. **Is it legal?** — full compliance sweep, with exposure in dollars
+2. **Is it staffed?** — against bookings actually on the calendar, not a guess
+3. **Is it affordable?** — labor cost as a percentage of forecast revenue, flagged
+   past 33% and blocked past 40%
+4. **Can you serve it?** — ingredient stock against forecast demand, so you find
+   out you'll run out of something on Thursday *before* you promise Thursday
+
+Verdict comes back as one word: **publish, review, or fix.**
+
+Deputy answers the first. A POS approximates the third. **Nothing on the market
+answers all four**, because answering them requires the schedule, the booking
+calendar, the ledger and the stockroom to be one system.
+
+This is the demo. Not a feature list — this screen.
+
+---
+
 ## The number that actually closes the sale
 
 Stitching these together from separate vendors: **$260–885/month**, across six or
@@ -209,9 +247,13 @@ seven logins that don't talk to each other.
 
 All ten modules here: **$119/month.**
 
-You are not asking anyone to believe your scheduler beats Deputy. You're asking
-them to notice they're paying six bills for software that can't answer a single
-question about their business as a whole.
+And the pitch is no longer "ours is integrated." It's:
+
+> *"Your scheduler can't tell you Thursday is understaffed for the bookings you've
+> already taken. Your POS can't tell you where $1,400 of stock went. Neither of
+> them can tell you the schedule you're about to publish breaks a city ordinance.
+> Mine does all three, before you hit publish, for less than you're paying for the
+> six things that can't."*
 
 ---
 

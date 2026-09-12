@@ -11,3 +11,4 @@ alembic
 pytest
 httpx
 stripe
+email-validator

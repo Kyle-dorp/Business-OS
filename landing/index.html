@@ -1,0 +1,661 @@
+<title>Business-EOS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&display=swap">
+
+<style>
+  :root{
+    --void:#0E0B0C;
+    --ink:#F6F0EA;
+    --ink-2:#C6B9B1;
+    --muted:#8C7F79;
+    --faint:#6A5F5A;
+
+    --amber:#F5A65B;
+    --amber-hot:#FFC98F;
+    --rose:#D9788D;
+    --mint:#77D8C2;
+
+    --line:rgba(246,240,234,.10);
+    --line-soft:rgba(246,240,234,.055);
+    --glass:rgba(246,240,234,.032);
+    --glass-2:rgba(246,240,234,.05);
+
+    --font-display:"Fraunces",Georgia,"Times New Roman",serif;
+    --font-ui:"Figtree","Helvetica Neue",Arial,sans-serif;
+    --ease:cubic-bezier(.22,.72,.2,1);
+    --gutter:clamp(1.25rem,5vw,4.5rem);
+
+    --mx:50vw;
+    --my:22vh;
+  }
+
+  *{box-sizing:border-box}
+
+  body{
+    margin:0;
+    background:var(--void);
+    color:var(--ink);
+    font-family:var(--font-ui);
+    font-size:1rem;
+    font-weight:300;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+    position:relative;
+    min-height:100vh;
+  }
+
+  /* ---- ambient atmosphere (dimmed) ---- */
+  .atmos,.spot,.grain{position:fixed;inset:0;pointer-events:none;z-index:0}
+  .atmos{
+    background:
+      radial-gradient(58vw 48vw at 12% -6%, rgba(245,166,91,.10), transparent 62%),
+      radial-gradient(52vw 44vw at 96% 14%, rgba(217,120,141,.085), transparent 64%),
+      radial-gradient(70vw 60vw at 50% 108%, rgba(201,122,58,.065), transparent 66%);
+  }
+  .spot{background:radial-gradient(30rem circle at var(--mx) var(--my), rgba(255,201,143,.055), transparent 62%)}
+  .grain{
+    opacity:.22;
+    mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+  }
+
+  main,header,footer{position:relative;z-index:1}
+  ::selection{background:rgba(245,166,91,.2);color:var(--ink)}
+  :focus-visible{outline:2px solid var(--amber-hot);outline-offset:4px;border-radius:4px}
+
+  .wrap{max-width:1140px;margin:0 auto;padding-inline:var(--gutter)}
+
+  /* ---- type ---- */
+  h1,h2{
+    font-family:var(--font-display);
+    font-optical-sizing:auto;
+    font-weight:400;
+    letter-spacing:-.018em;
+    line-height:1.07;
+    margin:0;
+    text-wrap:balance;
+  }
+  h1{font-size:clamp(2.7rem,6.6vw,5.1rem)}
+  h2{font-size:clamp(1.9rem,3.8vw,2.9rem)}
+  p{margin:0}
+
+  .lead{font-size:clamp(1.06rem,1.5vw,1.24rem);line-height:1.68;color:var(--ink-2);max-width:36ch}
+  .prose{max-width:56ch;color:var(--ink-2);line-height:1.75}
+
+  .eyebrow{font-size:.83rem;font-weight:500;color:var(--muted);margin-bottom:1.6rem}
+  .eyebrow b{color:var(--amber);font-weight:600}
+
+  .idx{font-family:var(--font-display);font-size:.95rem;color:var(--faint);line-height:1.6;padding-top:.6rem}
+  .idx span{display:block;color:var(--amber);opacity:.6;font-size:.8rem}
+
+  .track{display:grid;grid-template-columns:6.5rem 1fr;gap:0 2.75rem;align-items:start}
+  @media (max-width:860px){
+    .track{grid-template-columns:1fr;gap:.5rem}
+    .idx{padding-top:0;display:flex;gap:.6rem;align-items:baseline}
+  }
+
+  /* ---- masthead ---- */
+  .masthead{
+    position:sticky;top:0;z-index:50;
+    border-bottom:1px solid var(--line-soft);
+    background:rgba(14,11,12,.68);
+    backdrop-filter:blur(16px) saturate(1.15);
+  }
+  .masthead .wrap{display:flex;align-items:center;justify-content:space-between;gap:1.5rem;height:4.35rem}
+  .mark{display:flex;align-items:center;gap:.65rem;font-weight:700;font-size:1.02rem;letter-spacing:-.02em}
+  .mark i{
+    width:.55rem;height:.55rem;border-radius:50%;background:var(--amber);
+    box-shadow:0 0 10px 1px rgba(245,166,91,.38);flex:none;
+  }
+  .navlinks{display:flex;gap:1.9rem;font-size:.92rem}
+  @media (max-width:700px){ .navlinks a:not(:last-child){display:none} }
+  .navlinks a{color:var(--muted);text-decoration:none;transition:color .25s var(--ease),text-shadow .25s var(--ease)}
+  .navlinks a:hover{color:var(--ink);text-shadow:0 0 14px rgba(255,201,143,.26)}
+
+  /* ---- hero ---- */
+  .hero{padding-block:clamp(3.5rem,8.5vw,7rem) clamp(3rem,7vw,5.5rem)}
+  .hero h1 em{
+    font-style:italic;font-weight:300;color:var(--amber);
+    text-shadow:0 0 34px rgba(245,166,91,.26);
+  }
+  .hero-grid{
+    display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.02fr);
+    gap:clamp(2rem,5vw,4rem);align-items:center;margin-top:2.75rem;
+  }
+  @media (max-width:900px){ .hero-grid{grid-template-columns:1fr;gap:3.25rem} }
+
+  /* ---- convergence stage ---- */
+  .stage{position:relative;height:clamp(310px,44vw,400px)}
+  .chip{
+    position:absolute;left:50%;top:50%;width:9.6rem;
+    padding:.75rem .85rem .8rem;
+    background:var(--glass);border:1px solid var(--line);border-radius:12px;
+    backdrop-filter:blur(8px);
+    transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) rotate(var(--r));
+    transition:transform .9s var(--ease),opacity .6s var(--ease);
+    will-change:transform,opacity;
+  }
+  .chip .cn{display:block;font-size:.82rem;font-weight:500;color:var(--ink-2);margin-bottom:.15rem}
+  .chip .cp{font-size:.78rem;font-weight:500;color:var(--rose);opacity:.85;font-variant-numeric:tabular-nums}
+  .stage.is-unified .chip{transform:translate(-50%,-50%) rotate(0) scale(.8);opacity:0}
+
+  .unified{
+    position:absolute;left:50%;top:50%;width:min(23.5rem,90%);
+    padding:1.5rem 1.6rem 1.35rem;
+    transform:translate(-50%,-50%) scale(.9);opacity:0;
+    background:linear-gradient(158deg, rgba(246,240,234,.062), rgba(246,240,234,.026));
+    border:1px solid rgba(245,166,91,.2);
+    border-radius:18px;backdrop-filter:blur(14px);
+    box-shadow:0 26px 64px -28px rgba(0,0,0,.8), 0 0 44px -16px rgba(245,166,91,.2);
+    transition:transform .9s var(--ease),opacity .6s var(--ease) .15s,box-shadow .45s var(--ease);
+  }
+  .stage.is-unified .unified{transform:translate(-50%,-50%) scale(1);opacity:1}
+  .unified:hover{box-shadow:0 26px 64px -28px rgba(0,0,0,.8), 0 0 62px -12px rgba(245,166,91,.3)}
+
+  .u-top{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding-bottom:.95rem;border-bottom:1px solid var(--line-soft)}
+  .u-name{display:flex;align-items:center;gap:.55rem;font-weight:700;font-size:1rem;letter-spacing:-.02em}
+  .u-name i{width:.48rem;height:.48rem;border-radius:50%;background:var(--amber);box-shadow:0 0 8px 1px rgba(245,166,91,.42);flex:none}
+  .u-price{font-size:1.02rem;font-weight:600;color:var(--amber-hot);font-variant-numeric:tabular-nums}
+  .u-was{display:block;font-size:.74rem;font-weight:400;color:var(--rose);opacity:.7;text-decoration:line-through;text-align:right;margin-top:.1rem}
+  .u-rows{display:grid;grid-template-columns:1fr 1fr;gap:.4rem 1rem;padding-top:.95rem;font-size:.83rem;color:var(--muted);font-weight:400}
+  .u-rows div{display:flex;align-items:center;gap:.45rem}
+  .u-rows div::before{content:"";width:.3rem;height:.3rem;border-radius:50%;background:var(--amber);opacity:.5;flex:none}
+  .u-hint{margin-top:1.1rem;font-size:.78rem;color:var(--faint);opacity:0;transition:opacity .35s var(--ease),color .3s var(--ease)}
+  .stage.is-unified .u-hint{opacity:1}
+  .unified:hover .u-hint{color:var(--amber)}
+
+  .stage.is-unified.peek .chip{transform:translate(calc(-50% + var(--x)),calc(-50% + var(--y))) rotate(var(--r)) scale(1);opacity:1}
+  .stage.is-unified.peek .unified{transform:translate(-50%,-50%) scale(.97);opacity:.1}
+
+  @media (max-width:560px){
+    .chip{width:8.2rem;transform:translate(calc(-50% + (var(--x) * .6)),calc(-50% + (var(--y) * .84))) rotate(var(--r))}
+    .stage.is-unified.peek .chip{transform:translate(calc(-50% + (var(--x) * .6)),calc(-50% + (var(--y) * .84))) rotate(var(--r)) scale(1)}
+  }
+
+  /* ---- ghost actions ---- */
+  .actions{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:2.6rem;margin-left:-1rem}
+  .ghost{
+    position:relative;display:inline-flex;align-items:center;gap:.6rem;
+    padding:.8rem 1rem;font-family:var(--font-ui);
+    font-size:1rem;font-weight:600;letter-spacing:-.005em;
+    color:var(--ink);background:transparent;border:0;border-radius:10px;
+    cursor:pointer;text-decoration:none;
+    transition:color .28s var(--ease),background-color .28s var(--ease),box-shadow .35s var(--ease);
+  }
+  .ghost .arw{color:var(--amber);transition:transform .3s var(--ease)}
+  .ghost:hover{
+    color:var(--amber-hot);background:rgba(245,166,91,.07);
+    box-shadow:0 0 28px -10px rgba(245,166,91,.24), inset 0 0 0 1px rgba(245,166,91,.16);
+  }
+  .ghost:hover .arw{transform:translateX(4px)}
+  .ghost.quiet{color:var(--muted);font-weight:500}
+  .ghost.quiet:hover{color:var(--ink);box-shadow:0 0 22px -10px rgba(245,166,91,.16), inset 0 0 0 1px var(--line)}
+
+  /* ---- bands ---- */
+  section{scroll-margin-top:5.5rem}
+  .band{padding-block:clamp(3.5rem,8vw,6.5rem);border-top:1px solid var(--line-soft)}
+  .band-head{margin-bottom:clamp(2.25rem,4.5vw,3.4rem)}
+  .band-head h2{margin-bottom:1.2rem}
+
+  .figures{display:grid;grid-template-columns:repeat(auto-fit,minmax(216px,1fr));gap:1rem}
+  .fig{
+    padding:1.7rem 1.5rem 1.5rem;
+    background:var(--glass);border:1px solid var(--line-soft);border-radius:16px;
+    backdrop-filter:blur(6px);
+    transition:background-color .4s var(--ease),border-color .4s var(--ease),box-shadow .45s var(--ease),transform .45s var(--ease);
+  }
+  .fig:hover{
+    background:var(--glass-2);border-color:rgba(217,120,141,.24);
+    box-shadow:0 0 36px -18px rgba(217,120,141,.28);transform:translateY(-3px);
+  }
+  .fig .v{
+    display:block;font-family:var(--font-display);
+    font-size:clamp(1.9rem,3.2vw,2.45rem);font-weight:400;
+    letter-spacing:-.02em;line-height:1;color:var(--rose);
+    font-variant-numeric:tabular-nums;margin-bottom:.9rem;
+  }
+  .fig .k{display:block;font-size:.95rem;color:var(--ink-2);line-height:1.65}
+  .fig .src{display:block;margin-top:.95rem;font-size:.76rem;color:var(--faint);font-weight:500}
+
+  /* ---- builder ---- */
+  .builder{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:clamp(1.5rem,4vw,3.25rem);align-items:start}
+  @media (max-width:900px){ .builder{grid-template-columns:1fr} }
+
+  .modhead{
+    display:flex;align-items:baseline;justify-content:space-between;
+    padding:0 1rem .7rem;margin-bottom:.35rem;
+    border-bottom:1px solid var(--line-soft);
+    font-size:.78rem;font-weight:500;color:var(--faint);
+  }
+  .modhead .rt{color:var(--rose);opacity:.65}
+
+  .mod{
+    display:flex;align-items:center;gap:.95rem;width:100%;text-align:left;
+    padding:.95rem 1rem;background:transparent;
+    border:1px solid transparent;border-radius:12px;cursor:pointer;
+    font-family:var(--font-ui);font-size:1rem;color:var(--muted);
+    transition:background-color .28s var(--ease),box-shadow .35s var(--ease),border-color .28s var(--ease);
+  }
+  .mod + .mod{margin-top:.15rem}
+  .mod:hover{
+    background:rgba(245,166,91,.055);
+    border-color:rgba(245,166,91,.15);
+    box-shadow:0 0 26px -12px rgba(245,166,91,.22);
+  }
+  .mod .tick{
+    width:1.15rem;height:1.15rem;flex:none;border-radius:50%;
+    border:1px solid var(--line);display:grid;place-items:center;
+    font-size:.66rem;color:transparent;transition:all .28s var(--ease);
+  }
+  .mod .mn{flex:1;font-weight:500;color:var(--ink-2);transition:color .28s var(--ease)}
+  .mod .mp{
+    flex:none;font-size:.88rem;font-weight:500;color:var(--faint);
+    font-variant-numeric:tabular-nums;transition:color .28s var(--ease),opacity .28s var(--ease);
+  }
+  .mod[aria-pressed="true"] .tick{
+    background:var(--amber);border-color:var(--amber);color:#231207;
+    box-shadow:0 0 10px 1px rgba(245,166,91,.35);
+  }
+  .mod[aria-pressed="true"] .mn{color:var(--ink);font-weight:600}
+  .mod[aria-pressed="true"] .mp{color:var(--rose);text-decoration:line-through;opacity:.75}
+
+  .tally{
+    position:sticky;top:6.25rem;padding:1.7rem 1.7rem 1.5rem;
+    background:linear-gradient(160deg, rgba(246,240,234,.058), rgba(246,240,234,.024));
+    border:1px solid rgba(245,166,91,.16);border-radius:20px;backdrop-filter:blur(14px);
+    box-shadow:0 28px 70px -32px rgba(0,0,0,.8), 0 0 44px -24px rgba(245,166,91,.18);
+  }
+  @media (max-width:900px){ .tally{position:static} }
+  .t-row{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;padding-block:.9rem}
+  .t-row + .t-row{border-top:1px solid var(--line-soft)}
+  .t-lab{font-size:.88rem;color:var(--muted);max-width:15ch;line-height:1.5}
+  .t-val{font-family:var(--font-display);font-size:1.6rem;font-weight:400;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .t-val.bad{color:var(--rose);text-decoration:line-through;text-decoration-thickness:1px;opacity:.72}
+  .t-val.good{color:var(--amber-hot);font-size:2rem;text-shadow:0 0 24px rgba(245,166,91,.28)}
+  .saving{margin-top:1.2rem;font-size:.97rem;color:var(--ink-2);line-height:1.6}
+  .saving strong{color:var(--mint);font-weight:600;font-variant-numeric:tabular-nums}
+  .t-note{margin-top:1.15rem;padding-top:1.15rem;border-top:1px solid var(--line-soft);font-size:.86rem;line-height:1.7;color:var(--muted)}
+  .t-note b{color:var(--amber);font-weight:600}
+
+  /* ---- assistant conversation ---- */
+  .convo{display:flex;flex-direction:column;gap:.85rem;max-width:44rem}
+  .bubble{
+    padding:1rem 1.2rem;border-radius:16px;font-size:.97rem;line-height:1.65;
+    border:1px solid var(--line-soft);
+  }
+  .bubble p + p{margin-top:.7rem}
+  .bubble b{color:var(--ink);font-weight:600}
+  .bubble.me{
+    align-self:flex-end;max-width:82%;
+    background:rgba(245,166,91,.09);
+    border-color:rgba(245,166,91,.18);
+    color:var(--ink);border-bottom-right-radius:5px;
+  }
+  .bubble.it{
+    align-self:flex-start;max-width:90%;
+    background:var(--glass);color:var(--ink-2);
+    border-bottom-left-radius:5px;backdrop-filter:blur(6px);
+  }
+  .bubble .fine{font-size:.84rem;color:var(--faint)}
+  .proposal{
+    margin-top:.85rem;padding:.95rem 1.05rem;
+    display:flex;flex-direction:column;gap:.55rem;
+    background:rgba(119,216,194,.05);
+    border:1px solid rgba(119,216,194,.22);
+    border-radius:12px;
+  }
+  .p-line{font-size:.9rem;color:var(--ink-2)}
+  .p-line b{color:var(--ink)}
+  .p-actions{margin-top:.3rem;font-size:.88rem;color:var(--faint)}
+  .p-actions em{font-style:normal;font-weight:600;color:var(--mint)}
+  .p-actions em.no{color:var(--faint);font-weight:500}
+  @media (max-width:620px){ .bubble.me,.bubble.it{max-width:100%} }
+
+  /* ---- close / contact ---- */
+  .close-band{border-top:1px solid var(--line-soft);padding-block:clamp(4rem,9vw,7rem)}
+  .close-band h2{max-width:17ch;margin-bottom:1.4rem}
+  .contact{
+    margin-top:2.4rem;padding-top:1.6rem;border-top:1px solid var(--line-soft);
+    display:flex;flex-wrap:wrap;gap:.4rem 2.5rem;align-items:baseline;
+    font-size:.95rem;color:var(--muted);
+  }
+  .contact a{color:var(--ink-2);text-decoration:none;border-bottom:1px solid var(--line);transition:color .25s var(--ease),border-color .25s var(--ease)}
+  .contact a:hover{color:var(--amber-hot);border-color:var(--amber)}
+  .contact .dogfood{flex-basis:100%;font-size:.84rem;color:var(--faint);font-style:italic}
+
+  footer{border-top:1px solid var(--line-soft);padding-block:2.3rem 3.25rem;font-size:.84rem;color:var(--faint);line-height:1.8}
+  footer .wrap{display:flex;flex-wrap:wrap;gap:.75rem 2rem;justify-content:space-between}
+
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+  .reveal.in{opacity:1;transform:none}
+
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{transition-duration:.01ms !important;animation-duration:.01ms !important}
+    .reveal{opacity:1;transform:none}
+    .spot{display:none}
+  }
+</style>
+
+<div class="atmos" aria-hidden="true"></div>
+<div class="spot" id="spot" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="mark"><i></i>Business-EOS</div>
+    <nav class="navlinks">
+      <a href="#cost">The cost</a>
+      <a href="#build">Modules</a>
+      <a href="#ask">Ask it anything</a>
+      <a href="#start">Get started</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <div class="track">
+        <div class="idx">01<span>The stack</span></div>
+        <div>
+          <p class="eyebrow">The average small operator runs <b>five to seven</b> disconnected systems</p>
+          <h1>Six logins.<br>Six bills.<br><em>One business.</em></h1>
+
+          <div class="hero-grid">
+            <div>
+              <p class="lead">One operating system for the whole shop — scheduling, stock, books, customers, invoicing. Turn on what you need. Leave the rest off.</p>
+              <div class="actions">
+                <a class="ghost" href="#build">Build your stack <span class="arw">↓</span></a>
+                <a class="ghost quiet" href="#cost">See what fragmentation costs</a>
+              </div>
+            </div>
+
+            <div class="stage" id="stage">
+              <div class="chip" style="--x:-168px;--y:-116px;--r:-7deg"><span class="cn">Scheduling app</span><span class="cp">$40/mo</span></div>
+              <div class="chip" style="--x:26px;--y:-144px;--r:4deg"><span class="cn">Inventory tool</span><span class="cp">$79/mo</span></div>
+              <div class="chip" style="--x:182px;--y:-90px;--r:8deg"><span class="cn">Payroll service</span><span class="cp">$85/mo</span></div>
+              <div class="chip" style="--x:-186px;--y:76px;--r:6deg"><span class="cn">Booking page</span><span class="cp">$49/mo</span></div>
+              <div class="chip" style="--x:-6px;--y:136px;--r:-5deg"><span class="cn">POS software</span><span class="cp">$69/mo</span></div>
+              <div class="chip" style="--x:176px;--y:94px;--r:-9deg"><span class="cn">Bookkeeping</span><span class="cp">$70/mo</span></div>
+
+              <div class="unified" id="unified">
+                <div class="u-top">
+                  <span class="u-name"><i></i>Business-EOS</span>
+                  <span>
+                    <span class="u-price">$79/mo</span>
+                    <span class="u-was">$392/mo</span>
+                  </span>
+                </div>
+                <div class="u-rows">
+                  <div>Scheduling</div><div>Inventory</div>
+                  <div>Payroll prep</div><div>Bookings</div>
+                  <div>Sales</div><div>Books</div>
+                </div>
+                <p class="u-hint">Hover to see what it replaces</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="cost">
+    <div class="wrap">
+      <div class="track">
+        <div class="idx">02<span>The arithmetic</span></div>
+        <div>
+          <div class="band-head">
+            <h2>Disconnected systems don't just cost subscriptions.</h2>
+            <p class="prose">The subscriptions are the part you can see on a statement. The expensive part is what leaks between them — counts that don't match, hours nobody reconciled, a number that was right in one place and wrong in another.</p>
+          </div>
+
+          <div class="figures reveal">
+            <div class="fig">
+              <span class="v">1.6%</span>
+              <span class="k">of sales lost to shrinkage from spoilage, theft and miscounts when inventory lives apart from sales — around $16,000 a year at a $1M location.</span>
+              <span class="src">Point B, 2025</span>
+            </div>
+            <div class="fig">
+              <span class="v">5–10 hrs</span>
+              <span class="k">a week of staff time spent reconciling systems by hand that were never built to talk to each other.</span>
+              <span class="src">Crunchtime</span>
+            </div>
+            <div class="fig">
+              <span class="v">74%</span>
+              <span class="k">of operators say technology integration directly affects their profitability — not their convenience, their margin.</span>
+              <span class="src">Nat'l Restaurant Assoc.</span>
+            </div>
+            <div class="fig">
+              <span class="v">$5k–50k</span>
+              <span class="k">to integrate the tools you already pay for. Connecting the stack routinely costs more than replacing it.</span>
+              <span class="src">Point B, 2025</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="build">
+    <div class="wrap">
+      <div class="track">
+        <div class="idx">03<span>Your stack</span></div>
+        <div>
+          <div class="band-head">
+            <h2>Turn on what you run. Nothing else.</h2>
+            <p class="prose">Every module shares one database, one login, one bill. Pick the ones that match how you actually operate — the struck-out figures are what those same capabilities cost you today, bought separately.</p>
+          </div>
+
+          <div class="builder">
+            <div>
+              <div class="modhead"><span>Module</span><span class="rt">What it costs you elsewhere</span></div>
+              <div id="modlist"></div>
+            </div>
+
+            <aside class="tally">
+              <div class="t-row">
+                <span class="t-lab">Bought separately</span>
+                <span class="t-val bad" id="stitched">$184</span>
+              </div>
+              <div class="t-row">
+                <span class="t-lab">Business-EOS</span>
+                <span class="t-val good" id="eos">$59</span>
+              </div>
+              <p class="saving" id="savingLine">You keep <strong id="save">$125</strong> a month — <strong id="saveYear">$1,500</strong> a year — and stop reconciling by hand.</p>
+              <p class="t-note"><b>$29</b> for your first module, <b>$10</b> for each one after. Unlimited users, every location, and the assistant included on whatever you switch on.</p>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="ask">
+    <div class="wrap">
+      <div class="track">
+        <div class="idx">04<span>Ask it</span></div>
+        <div>
+          <div class="band-head">
+            <h2>Ask your business a question. Get an answer from the books.</h2>
+            <p class="prose">Because everything shares one database, the assistant can actually answer. Not a help article — your numbers, computed from your records, right now. And when you ask it to change something, it shows you exactly what it will do and waits.</p>
+          </div>
+
+          <div class="convo reveal">
+            <div class="bubble me">What did we take last week, and is anything running low?</div>
+            <div class="bubble it">
+              <p>Last week you invoiced <b>$8,240</b> across 34 invoices and collected <b>$7,110</b>. Outstanding is <b>$3,480</b>, oldest 19 days.</p>
+              <p>Three items are at or below reorder point: <b>house red</b> (2 left), <b>oat milk</b> (4), <b>takeaway lids</b> (0).</p>
+            </div>
+            <div class="bubble me">Bump the lids reorder point to 24 and mark the oldest invoice as chased.</div>
+            <div class="bubble it">
+              <p>Two changes ready for your OK:</p>
+              <div class="proposal">
+                <span class="p-line"><b>Takeaway lids</b> — reorder point 12 → 24</span>
+                <span class="p-line"><b>Invoice #1042</b> (Marlow Catering, $620) — flag as chased</span>
+                <span class="p-actions"><em>Approve</em> · <em class="no">Discard</em></span>
+              </div>
+              <p class="fine">Nothing has changed yet.</p>
+            </div>
+          </div>
+
+          <p class="prose" style="margin-top:2rem">
+            It proposes; you approve. That boundary is deliberate — notes, invoice memos and supplier emails are text other people wrote, and text other people wrote should never be able to move your stock levels on its own.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="close-band" id="start">
+    <div class="wrap">
+      <div class="track">
+        <div class="idx">05<span>Start</span></div>
+        <div>
+          <h2>One system. One number that's actually right.</h2>
+          <p class="prose">Bring one location on first. Keep whatever still works, replace what doesn't, and watch a real week run through it before you move anything else.</p>
+          <div class="actions">
+            <a class="ghost" href="mailto:hello@business-eos.com?subject=Starting%20with%20one%20location">Start with one location <span class="arw">→</span></a>
+            <a class="ghost quiet" href="mailto:hello@business-eos.com?subject=A%20few%20questions%20first">Talk to us first</a>
+          </div>
+          <div class="contact">
+            <span>Email <a href="mailto:hello@business-eos.com">hello@business-eos.com</a></span>
+            <span><a href="/book">Book fifteen minutes</a> — no demo, just questions about how you run things.</span>
+            <span class="dogfood">Booked through our own booking module, naturally.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Business-EOS — an operating system for small operators</span>
+    <span>Comparison figures are 2026 published list prices, rounded. Your stack may differ.</span>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (!reduce){
+      var spot = document.getElementById('spot'), px = 0, py = 0, queued = false;
+      window.addEventListener('pointermove', function(e){
+        px = e.clientX; py = e.clientY;
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(function(){
+          spot.style.setProperty('--mx', px + 'px');
+          spot.style.setProperty('--my', py + 'px');
+          queued = false;
+        });
+      }, {passive:true});
+    }
+
+    var stage = document.getElementById('stage');
+    var unified = document.getElementById('unified');
+
+    if (reduce) stage.classList.add('is-unified');
+    else setTimeout(function(){ stage.classList.add('is-unified'); }, 900);
+
+    function peek(on){
+      if (!stage.classList.contains('is-unified')) return;
+      stage.classList.toggle('peek', on);
+    }
+    unified.addEventListener('mouseenter', function(){ peek(true); });
+    unified.addEventListener('mouseleave', function(){ peek(false); });
+    stage.addEventListener('touchstart', function(){ peek(!stage.classList.contains('peek')); }, {passive:true});
+
+    /* pricing: $29 first module, $10 each after */
+    var FIRST = 29, EACH = 10;
+    function priceFor(n){ return n === 0 ? 0 : FIRST + (n - 1) * EACH; }
+
+    var MODULES = [
+      { name:'Scheduling & shifts',     market:40, on:true  },
+      { name:'Inventory & stock',       market:79, on:true  },
+      { name:'Invoicing & payments',    market:30, on:true  },
+      { name:'Customers & CRM',         market:35, on:true  },
+      { name:'Books & accounting',      market:70, on:false },
+      { name:'Payroll prep',            market:85, on:false },
+      { name:'Bookings & appointments', market:49, on:false },
+      { name:'Menus & QR ordering',     market:68, on:false },
+      { name:'Sales tracking',          market:69, on:false },
+      { name:'Team communication',      market:25, on:false }
+    ];
+
+    var list = document.getElementById('modlist');
+    var elStitched = document.getElementById('stitched');
+    var elEos = document.getElementById('eos');
+    var elSave = document.getElementById('save');
+    var elSaveYear = document.getElementById('saveYear');
+    var savingLine = document.getElementById('savingLine');
+
+    MODULES.forEach(function(m){
+      var b = document.createElement('button');
+      b.className = 'mod';
+      b.type = 'button';
+      b.setAttribute('aria-pressed', String(m.on));
+      b.innerHTML = '<span class="tick" aria-hidden="true">&#10003;</span>' +
+                    '<span class="mn">' + m.name + '</span>' +
+                    '<span class="mp">$' + m.market + '/mo</span>';
+      b.addEventListener('click', function(){
+        m.on = !m.on;
+        b.setAttribute('aria-pressed', String(m.on));
+        render();
+      });
+      list.appendChild(b);
+    });
+
+    var shown = { stitched:184, eos:59 };
+    function money(n){ return '$' + Math.round(n).toLocaleString('en-US'); }
+
+    function tween(key, el, target){
+      var from = shown[key], start = null, dur = 440;
+      if (reduce || from === target){ shown[key] = target; el.textContent = money(target); return; }
+      requestAnimationFrame(function step(ts){
+        if (start === null) start = ts;
+        var p = Math.min((ts - start) / dur, 1);
+        el.textContent = money(from + (target - from) * (1 - Math.pow(1 - p, 3)));
+        if (p < 1) requestAnimationFrame(step); else shown[key] = target;
+      });
+    }
+
+    function render(){
+      var picked = MODULES.filter(function(m){ return m.on; });
+      var n = picked.length;
+      var stitched = picked.reduce(function(a,m){ return a + m.market; }, 0);
+      var eos = priceFor(n);
+      var save = stitched - eos;
+
+      tween('stitched', elStitched, stitched);
+      tween('eos', elEos, eos);
+
+      if (n === 0){
+        savingLine.innerHTML = 'Pick what you actually run and we&rsquo;ll do the arithmetic.';
+      } else if (n === 1){
+        savingLine.innerHTML = 'One module is about what one tool costs. The point &mdash; and the savings &mdash; start at two.';
+      } else if (save <= 0){
+        savingLine.innerHTML = 'Roughly what you pay now, except it&rsquo;s one system that agrees with itself.';
+      } else {
+        savingLine.innerHTML = 'You keep <strong>' + money(save) + '</strong> a month &mdash; <strong>' +
+                               money(save * 12) + '</strong> a year &mdash; and stop reconciling by hand.';
+      }
+    }
+    render();
+
+    if (!reduce && 'IntersectionObserver' in window){
+      var io = new IntersectionObserver(function(entries){
+        entries.forEach(function(en){
+          if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+        });
+      }, { threshold:.18 });
+      document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+    } else {
+      document.querySelectorAll('.reveal').forEach(function(el){ el.classList.add('in'); });
+    }
+  })();
+</script>

@@ -91,6 +91,12 @@ from backend.app.routers import (
 )
 from backend.app.admin_routes import admin_router
 
+# Agent tables must be imported before create_all() so SQLModel registers them.
+from backend.app import agent_models  # noqa: F401
+from backend.app.ai_agent import router as agent_router
+from backend.app.billing import router as billing_router
+from backend.app.booking_public import router as public_booking_router
+
 
 # Track startup errors for debugging
 startup_errors = []
@@ -106,6 +112,10 @@ app.include_router(team_comm_router)
 app.include_router(analytics_router)
 app.include_router(booking_router)
 app.include_router(admin_router)
+app.include_router(agent_router)
+app.include_router(billing_router)
+# Public booking carries no auth by design — customers are not users.
+app.include_router(public_booking_router)
 
 cors_origins = [item.strip() for item in os.getenv(
     "CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"

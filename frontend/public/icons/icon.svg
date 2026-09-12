@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Business-EOS">
+  <defs>
+    <radialGradient id="glow" cx="34%" cy="28%" r="78%">
+      <stop offset="0%" stop-color="#F5A65B" stop-opacity=".55"/>
+      <stop offset="55%" stop-color="#D9788D" stop-opacity=".18"/>
+      <stop offset="100%" stop-color="#0E0B0C" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFC98F"/>
+      <stop offset="100%" stop-color="#F5A65B"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="#0E0B0C"/>
+  <rect width="512" height="512" rx="112" fill="url(#glow)"/>
+
+  <!-- six scattered parts resolving into one centre: the product in one mark -->
+  <g fill="none" stroke="#F6F0EA" stroke-opacity=".28" stroke-width="10" stroke-linecap="round">
+    <path d="M150 150 L206 206"/>
+    <path d="M362 150 L306 206"/>
+    <path d="M150 362 L206 306"/>
+    <path d="M362 362 L306 306"/>
+    <path d="M256 118 L256 190"/>
+    <path d="M256 394 L256 322"/>
+  </g>
+
+  <circle cx="256" cy="256" r="74" fill="none" stroke="url(#ring)" stroke-width="18"/>
+  <circle cx="256" cy="256" r="26" fill="#FFC98F"/>
+</svg>

@@ -181,6 +181,16 @@ def _record_usage(
 
     session.commit()
 
+    # Anything past the included allowance is metered to Stripe. Imported locally
+    # so a billing misconfiguration can never stop the assistant from answering.
+    if newly_billable > 0:
+        try:
+            from backend.app.billing import report_meter_usage
+            report_meter_usage(session, business_id, newly_billable)
+        except Exception:
+            log.warning("Could not meter %s overage tokens for business %s",
+                        newly_billable, business_id)
+
     used_after = used_before + total
     return {
         "tokens_this_month": used_after,

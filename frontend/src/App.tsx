@@ -29,7 +29,7 @@ const App: React.FC = () => {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         user={user}
-        workspaceName="Business OS"
+        workspaceName="Business-EOS"
       />
 
       {/* Main Content */}

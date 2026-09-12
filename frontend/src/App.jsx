@@ -64,7 +64,7 @@ export default function App() {
   }, [user?.role, workspace?.modules]);
 
   function restoreTab(nextUser) {
-    const saved = localStorage.getItem(`business-os.active-tab.${nextUser.id}`);
+    const saved = localStorage.getItem(`business-eos.active-tab.${nextUser.id}`);
     const allowed = (nextUser.role === "manager" ? MANAGER_TABS : EMPLOYEE_TABS).some((tab) => tab.id === saved);
     setActiveTab(allowed ? saved : "home");
   }
@@ -96,7 +96,7 @@ export default function App() {
   }, []);
   useEffect(() => {
     if (!user) return undefined;
-    localStorage.setItem(`business-os.active-tab.${user.id}`, activeTab);
+    localStorage.setItem(`business-eos.active-tab.${user.id}`, activeTab);
     const loadCount = () => api("/notifications").then((x) => setNotificationCount(x.unread_count || 0)).catch(() => {});
     loadCount(); const interval = window.setInterval(loadCount, 30000);
     return () => window.clearInterval(interval);
@@ -124,7 +124,7 @@ export default function App() {
   return <div className="app commercial-shell">
     {drawerOpen && <button className="drawer-backdrop" aria-label="Close navigation" onClick={() => setDrawerOpen(false)} />}
     <aside className={drawerOpen ? "drawer open" : "drawer"}>
-      <div className="drawer-brand"><div className="drawer-logo">O</div><div><strong>{workspace?.business?.name || "Business OS"}</strong><span>Operations + accounting</span></div><button className="drawer-close" onClick={() => setDrawerOpen(false)}>×</button></div>
+      <div className="drawer-brand"><div className="drawer-logo">O</div><div><strong>{workspace?.business?.name || "Business-EOS"}</strong><span>Operations + accounting</span></div><button className="drawer-close" onClick={() => setDrawerOpen(false)}>×</button></div>
       <nav className="drawer-nav">
         <div className="workspace-switcher"><select className="workspace-select" value={workspace?.business?.id || ""} onChange={(e) => switchBusiness(e.target.value)}>{businesses.map((x) => <option key={x.business.id} value={x.business.id}>{x.business.name}</option>)}</select>{user.role === "manager" && <button title="Create another business" onClick={createBusiness}>+</button>}</div>
         <span className="drawer-section-label">WORKSPACE</span>

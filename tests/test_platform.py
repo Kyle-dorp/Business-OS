@@ -1,8 +1,8 @@
 import os
 from pathlib import Path
 
-os.environ["DATABASE_URL"] = "sqlite:///./test_business_os.db"
-Path("test_business_os.db").unlink(missing_ok=True)
+os.environ["DATABASE_URL"] = "sqlite:///./test_business_eos.db"
+Path("test_business_eos.db").unlink(missing_ok=True)
 
 from fastapi.testclient import TestClient  # noqa: E402
 from backend.app.main import app  # noqa: E402

@@ -49,6 +49,8 @@ log = logging.getLogger(__name__)
 PRICE_BASE = os.environ.get("STRIPE_PRICE_BASE", "")
 PRICE_MODULE = os.environ.get("STRIPE_PRICE_MODULE", "")
 PRICE_AI_OVERAGE = os.environ.get("STRIPE_PRICE_AI_OVERAGE", "")
+# Billing Meter event name — must match the meter created in the Stripe dashboard.
+METER_EVENT_NAME = os.environ.get("STRIPE_METER_EVENT_NAME", "assistant_tokens")
 APP_URL = os.environ.get("APP_URL", "http://localhost:5173").rstrip("/")
 
 FIRST_MODULE_CENTS = 2900
@@ -309,36 +311,51 @@ def sync(
     return {"synced": True, "module_count": count, "monthly_cents": quote_cents(count)}
 
 
+def report_meter_usage(session: Session, business_id: int, tokens: int) -> dict:
+    """
+    Report metered assistant usage to Stripe, in 1,000-token units.
+
+    Stripe's modern metered billing is Billing Meters, not the old usage-record
+    API — you send a meter event naming the customer and Stripe aggregates it
+    against whatever price is bound to that meter. Called by the agent as usage
+    accrues past the included allowance.
+
+    Every failure path here is soft. A metering hiccup must never break someone's
+    conversation: worst case we under-bill, which is the right way to be wrong.
+    """
+    if not (METER_EVENT_NAME and PRICE_AI_OVERAGE):
+        return {"reported": False, "reason": "metering not configured"}
+
+    units = max(round(tokens / 1000), 0)
+    if units <= 0:
+        return {"reported": False, "reason": "below one billable unit"}
+
+    sub = _subscription(session, business_id)
+    if not sub or not sub.stripe_customer_id:
+        return {"reported": False, "reason": "no stripe customer"}
+
+    try:
+        stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
+        stripe.billing.MeterEvent.create(
+            event_name=METER_EVENT_NAME,
+            payload={
+                "stripe_customer_id": sub.stripe_customer_id,
+                "value": str(units),
+            },
+        )
+    except Exception as exc:
+        log.warning("Meter report failed for business %s: %s", business_id, exc)
+        return {"reported": False, "reason": str(exc)}
+
+    return {"reported": True, "units": units}
+
+
 @router.post("/report-ai-usage")
-def report_ai_usage(
+def report_ai_usage_route(
     tokens: int,
     session: Session = Depends(get_session),
     user: UserAccount = Depends(user_from_request),
 ):
-    """
-    Report metered assistant usage to Stripe, in 1,000-token units.
-
-    Called by the agent once a workspace passes its included allowance. If no
-    metered price is configured this is a no-op, so overage simply isn't
-    charged rather than silently failing.
-    """
-    if not PRICE_AI_OVERAGE:
-        return {"reported": False, "reason": "no metered price configured"}
-
+    """Manual trigger, mostly for testing the meter wiring end to end."""
     _stripe_ready()
-    bid = current_business_id()
-    sub = _subscription(session, bid)
-    if not sub or not sub.stripe_subscription_id:
-        return {"reported": False, "reason": "no active subscription"}
-
-    live = stripe.Subscription.retrieve(sub.stripe_subscription_id)
-    item = next((i for i in live["items"]["data"] if i["price"]["id"] == PRICE_AI_OVERAGE), None)
-    if not item:
-        return {"reported": False, "reason": "metered item not on subscription"}
-
-    units = max(round(tokens / 1000), 0)
-    if units:
-        stripe.SubscriptionItem.create_usage_record(
-            item["id"], quantity=units, action="increment"
-        )
-    return {"reported": True, "units": units}
+    return report_meter_usage(session, current_business_id(), tokens)

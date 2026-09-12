@@ -25,7 +25,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   onTabChange,
   user,
-  workspaceName = 'Business OS',
+  workspaceName = 'Business-EOS',
 }) => {
   const enabledModules = modules.filter((m) => m.enabled);
 

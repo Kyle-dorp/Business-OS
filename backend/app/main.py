@@ -91,11 +91,14 @@ from backend.app.routers import (
 )
 from backend.app.admin_routes import admin_router
 
-# Agent tables must be imported before create_all() so SQLModel registers them.
+# These modules declare tables, so they must be imported before create_all()
+# runs or SQLModel never learns about them.
 from backend.app import agent_models  # noqa: F401
+from backend.app import ops_models  # noqa: F401
 from backend.app.ai_agent import router as agent_router
 from backend.app.billing import router as billing_router
 from backend.app.booking_public import router as public_booking_router
+from backend.app.preflight import router as ops_router
 
 
 # Track startup errors for debugging
@@ -114,6 +117,7 @@ app.include_router(booking_router)
 app.include_router(admin_router)
 app.include_router(agent_router)
 app.include_router(billing_router)
+app.include_router(ops_router)
 # Public booking carries no auth by design — customers are not users.
 app.include_router(public_booking_router)
 

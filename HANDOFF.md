@@ -36,7 +36,10 @@ The subscription carries base × 1 + module × (count − 1). One module = $29, 
 
 ### 3. Webhook endpoint
 
-Developers → Webhooks → Add endpoint → `https://<api-domain>/webhooks/stripe`
+Developers → Webhooks → Add endpoint → `https://<api-domain>/billing/webhook`
+
+> Corrected: an earlier draft of this file said `/webhooks/stripe`. The real route
+> is `/billing/webhook`, defined in `main.py:786`.
 
 Events: `checkout.session.completed`, `customer.subscription.created`,
 `customer.subscription.updated`, `customer.subscription.deleted`,
@@ -72,14 +75,16 @@ AI_OVERAGE_CENTS_PER_1K=2
 AI_HARD_CEILING_MULTIPLIER=5
 ```
 
-### 5. Migration
+### 5. Migration — nothing to do
 
-Three new tables: `agentproposal`, `supportticket`, `agentthread`.
+I was wrong to list this as a task. `main.py` calls `create_db_and_tables()` on
+startup, which runs `SQLModel.metadata.create_all(engine)`, and `agent_models` is
+imported before that runs. The three new tables (`agentproposal`, `supportticket`,
+`agentthread`) appear by themselves on first boot after deploy.
 
-```bash
-alembic revision --autogenerate -m "agent proposals, support tickets, threads"
-alembic upgrade head
-```
+`create_all` only adds missing tables — it never alters or drops existing ones, so
+there's no risk to current data. Alembic only becomes necessary when you change a
+column on a table that already exists.
 
 ### 6. Two PNG icons
 

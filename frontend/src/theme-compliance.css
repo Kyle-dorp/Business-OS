@@ -1,0 +1,111 @@
+/* ============================================================================
+   Business-EOS — labor rules
+   ========================================================================= */
+
+.compliance-page { max-width: 1180px; margin: 0 auto; }
+
+.cmp-card { padding: 1.6rem 1.8rem; margin-bottom: 1rem; }
+.cmp-card h3 { margin: 0 0 0.5rem; }
+.cmp-blurb { color: var(--muted); font-size: 0.92rem; line-height: 1.65; margin: 0 0 1.4rem; max-width: 62ch; }
+.cmp-empty { color: var(--muted); margin: 0; }
+
+/* ----------------------------------------------------------- readiness */
+
+.cmp-readiness { min-width: 15rem; text-align: right; }
+.cmp-readiness-bar {
+  height: 3px; border-radius: 3px; overflow: hidden;
+  background: rgba(246, 240, 234, 0.08); margin-bottom: 0.5rem;
+}
+.cmp-readiness-bar span { display: block; height: 100%; border-radius: 3px; transition: width 0.5s var(--ease); }
+.cmp-readiness small { color: var(--faint); font-size: 0.78rem; }
+
+/* --------------------------------------------------------- jurisdiction */
+
+.cmp-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+.cmp-fields .os-field span { color: var(--muted); font-size: 0.82rem; font-weight: 500; }
+.cmp-fields select { width: 100%; padding: 0.7rem 0.85rem !important; }
+
+.cmp-toggle {
+  display: flex; gap: 0.8rem; align-items: flex-start;
+  padding: 0.95rem 1.05rem;
+  border-radius: 12px;
+  background: var(--glass);
+  border: 1px solid var(--line-soft);
+  cursor: pointer;
+  transition: all 0.25s var(--ease);
+}
+.cmp-toggle:hover { border-color: rgba(245, 166, 91, 0.2); background: rgba(245, 166, 91, 0.05); }
+.cmp-toggle input { margin-top: 0.2rem; flex: none; }
+.cmp-toggle strong { display: block; color: var(--ink); font-size: 0.94rem; font-weight: 600; }
+.cmp-toggle small { display: block; margin-top: 0.2rem; color: var(--muted); font-size: 0.84rem; line-height: 1.55; }
+
+.cmp-fallback { margin-top: 1.2rem; }
+.cmp-fallback strong { display: block; margin-bottom: 0.2rem; }
+
+/* What is actually in force, which may not be what was chosen. */
+.cmp-effective {
+  margin-top: 1.3rem; padding: 1.2rem 1.3rem;
+  border-radius: 14px;
+  background: rgba(119, 216, 194, 0.05);
+  border: 1px solid rgba(119, 216, 194, 0.2);
+}
+.cmp-effective-label {
+  display: block; font-size: 0.72rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--mint); font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+.cmp-effective > strong { color: var(--ink); font-size: 1.05rem; }
+.cmp-effective small { display: block; margin-top: 0.9rem; color: var(--faint); font-size: 0.76rem; line-height: 1.55; }
+
+.cmp-rules {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.7rem 1.4rem; margin-top: 1rem;
+}
+.cmp-rule { display: flex; flex-direction: column; gap: 0.15rem; }
+.cmp-rule span { color: var(--faint); font-size: 0.76rem; }
+.cmp-rule strong { color: var(--ink-2); font-size: 0.94rem; font-variant-numeric: tabular-nums; }
+
+.cmp-actions { margin-top: 1.3rem; }
+.cmp-actions .primary-btn { padding: 0.7rem 1.5rem; }
+
+/* ------------------------------------------------------------- employees */
+
+.cmp-table-wrap { background: transparent; border: 0; box-shadow: none; padding: 0; }
+.cmp-table { min-width: 760px; }
+.cmp-table td { vertical-align: middle; padding: 0.75rem 0.9rem; }
+.cmp-table td strong { display: block; color: var(--ink); font-size: 0.94rem; }
+.cmp-table td small { color: var(--faint); font-size: 0.78rem; }
+
+.cmp-table input[type="date"],
+.cmp-table input[type="number"] {
+  padding: 0.5rem 0.65rem !important;
+  font-size: 0.9rem;
+  width: 100%;
+  min-width: 8rem;
+}
+
+.cmp-rate { display: flex; align-items: center; gap: 0.3rem; }
+.cmp-rate span { color: var(--faint); }
+.cmp-rate input { max-width: 6.5rem; }
+
+.cmp-flags { display: flex; flex-direction: column; gap: 0.35rem; }
+.cmp-flags label { display: flex; align-items: center; gap: 0.45rem; cursor: pointer; }
+.cmp-flags span { color: var(--muted); font-size: 0.84rem; }
+
+.cmp-row-action { text-align: right; white-space: nowrap; }
+.cmp-row-action .primary-btn { padding: 0.45rem 1rem; font-size: 0.86rem; }
+.cmp-row-error { display: block; color: var(--rose); font-size: 0.78rem; margin-bottom: 0.35rem; }
+
+/* A row missing data is not an error — it is an invitation. Amber, not rose. */
+.cmp-missing { color: var(--amber); font-size: 0.82rem; }
+.cmp-done { color: var(--mint); font-size: 0.82rem; }
+.cmp-incomplete td:first-child { box-shadow: inset 2px 0 0 var(--amber); }
+
+@media (max-width: 720px) {
+  .cmp-readiness { min-width: 0; text-align: left; margin-top: 1rem; }
+}

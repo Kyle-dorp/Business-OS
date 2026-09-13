@@ -46,6 +46,7 @@ from backend.app.models import (
     ScheduleShift,
     Service,
     UserAccount,
+    utc_now_iso,
 )
 from backend.app.ops_models import ComplianceProfile, EmployeeCompliance
 from backend.app.tenancy import current_business_id
@@ -310,16 +311,6 @@ def preflight(
     )
 
 
-@router.get("/compliance/{schedule_id}")
-def compliance_only(
-    schedule_id: int,
-    session: Session = Depends(get_session),
-    user: UserAccount = Depends(user_from_request),
-):
-    """Labor-law check on its own, for the schedule editor's live warning bar."""
-    return summarize(check_schedule(session, current_business_id(), schedule_id))
-
-
 class ProfileIn(BaseModel):
     jurisdiction: str = "federal"
     industry: str = "general"
@@ -350,6 +341,161 @@ def set_profile(
     return {"saved": True, "jurisdiction": profile.jurisdiction}
 
 
+@router.get("/compliance/profile")
+def get_profile(
+    session: Session = Depends(get_session),
+    user: UserAccount = Depends(user_from_request),
+):
+    """Current rules, plus what they actually mean, for the settings screen."""
+    from backend.app.compliance import resolve_rules
+
+    business_id = current_business_id()
+    profile = session.exec(
+        select(ComplianceProfile).where(ComplianceProfile.business_id == business_id)
+    ).first()
+
+    headcount = len(session.exec(
+        select(Employee).where(
+            Employee.business_id == business_id,
+            Employee.active == True,  # noqa: E712
+        )
+    ).all())
+
+    rules = resolve_rules(profile)
+    chosen = (profile.jurisdiction if profile else "federal")
+
+    return {
+        "jurisdiction": chosen,
+        "industry": profile.industry if profile else "general",
+        "employee_count": profile.employee_count if profile else headcount,
+        "actual_headcount": headcount,
+        "track_minors": profile.track_minors if profile else True,
+        # What is genuinely in force, which may differ from what was chosen if a
+        # headcount or industry threshold is not met. Saying so out loud beats
+        # letting somebody believe they are covered when they are not.
+        "effective": {
+            "key": rules.key,
+            "name": rules.name,
+            "advance_notice_days": rules.advance_notice_days,
+            "min_rest_hours": rules.min_rest_hours,
+            "daily_overtime_hours": rules.daily_overtime_hours,
+            "meal_break_after_hours": rules.meal_break_after_hours,
+            "max_consecutive_days": rules.max_consecutive_days,
+            "citation": rules.citation,
+        },
+        "falling_back": rules.key != chosen,
+    }
+
+
+class EmployeeComplianceIn(BaseModel):
+    employee_id: int
+    date_of_birth: str = ""
+    exempt: bool = False
+    is_student: bool = False
+    hourly_rate: float = 0.0
+
+
+@router.get("/compliance/employees")
+def list_employee_compliance(
+    session: Session = Depends(get_session),
+    user: UserAccount = Depends(user_from_request),
+):
+    """
+    Every employee with the two facts the rule engine needs.
+
+    Without a date of birth the minor rules never fire. Without an hourly rate
+    every exposure figure reads $0, which makes a real violation look free.
+    The UI uses `missing` to say so plainly.
+    """
+    business_id = current_business_id()
+
+    employees = session.exec(
+        select(Employee).where(
+            Employee.business_id == business_id,
+            Employee.active == True,  # noqa: E712
+        )
+    ).all()
+    records = {
+        c.employee_id: c
+        for c in session.exec(
+            select(EmployeeCompliance).where(EmployeeCompliance.business_id == business_id)
+        ).all()
+    }
+
+    rows = []
+    for e in employees:
+        c = records.get(e.id)
+        missing = []
+        if not (c and c.date_of_birth):
+            missing.append("date of birth")
+        if not (c and c.hourly_rate_cents):
+            missing.append("hourly rate")
+
+        rows.append({
+            "employee_id": e.id,
+            "name": e.name,
+            "department": e.department,
+            "role": e.role,
+            "date_of_birth": c.date_of_birth if c else "",
+            "exempt": c.exempt if c else False,
+            "is_student": c.is_student if c else False,
+            "hourly_rate": round((c.hourly_rate_cents if c else 0) / 100, 2),
+            "missing": missing,
+        })
+
+    return {
+        "employees": rows,
+        "complete": sum(1 for r in rows if not r["missing"]),
+        "total": len(rows),
+        "why_it_matters": (
+            "Date of birth switches on the minor-hours rules. Hourly rate is what "
+            "turns a violation into a dollar figure — without it every finding "
+            "reads $0 and a real problem looks free."
+        ),
+    }
+
+
+@router.put("/compliance/employees")
+def upsert_employee_compliance(
+    body: EmployeeComplianceIn,
+    session: Session = Depends(get_session),
+    user: UserAccount = Depends(user_from_request),
+):
+    business_id = current_business_id()
+
+    employee = session.get(Employee, body.employee_id)
+    if not employee or employee.business_id != business_id:
+        raise HTTPException(404, "No such employee in this workspace.")
+
+    if body.date_of_birth:
+        try:
+            born = date.fromisoformat(body.date_of_birth)
+        except ValueError:
+            raise HTTPException(400, "Date of birth must be YYYY-MM-DD.")
+        if born > date.today():
+            raise HTTPException(400, "That date of birth is in the future.")
+        if born.year < 1900:
+            raise HTTPException(400, "That date of birth looks wrong.")
+
+    record = session.exec(
+        select(EmployeeCompliance).where(
+            EmployeeCompliance.business_id == business_id,
+            EmployeeCompliance.employee_id == body.employee_id,
+        )
+    ).first() or EmployeeCompliance(business_id=business_id, employee_id=body.employee_id)
+
+    record.date_of_birth = body.date_of_birth
+    record.exempt = body.exempt
+    record.is_student = body.is_student
+    record.hourly_rate_cents = int(round(body.hourly_rate * 100))
+    record.updated_at = utc_now_iso()
+
+    session.add(record)
+    session.commit()
+
+    return {"saved": True, "employee_id": body.employee_id}
+
+
 @router.get("/compliance/jurisdictions")
 def jurisdictions():
     """Everything the rule engine knows, for the settings dropdown."""
@@ -374,6 +520,20 @@ def jurisdictions():
             "anything flagged with your own counsel before relying on it."
         ),
     }
+
+
+# Declared after every literal /compliance/... path. FastAPI matches routes in
+# declaration order, so anywhere earlier and GET /compliance/profile or
+# /compliance/jurisdictions would bind here and fail parsing the word as an
+# integer schedule id.
+@router.get("/compliance/{schedule_id}")
+def compliance_only(
+    schedule_id: int,
+    session: Session = Depends(get_session),
+    user: UserAccount = Depends(user_from_request),
+):
+    """Labor-law check on its own, for the schedule editor's live warning bar."""
+    return summarize(check_schedule(session, current_business_id(), schedule_id))
 
 
 # --------------------------------------------------------------- inventory

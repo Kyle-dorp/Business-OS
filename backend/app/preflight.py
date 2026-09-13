@@ -41,6 +41,7 @@ from backend.app.models import (
     Booking,
     Employee,
     InventoryItem,
+    InventoryMovement,
     Invoice,
     Schedule,
     ScheduleShift,
@@ -48,7 +49,13 @@ from backend.app.models import (
     UserAccount,
     utc_now_iso,
 )
-from backend.app.ops_models import ComplianceProfile, EmployeeCompliance
+from backend.app.ops_models import (
+    ComplianceProfile,
+    EmployeeCompliance,
+    Recipe,
+    RecipeComponent,
+    WasteLog,
+)
 from backend.app.tenancy import current_business_id
 
 log = logging.getLogger(__name__)
@@ -565,6 +572,343 @@ def recipe_cost(
     user: UserAccount = Depends(user_from_request),
 ):
     return recipe_cost_cents(session, current_business_id(), recipe_id)
+
+
+class RecipeIn(BaseModel):
+    name: str
+    sells_as_item_id: Optional[int] = None
+    yield_quantity: float = 1.0
+    notes: str = ""
+
+
+class ComponentIn(BaseModel):
+    inventory_item_id: int
+    quantity: float
+    waste_factor_percent: float = 0.0
+
+
+@router.get("/inventory/recipes")
+def list_recipes(
+    session: Session = Depends(get_session),
+    user: UserAccount = Depends(user_from_request),
+):
+    """
+    Every recipe with its cost, plus the items available to build one from.
+
+    One call, because the builder needs both and two round trips on a phone in
+    a stockroom is two chances to fail.
+    """
+    business_id = current_business_id()
+
+    recipes = session.exec(
+        select(Recipe).where(Recipe.business_id == business_id, Recipe.active == True)  # noqa: E712
+    ).all()
+
+    items = session.exec(
+        select(InventoryItem).where(
+            InventoryItem.business_id == business_id,
+            InventoryItem.active == True,  # noqa: E712
+        )
+    ).all()
+
+    out = []
+    for r in recipes:
+        cost = recipe_cost_cents(session, business_id, r.id)
+        components = session.exec(
+            select(RecipeComponent).where(
+                RecipeComponent.business_id == business_id,
+                RecipeComponent.recipe_id == r.id,
+            )
+        ).all()
+        out.append({
+            "id": r.id,
+            "name": r.name,
+            "sells_as_item_id": r.sells_as_item_id,
+            "yield_quantity": round(r.yield_quantity_milli / 1000, 3),
+            "notes": r.notes,
+            "component_count": len(components),
+            "components": [
+                {
+                    "id": c.id,
+                    "inventory_item_id": c.inventory_item_id,
+                    "quantity": round(c.quantity_milli / 1000, 3),
+                    "waste_factor_percent": c.waste_factor_percent,
+                }
+                for c in components
+            ],
+            **{k: v for k, v in cost.items() if k not in ("recipe", "recipe_id", "components")},
+        })
+
+    return {
+        "recipes": out,
+        "items": [
+            {
+                "id": i.id,
+                "name": i.name,
+                "sku": i.sku,
+                "unit": i.unit,
+                "unit_cost": round(i.unit_cost_cents / 100, 2),
+                "sales_price": round(i.sales_price_cents / 100, 2),
+                "on_hand": round(i.quantity_milli / 1000, 3),
+                "item_type": i.item_type,
+            }
+            for i in items
+        ],
+        "why_it_matters": (
+            "Recipes are what turn a sale into an expected draw-down. Without "
+            "them, variance has nothing to compare a count against and shrinkage "
+            "stays invisible."
+        ),
+    }
+
+
+@router.post("/inventory/recipes")
+def create_recipe(
+    body: RecipeIn,
+    session: Session = Depends(get_session),
+    user: UserAccount = Depends(user_from_request),
+):
+    business_id = current_business_id()
+
+    if not body.name.strip():
+        raise HTTPException(400, "Give the recipe a name.")
+    if body.yield_quantity <= 0:
+        raise HTTPException(400, "Yield must be greater than zero.")
+
+    if body.sells_as_item_id:
+        sold = session.get(InventoryItem, body.sells_as_item_id)
+        if not sold or sold.business_id != business_id:
+            raise HTTPException(404, "That sellable item is not in this workspace.")
+
+    recipe = Recipe(
+        business_id=business_id,
+        name=body.name.strip(),
+        sells_as_item_id=body.sells_as_item_id,
+        yield_quantity_milli=int(round(body.yield_quantity * 1000)),
+        notes=body.notes.strip(),
+    )
+    session.add(recipe)
+    session.commit()
+    session.refresh(recipe)
+    return {"id": recipe.id, "name": recipe.name}
+
+
+@router.put("/inventory/recipes/{recipe_id}")
+def update_recipe(
+    recipe_id: int,
+    body: RecipeIn,
+    session: Session = Depends(get_session),
+    user: UserAccount = Depends(user_from_request),
+):
+    business_id = current_business_id()
+    recipe = session.get(Recipe, recipe_id)
+    if not recipe or recipe.business_id != business_id:
+        raise HTTPException(404, "No such recipe.")
+    if body.yield_quantity <= 0:
+        raise HTTPException(400, "Yield must be greater than zero.")
+
+    recipe.name = body.name.strip() or recipe.name
+    recipe.sells_as_item_id = body.sells_as_item_id
+    recipe.yield_quantity_milli = int(round(body.yield_quantity * 1000))
+    recipe.notes = body.notes.strip()
+    session.add(recipe)
+    session.commit()
+    return {"saved": True}
+
+
+@router.delete("/inventory/recipes/{recipe_id}")
+def archive_recipe(
+    recipe_id: int,
+    session: Session = Depends(get_session),
+    user: UserAccount = Depends(user_from_request),
+):
+    """
+    Archived, not deleted. Past variance reports were computed using this
+    recipe, and removing it would silently rewrite history.
+    """
+    business_id = current_business_id()
+    recipe = session.get(Recipe, recipe_id)
+    if not recipe or recipe.business_id != business_id:
+        raise HTTPException(404, "No such recipe.")
+    recipe.active = False
+    session.add(recipe)
+    session.commit()
+    return {"archived": True}
+
+
+@router.post("/inventory/recipes/{recipe_id}/components")
+def add_component(
+    recipe_id: int,
+    body: ComponentIn,
+    session: Session = Depends(get_session),
+    user: UserAccount = Depends(user_from_request),
+):
+    business_id = current_business_id()
+
+    recipe = session.get(Recipe, recipe_id)
+    if not recipe or recipe.business_id != business_id:
+        raise HTTPException(404, "No such recipe.")
+
+    item = session.get(InventoryItem, body.inventory_item_id)
+    if not item or item.business_id != business_id:
+        raise HTTPException(404, "That ingredient is not in this workspace.")
+    if body.quantity <= 0:
+        raise HTTPException(400, "Quantity must be greater than zero.")
+    if not 0 <= body.waste_factor_percent <= 100:
+        raise HTTPException(400, "Waste factor must be between 0 and 100 percent.")
+
+    existing = session.exec(
+        select(RecipeComponent).where(
+            RecipeComponent.business_id == business_id,
+            RecipeComponent.recipe_id == recipe_id,
+            RecipeComponent.inventory_item_id == body.inventory_item_id,
+        )
+    ).first()
+
+    # Adding the same ingredient twice means editing it, not duplicating the
+    # line — two rows for one ingredient would double-count in every report.
+    component = existing or RecipeComponent(
+        business_id=business_id,
+        recipe_id=recipe_id,
+        inventory_item_id=body.inventory_item_id,
+    )
+    component.quantity_milli = int(round(body.quantity * 1000))
+    component.waste_factor_percent = body.waste_factor_percent
+    session.add(component)
+    session.commit()
+
+    return recipe_cost_cents(session, business_id, recipe_id)
+
+
+@router.delete("/inventory/components/{component_id}")
+def remove_component(
+    component_id: int,
+    session: Session = Depends(get_session),
+    user: UserAccount = Depends(user_from_request),
+):
+    business_id = current_business_id()
+    component = session.get(RecipeComponent, component_id)
+    if not component or component.business_id != business_id:
+        raise HTTPException(404, "No such ingredient line.")
+    recipe_id = component.recipe_id
+    session.delete(component)
+    session.commit()
+    return recipe_cost_cents(session, business_id, recipe_id)
+
+
+class WasteIn(BaseModel):
+    inventory_item_id: int
+    quantity: float
+    reason: str = "spoilage"
+    notes: str = ""
+
+
+WASTE_REASONS = ("spoilage", "breakage", "comp", "staff_meal", "prep_error")
+
+
+@router.get("/inventory/waste")
+def list_waste(
+    days: int = 30,
+    session: Session = Depends(get_session),
+    user: UserAccount = Depends(user_from_request),
+):
+    business_id = current_business_id()
+    since = (date.today() - timedelta(days=days)).isoformat()
+
+    rows = session.exec(
+        select(WasteLog).where(
+            WasteLog.business_id == business_id,
+            WasteLog.occurred_at >= since,
+        )
+    ).all()
+
+    items = {
+        i.id: i for i in session.exec(
+            select(InventoryItem).where(InventoryItem.business_id == business_id)
+        ).all()
+    }
+
+    by_reason: Dict[str, int] = {}
+    entries = []
+    for w in sorted(rows, key=lambda r: r.occurred_at, reverse=True):
+        item = items.get(w.inventory_item_id)
+        by_reason[w.reason] = by_reason.get(w.reason, 0) + w.value_cents
+        entries.append({
+            "id": w.id,
+            "item": item.name if item else "Unknown",
+            "quantity": round(w.quantity_milli / 1000, 3),
+            "value": round(w.value_cents / 100, 2),
+            "reason": w.reason,
+            "notes": w.notes,
+            "occurred_at": w.occurred_at,
+        })
+
+    total = sum(w.value_cents for w in rows)
+    return {
+        "period_days": days,
+        "entries": entries[:100],
+        "total_value": round(total / 100, 2),
+        "by_reason": {k: round(v / 100, 2) for k, v in sorted(by_reason.items(), key=lambda kv: -kv[1])},
+        "reasons": list(WASTE_REASONS),
+    }
+
+
+@router.post("/inventory/waste")
+def log_waste(
+    body: WasteIn,
+    session: Session = Depends(get_session),
+    user: UserAccount = Depends(user_from_request),
+):
+    """
+    Record deliberate loss, and take it out of stock.
+
+    Logging waste is what makes variance mean anything. Unexplained variance
+    with no waste log is just noise; what is left after waste is accounted for
+    is the number worth chasing.
+    """
+    business_id = current_business_id()
+
+    item = session.get(InventoryItem, body.inventory_item_id)
+    if not item or item.business_id != business_id:
+        raise HTTPException(404, "That item is not in this workspace.")
+    if body.quantity <= 0:
+        raise HTTPException(400, "Quantity must be greater than zero.")
+    if body.reason not in WASTE_REASONS:
+        raise HTTPException(400, f"Reason must be one of: {', '.join(WASTE_REASONS)}")
+
+    milli = int(round(body.quantity * 1000))
+    value_cents = round((milli / 1000) * item.unit_cost_cents)
+
+    session.add(WasteLog(
+        business_id=business_id,
+        inventory_item_id=item.id,
+        quantity_milli=milli,
+        value_cents=value_cents,
+        reason=body.reason,
+        notes=body.notes.strip(),
+        logged_by_user_id=user.id,
+    ))
+
+    # Waste has physically left the building, so stock follows it out with an
+    # auditable movement rather than a silent adjustment.
+    session.add(InventoryMovement(
+        business_id=business_id,
+        item_id=item.id,
+        movement_date=date.today().isoformat(),
+        quantity_milli=-milli,
+        reason="waste",
+        reference=f"{body.reason}: {body.notes.strip()[:80]}",
+        created_by_user_id=user.id,
+    ))
+    item.quantity_milli = max(item.quantity_milli - milli, 0)
+    session.add(item)
+    session.commit()
+
+    return {
+        "logged": True,
+        "value": round(value_cents / 100, 2),
+        "remaining": round(item.quantity_milli / 1000, 3),
+    }
 
 
 class CountIn(BaseModel):

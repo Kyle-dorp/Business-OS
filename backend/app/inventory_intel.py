@@ -302,9 +302,19 @@ def variance_report(session: Session, business_id: int, days: int = 30) -> dict:
         expected_usage = usage.get(item_id, 0)
         logged_waste = waste_by_item.get(item_id, 0)
 
-        # Variance recorded at count time already compares system belief to reality.
+        # `variance` is what the count found against what the system believed.
         variance_milli = count.variance_milli or (count.counted_milli - count.expected_milli)
-        unexplained_milli = variance_milli + logged_waste
+
+        # Then add back what sales *should* have consumed, because nothing
+        # decrements an ingredient when a finished dish sells — the sale
+        # movement is recorded against the dish, not the gin inside it. Without
+        # this, every ingredient looks stolen in exactly the volume it was
+        # legitimately used.
+        #
+        # Waste is deliberately NOT added back. log_waste already decremented
+        # stock when it was recorded, so it is inside `expected` and adding it
+        # again would credit the same loss twice.
+        unexplained_milli = variance_milli + expected_usage
         variance_cents = round((unexplained_milli / 1000) * item.unit_cost_cents)
         total_variance_cents += variance_cents
 

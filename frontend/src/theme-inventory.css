@@ -1,0 +1,178 @@
+/* ============================================================================
+   Business-EOS — inventory intelligence
+   ========================================================================= */
+
+.inv-page { max-width: 1180px; margin: 0 auto; }
+
+.inv-tabs {
+  display: flex; flex-wrap: wrap; gap: 0.3rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--line-soft);
+  padding-bottom: 0.6rem;
+}
+.inv-tab {
+  padding: 0.55rem 1rem;
+  background: transparent; border: 1px solid transparent;
+  border-radius: 10px;
+  color: var(--muted); font: inherit; font-size: 0.94rem;
+  cursor: pointer;
+  transition: all 0.25s var(--ease);
+}
+.inv-tab:hover { color: var(--ink); background: rgba(245, 166, 91, 0.06); }
+.inv-tab.is-active {
+  color: var(--ink); font-weight: 600;
+  background: rgba(245, 166, 91, 0.1);
+  border-color: rgba(245, 166, 91, 0.24);
+}
+
+.inv-page .card { padding: 1.5rem 1.7rem; margin-bottom: 1rem; }
+.inv-page h3 { margin: 0 0 0.5rem; }
+.inv-note { color: var(--muted); font-size: 0.88rem; line-height: 1.65; margin: 0 0 1.2rem; max-width: 68ch; }
+
+.inv-toolbar { display: flex; justify-content: flex-end; margin-bottom: 1rem; }
+.inv-toolbar .os-field span { color: var(--faint); font-size: 0.78rem; }
+.inv-toolbar select { padding: 0.5rem 0.8rem !important; }
+
+.inv-filter { width: 100%; margin-bottom: 1rem; padding: 0.65rem 0.9rem !important; }
+
+/* ------------------------------------------------------------- headline */
+
+/* The number this whole module exists to produce. It gets the serif and the
+   glow; nothing else on the page competes with it. */
+.inv-headline {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 2rem; padding: 1.8rem 1.9rem !important;
+}
+.inv-headline-label {
+  display: block; font-size: 0.72rem; letter-spacing: 0.14em;
+  text-transform: uppercase; font-weight: 600; margin-bottom: 0.5rem;
+}
+.inv-headline strong {
+  display: block; font-family: "Fraunces", serif;
+  font-size: clamp(2.4rem, 5vw, 3.4rem); font-weight: 400;
+  letter-spacing: -0.03em; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.inv-headline small { display: block; margin-top: 0.6rem; color: var(--muted); font-size: 0.86rem; }
+
+.inv-headline.is-leak { border-color: rgba(217, 120, 141, 0.3); }
+.inv-headline.is-leak .inv-headline-label { color: var(--rose); }
+.inv-headline.is-leak strong { color: var(--rose); text-shadow: 0 0 30px rgba(217, 120, 141, 0.25); }
+.inv-headline.is-fine .inv-headline-label { color: var(--mint); }
+.inv-headline.is-fine strong { color: var(--mint); }
+
+.inv-projection { text-align: right; white-space: nowrap; }
+.inv-projection span { display: block; color: var(--faint); font-size: 0.78rem; margin-bottom: 0.3rem; }
+.inv-projection strong {
+  font-family: "Fraunces", serif; font-size: 1.6rem; font-weight: 400;
+  color: var(--rose); font-variant-numeric: tabular-nums;
+}
+
+.inv-offenders { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+.inv-offenders li {
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+  padding: 0.8rem 1rem; border-radius: 12px;
+  background: var(--glass); border: 1px solid var(--line-soft);
+  border-left: 2px solid var(--line);
+}
+.inv-offenders li.sev-high { border-left-color: var(--rose); }
+.inv-offenders li.sev-medium { border-left-color: var(--amber); }
+.inv-offenders strong { display: block; color: var(--ink); font-size: 0.95rem; }
+.inv-offenders small { color: var(--faint); font-size: 0.78rem; }
+.inv-offender-value { color: var(--rose); font-variant-numeric: tabular-nums; font-size: 1.05rem; }
+
+.inv-neg { color: var(--rose); font-variant-numeric: tabular-nums; }
+.inv-pos { color: var(--mint); font-variant-numeric: tabular-nums; }
+.inv-flat { color: var(--muted); }
+
+.inv-empty-state { text-align: center; padding: 2.6rem 2rem !important; }
+.inv-empty-state h3 { margin-bottom: 0.7rem; }
+.inv-empty-state p { color: var(--muted); max-width: 52ch; margin: 0 auto 1.5rem; line-height: 1.7; }
+
+/* -------------------------------------------------------------- recipes */
+
+.inv-create-row, .inv-waste-row, .inv-add-row {
+  display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;
+}
+.inv-create-row input, .inv-create-row select,
+.inv-waste-row input, .inv-waste-row select,
+.inv-add-row input, .inv-add-row select {
+  padding: 0.6rem 0.8rem !important; font-size: 0.92rem;
+}
+.inv-create-row input:first-child { flex: 2; min-width: 12rem; }
+.inv-create-row select { flex: 2; min-width: 11rem; }
+.inv-create-row input[type="number"] { max-width: 6rem; }
+.inv-waste-row select:first-child { flex: 2; min-width: 11rem; }
+.inv-waste-row input[type="number"] { max-width: 6.5rem; }
+.inv-waste-row input:last-of-type { flex: 1; min-width: 9rem; }
+.inv-add-row select { flex: 2; min-width: 11rem; }
+.inv-add-row input { max-width: 6.5rem; }
+
+.inv-recipe { padding: 0 !important; overflow: hidden; }
+.inv-recipe-head {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 1.5rem; width: 100%;
+  padding: 1.2rem 1.6rem;
+  background: transparent; border: 0; cursor: pointer;
+  font: inherit; text-align: left;
+  transition: background-color 0.25s var(--ease);
+}
+.inv-recipe-head:hover { background: rgba(245, 166, 91, 0.04); }
+.inv-recipe.is-open .inv-recipe-head { border-bottom: 1px solid var(--line-soft); }
+
+.inv-recipe-name strong { display: block; color: var(--ink); font-size: 1rem; }
+.inv-recipe-name small { color: var(--faint); font-size: 0.8rem; }
+
+.inv-recipe-figures { display: flex; gap: 1.6rem; }
+.inv-fig { display: flex; flex-direction: column; text-align: right; }
+.inv-fig small { color: var(--faint); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.inv-fig b { color: var(--ink-2); font-variant-numeric: tabular-nums; font-size: 0.98rem; font-weight: 500; }
+.inv-flag-healthy b { color: var(--mint); }
+.inv-flag-high_cost b { color: var(--rose); }
+.inv-flag-no_price b { color: var(--faint); }
+
+.inv-recipe-body { padding: 1.3rem 1.6rem; }
+.inv-inline-alert { margin-bottom: 1.1rem; }
+.inv-components { margin-bottom: 1.1rem; }
+.inv-row-action { text-align: right; white-space: nowrap; }
+.inv-row-action .ghost-btn { padding: 0.35rem 0.75rem; font-size: 0.82rem; }
+.inv-row-action .primary-btn { padding: 0.4rem 0.9rem; font-size: 0.85rem; }
+
+/* ---------------------------------------------------------------- waste */
+
+.inv-reason-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem;
+}
+.inv-reason {
+  padding: 1rem 1.1rem; border-radius: 12px;
+  background: var(--glass); border: 1px solid var(--line-soft);
+}
+.inv-reason span { display: block; color: var(--faint); font-size: 0.78rem; margin-bottom: 0.4rem; }
+.inv-reason strong {
+  color: var(--rose); font-family: "Fraunces", serif;
+  font-size: 1.4rem; font-weight: 400; font-variant-numeric: tabular-nums;
+}
+
+/* ----------------------------------------------------------------- menu */
+
+.inv-quadrant {
+  display: inline-block; padding: 0.25rem 0.6rem;
+  border-radius: 999px; font-size: 0.76rem; font-weight: 600;
+  cursor: help;
+}
+.q-star { color: var(--mint); background: rgba(119, 216, 194, 0.12); }
+.q-workhorse { color: var(--amber); background: rgba(245, 166, 91, 0.12); }
+.q-puzzle { color: var(--ink-2); background: rgba(246, 240, 234, 0.07); }
+.q-drop_or_rework { color: var(--rose); background: rgba(217, 120, 141, 0.12); }
+
+.inv-page .os-table td strong { display: block; color: var(--ink); }
+.inv-page .os-table td small { display: block; color: var(--faint); font-size: 0.76rem; }
+.inv-page .os-table input { padding: 0.45rem 0.6rem !important; max-width: 7rem; font-size: 0.9rem; }
+
+@media (max-width: 720px) {
+  .inv-headline { flex-direction: column; align-items: flex-start; gap: 1.2rem; }
+  .inv-projection { text-align: left; }
+  .inv-recipe-head { flex-direction: column; align-items: flex-start; gap: 0.9rem; }
+  .inv-recipe-figures { gap: 1.2rem; }
+  .inv-fig { text-align: left; }
+}

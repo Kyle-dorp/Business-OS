@@ -7,6 +7,7 @@ import "./theme-pages.css";
 import "./theme-security.css";
 import "./theme-billing.css";
 import "./theme-compliance.css";
+import "./theme-inventory.css";
 import { api, getBusinessId, getToken, setBusinessId, setToken } from "./api";
 import AuthPage from "./pages/AuthPage";
 import AgentPage from "./pages/AgentPage";
@@ -14,6 +15,7 @@ import PreflightPage from "./pages/PreflightPage";
 import SecurityPage from "./pages/SecurityPage";
 import BillingPage from "./pages/BillingPage";
 import CompliancePage from "./pages/CompliancePage";
+import InventoryIntelPage from "./pages/InventoryIntelPage";
 import AssistantPage from "./pages/AssistantPage";
 import AvailabilityPage from "./pages/AvailabilityPage";
 import EmployeeAvailabilityPage from "./pages/EmployeeAvailabilityPage";
@@ -47,6 +49,7 @@ const MANAGER_TABS = [
   { id: "reports", label: "Reports", icon: "↗", module: "reports" },
   { id: "tasks", label: "Tasks", icon: "✓", module: "tasks" },
   { id: "inventory", label: "Inventory & assets", icon: "□", module: "inventory" },
+  { id: "inventory-intel", label: "Stock intelligence", icon: "◉", module: "inventory" },
   { id: "availability", label: "Availability", icon: "◷", module: "scheduling" },
   { id: "manager", label: "Scheduling", icon: "▦", module: "scheduling" },
   { id: "preflight", label: "Preflight", icon: "◈", module: "scheduling" },
@@ -162,6 +165,7 @@ export default function App() {
           {activeTab === "security" && <SecurityPage />}
           {activeTab === "billing" && <BillingPage onModulesChanged={refreshWorkspace} />}
           {activeTab === "compliance" && <CompliancePage />}
+          {activeTab === "inventory-intel" && <InventoryIntelPage />}
           {activeTab === "assistant" && <AssistantPage />}{activeTab === "notifications" && <NotificationsPage onCountChange={setNotificationCount} />}
           {activeTab === "settings" && <SettingsPage user={user} workspaceRole={workspace?.role} modules={workspace?.modules || []} onModulesChanged={refreshWorkspace} onUserChange={setUser} onLogout={logout} />}
         </> : <>{activeTab === "home" && <EmployeeHomePage />}{activeTab === "my-availability" && <EmployeeAvailabilityPage />}{activeTab === "requests" && <RequestsPage />}{activeTab === "settings" && <SettingsPage user={user} onUserChange={setUser} onLogout={logout} />}</>}

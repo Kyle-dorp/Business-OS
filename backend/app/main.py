@@ -95,10 +95,13 @@ from backend.app.admin_routes import admin_router
 # runs or SQLModel never learns about them.
 from backend.app import agent_models  # noqa: F401
 from backend.app import ops_models  # noqa: F401
+from backend.app import security as security_module  # noqa: F401  (declares tables)
 from backend.app.ai_agent import router as agent_router
 from backend.app.billing import router as billing_router
 from backend.app.booking_public import router as public_booking_router
 from backend.app.preflight import router as ops_router
+from backend.app.security import router as security_router
+from backend.app.oauth import router as oauth_router
 
 
 # Track startup errors for debugging
@@ -118,6 +121,8 @@ app.include_router(admin_router)
 app.include_router(agent_router)
 app.include_router(billing_router)
 app.include_router(ops_router)
+app.include_router(security_router)
+app.include_router(oauth_router)
 # Public booking carries no auth by design — customers are not users.
 app.include_router(public_booking_router)
 
@@ -359,6 +364,16 @@ PUBLIC_PATHS = {
     # token here. Exact match, never a prefix — a prefix would also open
     # /billing/webhook-anything to the world.
     "/billing/webhook",
+    # Somebody redeeming a reset code cannot sign in — that is the whole reason
+    # they are here. The code itself is the credential, and this endpoint is
+    # throttled exactly as hard as /auth/login.
+    "/security/reset/redeem",
+    # The sign-in page needs to know whether to render a Google button before
+    # anyone has signed in. Returns only the public client id.
+    "/auth/google/config",
+    # Google sign-in happens before a session exists. The ID token is verified
+    # against Google server-side, so the bearer check adds nothing here.
+    "/auth/google/login",
 }
 
 # Prefixes that bypass authentication. Only for route families where every
@@ -496,15 +511,29 @@ def setup_first_manager(payload: SetupAccountRequest):
 
 
 @app.post("/auth/login")
-def login(payload: LoginRequest):
+def login(payload: LoginRequest, request: Request):
+    from backend.app.security import check_not_locked, clear_failures, record_failure
+
+    identifier = payload.username.strip().lower()
+
     with Session(engine) as session:
+        # Checked before any password work: a throttled account must not cost a
+        # bcrypt round, or the lockout itself becomes a way to burn CPU.
+        check_not_locked(session, identifier)
+
         users = session.exec(select(UserAccount)).all()
         user = next(
-            (row for row in users if row.username.strip().lower() == payload.username.strip().lower()),
+            (row for row in users if row.username.strip().lower() == identifier),
             None,
         )
         if not user or not user.active or not verify_password(payload.password, user.password_hash):
+            record_failure(session, identifier, request)
+            # Same message whether the account is missing, disabled or the
+            # password is wrong — anything else tells an attacker which
+            # usernames are real.
             raise HTTPException(status_code=401, detail="Incorrect username or password")
+
+        clear_failures(session, identifier)
         return {"token": create_access_token(user), "user": _user_dict(user)}
 
 

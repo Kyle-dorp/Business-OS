@@ -38,6 +38,11 @@ def is_public(path: str) -> bool:
         "/auth/setup-status",
         # Stripe cannot hold a bearer token; it authenticates by signature.
         "/billing/webhook",
+        # Someone redeeming a reset code cannot sign in by definition.
+        "/security/reset/redeem",
+        # Google sign-in happens before a session exists.
+        "/auth/google/config",
+        "/auth/google/login",
         # Customers booking an appointment are not users.
         "/public/book/1",
         "/public/book/42/slots",
@@ -73,6 +78,14 @@ def test_reachable_without_a_token(path):
         "/ops/compliance/jurisdictions",
         "/ops/inventory/variance",
         "/ops/inventory/count",
+        # Issuing a reset code is a manager action and needs a session —
+        # only redeeming one is public.
+        "/security/reset/issue",
+        "/security/lockouts",
+        # Linking Google requires proving you already own the account.
+        "/auth/google/link",
+        "/auth/google/unlink",
+        "/auth/google/status",
         # Core business data.
         "/platform/invoices",
         "/platform/reports/profit-loss",

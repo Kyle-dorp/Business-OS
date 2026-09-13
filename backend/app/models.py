@@ -185,6 +185,22 @@ class UserAccount(SQLModel, table=True):
     employee_id: Optional[int] = Field(default=None, index=True)
     is_admin: bool = Field(default=False)  # True if this is a platform admin
     active: bool = True
+
+    # Optional contact address. Nullable because accounts are provisioned by a
+    # manager, not self-registered, and most staff accounts will never have one.
+    # Uniqueness is enforced in the application rather than by a constraint, so
+    # a collision can return a useful message instead of a database error.
+    email: Optional[str] = Field(default=None, index=True)
+    email_verified: bool = False
+
+    # "password" or an external provider such as "google". Stored rather than
+    # inferred so an account linked to Google cannot quietly fall back to
+    # password auth if its hash is ever guessed.
+    auth_provider: str = "password"
+    # The provider's stable subject id — Google's `sub`, never the email, which
+    # a user can change.
+    provider_subject: Optional[str] = Field(default=None, index=True)
+
     created_at: str = Field(default_factory=utc_now_iso)
     updated_at: str = Field(default_factory=utc_now_iso)
 

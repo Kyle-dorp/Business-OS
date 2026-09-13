@@ -4,10 +4,12 @@ import "./App.css";
 // the look, and later import wins on equal specificity.
 import "./theme.css";
 import "./theme-pages.css";
+import "./theme-security.css";
 import { api, getBusinessId, getToken, setBusinessId, setToken } from "./api";
 import AuthPage from "./pages/AuthPage";
 import AgentPage from "./pages/AgentPage";
 import PreflightPage from "./pages/PreflightPage";
+import SecurityPage from "./pages/SecurityPage";
 import AssistantPage from "./pages/AssistantPage";
 import AvailabilityPage from "./pages/AvailabilityPage";
 import EmployeeAvailabilityPage from "./pages/EmployeeAvailabilityPage";
@@ -47,6 +49,7 @@ const MANAGER_TABS = [
   { id: "ask", label: "Ask", icon: "✦" },
   { id: "assistant", label: "Scheduling AI", icon: "◇", module: "assistant" },
   { id: "notifications", label: "Notifications", icon: "●", module: "notifications" },
+  { id: "security", label: "Security", icon: "⛨" },
   { id: "settings", label: "Settings", icon: "⚙" },
 ];
 const EMPLOYEE_TABS = [
@@ -150,6 +153,7 @@ export default function App() {
           {activeTab === "finance" && <FinancePage />}
           {activeTab === "preflight" && <PreflightPage />}
           {activeTab === "ask" && <AgentPage />}
+          {activeTab === "security" && <SecurityPage />}
           {activeTab === "assistant" && <AssistantPage />}{activeTab === "notifications" && <NotificationsPage onCountChange={setNotificationCount} />}
           {activeTab === "settings" && <SettingsPage user={user} workspaceRole={workspace?.role} modules={workspace?.modules || []} onModulesChanged={refreshWorkspace} onUserChange={setUser} onLogout={logout} />}
         </> : <>{activeTab === "home" && <EmployeeHomePage />}{activeTab === "my-availability" && <EmployeeAvailabilityPage />}{activeTab === "requests" && <RequestsPage />}{activeTab === "settings" && <SettingsPage user={user} onUserChange={setUser} onLogout={logout} />}</>}

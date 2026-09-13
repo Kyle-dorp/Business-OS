@@ -1,0 +1,189 @@
+/* ============================================================================
+   Business-EOS — sign-in and account security
+   ========================================================================= */
+
+/* ------------------------------------------------------------- sign-in */
+
+.auth-screen {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  background: var(--void);
+  color: var(--ink);
+}
+@media (max-width: 900px) {
+  .auth-screen { grid-template-columns: 1fr; }
+  .auth-brand-panel { display: none; }
+}
+
+.auth-brand-panel {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  padding: clamp(2rem, 6vw, 5rem);
+  background:
+    radial-gradient(60vw 52vw at 18% 8%, rgba(245, 166, 91, 0.14), transparent 62%),
+    radial-gradient(52vw 46vw at 82% 88%, rgba(217, 120, 141, 0.10), transparent 64%),
+    var(--void);
+  border-right: 1px solid var(--line-soft);
+}
+
+/* Two slow-drifting light sources. They are the only motion on this screen,
+   which is why they can afford to be this slow — nothing competes with them. */
+.brand-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  pointer-events: none;
+}
+.brand-orb-one {
+  width: 30rem; height: 30rem; top: -8rem; left: -6rem;
+  background: rgba(245, 166, 91, 0.18);
+  animation: eos-drift-a 22s ease-in-out infinite alternate;
+}
+.brand-orb-two {
+  width: 26rem; height: 26rem; bottom: -7rem; right: -5rem;
+  background: rgba(217, 120, 141, 0.14);
+  animation: eos-drift-b 26s ease-in-out infinite alternate;
+}
+@keyframes eos-drift-a { to { transform: translate3d(3rem, 2.5rem, 0) scale(1.1); } }
+@keyframes eos-drift-b { to { transform: translate3d(-2.5rem, -3rem, 0) scale(1.08); } }
+
+.auth-brand-content { position: relative; z-index: 1; max-width: 30rem; }
+
+.brand-mark {
+  width: 3.2rem; height: 3.2rem;
+  display: grid; place-items: center;
+  border-radius: 14px;
+  font-family: "Fraunces", serif;
+  font-size: 1.5rem;
+  color: var(--void);
+  background: var(--amber);
+  box-shadow: 0 0 40px -6px rgba(245, 166, 91, 0.55);
+  margin-bottom: 2rem;
+}
+
+.eyebrow.light { color: var(--amber); }
+
+.auth-brand-content h1 {
+  font-size: clamp(2rem, 3.6vw, 3rem);
+  line-height: 1.08;
+  margin: 0.9rem 0 1.2rem;
+  text-wrap: balance;
+}
+.auth-brand-content p { color: var(--ink-2); line-height: 1.7; max-width: 34ch; }
+
+.auth-feature-row {
+  display: flex; flex-wrap: wrap; gap: 0.5rem;
+  margin-top: 2.2rem;
+}
+.auth-feature-row span {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.86rem;
+  color: var(--ink-2);
+  background: var(--glass);
+}
+
+.auth-form-panel {
+  display: grid;
+  place-items: center;
+  padding: clamp(1.5rem, 5vw, 4rem);
+}
+
+.auth-card {
+  width: min(26rem, 100%);
+  display: flex; flex-direction: column; gap: 1.1rem;
+  padding: clamp(1.8rem, 4vw, 2.6rem);
+  border-radius: 20px;
+  background: linear-gradient(160deg, rgba(246, 240, 234, 0.06), rgba(246, 240, 234, 0.025));
+  border: 1px solid var(--line);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 30px 76px -34px rgba(0, 0, 0, 0.85);
+}
+
+.auth-card-heading { margin-bottom: 0.3rem; }
+.auth-card-heading h2 { margin: 0.55rem 0 0.6rem; }
+.auth-card-heading p { color: var(--muted); line-height: 1.6; margin: 0; font-size: 0.94rem; }
+
+.field-label {
+  display: flex; flex-direction: column; gap: 0.45rem;
+  font-size: 0.82rem; font-weight: 500; color: var(--muted);
+}
+.field-label input { padding: 0.75rem 0.9rem !important; font-size: 0.97rem; }
+
+.auth-submit { width: 100%; padding: 0.85rem 1rem; font-size: 1rem; margin-top: 0.3rem; }
+
+.alert {
+  padding: 0.75rem 0.95rem; border-radius: 10px;
+  font-size: 0.9rem; line-height: 1.5;
+}
+.alert.error { background: rgba(217, 120, 141, 0.1); border: 1px solid rgba(217, 120, 141, 0.28); color: var(--rose); }
+.alert.notice { background: rgba(119, 216, 194, 0.08); border: 1px solid rgba(119, 216, 194, 0.26); color: var(--mint); }
+
+.auth-link {
+  background: none; border: 0;
+  color: var(--muted); font-size: 0.88rem;
+  cursor: pointer; padding: 0.3rem;
+  transition: color 0.25s var(--ease);
+}
+.auth-link:hover { color: var(--amber); }
+
+.auth-google { display: flex; flex-direction: column; align-items: center; gap: 0.8rem; }
+.auth-google small { color: var(--faint); font-size: 0.76rem; text-align: center; line-height: 1.5; }
+.auth-google-button { min-height: 40px; display: flex; justify-content: center; }
+
+.auth-divider {
+  width: 100%; display: flex; align-items: center; gap: 0.85rem;
+  color: var(--faint); font-size: 0.8rem;
+}
+.auth-divider::before, .auth-divider::after {
+  content: ""; flex: 1; height: 1px; background: var(--line);
+}
+
+/* ------------------------------------------------------------- security */
+
+.security-page { max-width: 1180px; margin: 0 auto; }
+.sec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1rem; }
+.sec-card { padding: 1.5rem 1.7rem; }
+.sec-card h3 { margin: 0 0 0.6rem; }
+.sec-blurb { color: var(--muted); font-size: 0.9rem; line-height: 1.65; margin: 0 0 1.2rem; }
+.sec-blurb code { color: var(--amber); font-size: 0.86rem; }
+
+.sec-inline-form { display: flex; gap: 0.5rem; }
+.sec-inline-form input { flex: 1; padding: 0.65rem 0.85rem !important; }
+.sec-inline-form .primary-btn { white-space: nowrap; padding: 0.65rem 1.1rem; }
+
+.sec-error { color: var(--rose); font-size: 0.88rem; margin: 0.9rem 0 0; }
+.sec-clear { color: var(--mint); margin: 0; }
+
+/* A code shown once gets its own weight on the page — it is the only thing
+   in this panel that cannot be recovered. */
+.sec-code-panel {
+  margin-top: 1.2rem; padding: 1.1rem 1.2rem;
+  border-radius: 14px;
+  background: rgba(245, 166, 91, 0.07);
+  border: 1px solid rgba(245, 166, 91, 0.28);
+}
+.sec-code-label {
+  display: block; font-size: 0.74rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--amber); font-weight: 600;
+  margin-bottom: 0.6rem;
+}
+.sec-code-row { display: flex; align-items: center; gap: 0.8rem; }
+.sec-code-row code {
+  font-family: "SF Mono", Menlo, monospace;
+  font-size: 1.4rem; letter-spacing: 0.1em;
+  color: var(--ink); flex: 1;
+}
+.sec-code-row .ghost-btn { padding: 0.45rem 0.9rem; font-size: 0.86rem; }
+.sec-code-panel small { display: block; margin-top: 0.8rem; color: var(--muted); font-size: 0.8rem; line-height: 1.6; }
+
+.sec-locked { color: var(--rose); font-weight: 600; }
+.sec-ok { color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-orb { animation: none !important; }
+}

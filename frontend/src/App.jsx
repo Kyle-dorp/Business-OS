@@ -8,6 +8,7 @@ import "./theme-security.css";
 import "./theme-billing.css";
 import "./theme-compliance.css";
 import "./theme-inventory.css";
+import "./theme-booking.css";
 import { api, getBusinessId, getToken, setBusinessId, setToken } from "./api";
 import AuthPage from "./pages/AuthPage";
 import AgentPage from "./pages/AgentPage";
@@ -16,6 +17,8 @@ import SecurityPage from "./pages/SecurityPage";
 import BillingPage from "./pages/BillingPage";
 import CompliancePage from "./pages/CompliancePage";
 import InventoryIntelPage from "./pages/InventoryIntelPage";
+import PublicBookingPage from "./pages/PublicBookingPage";
+import BookingAdminPage from "./pages/BookingAdminPage";
 import AssistantPage from "./pages/AssistantPage";
 import AvailabilityPage from "./pages/AvailabilityPage";
 import EmployeeAvailabilityPage from "./pages/EmployeeAvailabilityPage";
@@ -54,6 +57,7 @@ const MANAGER_TABS = [
   { id: "manager", label: "Scheduling", icon: "▦", module: "scheduling" },
   { id: "preflight", label: "Preflight", icon: "◈", module: "scheduling" },
   { id: "compliance", label: "Labor rules", icon: "⚖", module: "scheduling" },
+  { id: "bookings", label: "Bookings", icon: "◑", module: "team" },
   { id: "ask", label: "Ask", icon: "✦" },
   { id: "assistant", label: "Scheduling AI", icon: "◇", module: "assistant" },
   { id: "notifications", label: "Notifications", icon: "●", module: "notifications" },
@@ -68,7 +72,18 @@ const EMPLOYEE_TABS = [
   { id: "settings", label: "Settings", icon: "⚙" },
 ];
 
+/**
+ * A customer arriving at /book/123 is not a user and must never be shown a
+ * sign-in screen. Read straight off the path rather than adding a router for
+ * one public route.
+ */
+function publicBookingBusinessId() {
+  const match = window.location.pathname.match(/^\/book\/(\d+)/);
+  return match ? match[1] : null;
+}
+
 export default function App() {
+  const bookingBusinessId = publicBookingBusinessId();
   const [initializing, setInitializing] = useState(true);
   const [needsSetup, setNeedsSetup] = useState(false);
   const [user, setUser] = useState(null);
@@ -108,7 +123,7 @@ export default function App() {
     } finally { setInitializing(false); }
   }
 
-  useEffect(() => { bootstrap(); }, []);
+  useEffect(() => { if (!bookingBusinessId) bootstrap(); }, [bookingBusinessId]);
   useEffect(() => {
     const handler = () => { setToken(""); setBusinessId(""); setUser(null); setWorkspace(null); setDrawerOpen(false); };
     window.addEventListener("scheduler:unauthorized", handler);
@@ -137,6 +152,7 @@ export default function App() {
     await loadWorkspace(); await switchBusiness(business.id);
   }
 
+  if (bookingBusinessId) return <PublicBookingPage businessId={bookingBusinessId} />;
   if (initializing) return <div className="boot-screen"><div className="boot-mark">E</div><div className="boot-pulse" /><p>Opening business workspace…</p></div>;
   if (!user) return <AuthPage needsSetup={needsSetup} onAuthenticated={authenticated} />;
   const currentLabel = tabs.find((tab) => tab.id === activeTab)?.label || "Home";
@@ -166,6 +182,7 @@ export default function App() {
           {activeTab === "billing" && <BillingPage onModulesChanged={refreshWorkspace} />}
           {activeTab === "compliance" && <CompliancePage />}
           {activeTab === "inventory-intel" && <InventoryIntelPage />}
+          {activeTab === "bookings" && <BookingAdminPage />}
           {activeTab === "assistant" && <AssistantPage />}{activeTab === "notifications" && <NotificationsPage onCountChange={setNotificationCount} />}
           {activeTab === "settings" && <SettingsPage user={user} workspaceRole={workspace?.role} modules={workspace?.modules || []} onModulesChanged={refreshWorkspace} onUserChange={setUser} onLogout={logout} />}
         </> : <>{activeTab === "home" && <EmployeeHomePage />}{activeTab === "my-availability" && <EmployeeAvailabilityPage />}{activeTab === "requests" && <RequestsPage />}{activeTab === "settings" && <SettingsPage user={user} onUserChange={setUser} onLogout={logout} />}</>}

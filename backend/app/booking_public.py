@@ -151,6 +151,9 @@ class PublicService(BaseModel):
     description: str
     duration_minutes: int
     price: float
+    requires_deposit: bool = False
+    deposit: float = 0.0
+    cancellation_hours: int = 24
 
 
 class BookingRequest(BaseModel):
@@ -172,6 +175,9 @@ class BookingConfirmation(BaseModel):
     price: float
     status: str
     business_name: str
+    deposit: float = 0.0
+    deposit_required: bool = False
+    cancellation_hours: int = 24
 
 
 # ------------------------------------------------------------------ routes
@@ -200,6 +206,9 @@ def booking_page(business_id: int, session: Session = Depends(get_session)):
             PublicService(
                 id=s.id, name=s.name, description=s.description,
                 duration_minutes=s.duration_minutes, price=s.price,
+                requires_deposit=s.requires_deposit,
+                deposit=round(s.deposit_cents / 100, 2),
+                cancellation_hours=s.cancellation_hours,
             )
             for s in services
         ],
@@ -290,6 +299,10 @@ def book(
         notes=body.notes.strip(),
         status="pending",
         payment_status="pending",
+        deposit_cents=service.deposit_cents if service.requires_deposit else 0,
+        # "required" rather than "held" — nothing has been taken yet. Recording
+        # it as held would make an unpaid booking look secured.
+        deposit_status="required" if service.requires_deposit else "none",
     )
     session.add(booking)
     session.commit()
@@ -324,6 +337,9 @@ def book(
         price=booking.price,
         status=booking.status,
         business_name=business.name,
+        deposit=round(booking.deposit_cents / 100, 2),
+        deposit_required=service.requires_deposit,
+        cancellation_hours=service.cancellation_hours,
     )
 
 
@@ -350,8 +366,37 @@ def cancel(
     if booking.status == "cancelled":
         return {"cancelled": True, "already": True}
 
+    # Past the cancellation window a deposit is forfeited. The booking is still
+    # cancelled — refusing to release the slot helps nobody, since the customer
+    # is not coming either way and somebody else could take it.
+    service = session.get(Service, booking.service_id)
+    window_hours = service.cancellation_hours if service else 24
+    forfeited = False
+
+    try:
+        starts_at = datetime.fromisoformat(f"{booking.booking_date}T{booking.booking_time}")
+        hours_notice = (starts_at - datetime.now()).total_seconds() / 3600
+    except ValueError:
+        hours_notice = window_hours   # unparseable time is not the customer's fault
+
+    if hours_notice < window_hours and booking.deposit_status == "held":
+        booking.deposit_status = "forfeited"
+        forfeited = True
+
     booking.status = "cancelled"
+    booking.cancelled_at = utc_now_iso()
     booking.updated_at = utc_now_iso()
     session.add(booking)
     session.commit()
-    return {"cancelled": True, "booking_id": booking_id}
+
+    return {
+        "cancelled": True,
+        "booking_id": booking_id,
+        "deposit_forfeited": forfeited,
+        "notice_hours": round(max(hours_notice, 0), 1),
+        "window_hours": window_hours,
+        "message": (
+            f"Cancelled. Your deposit is not refundable inside {window_hours} hours."
+            if forfeited else "Cancelled. Thanks for letting us know."
+        ),
+    }

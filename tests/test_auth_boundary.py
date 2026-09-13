@@ -45,6 +45,9 @@ def is_public(path: str) -> bool:
         "/auth/google/login",
         # Customers booking an appointment are not users.
         "/public/book/1",
+        # The booking page HTML itself, served by the SPA catch-all.
+        "/book/1",
+        "/book/42",
         "/public/book/42/slots",
         "/public/book/42/next-available",
         "/public/book/42/book",
@@ -78,6 +81,11 @@ def test_reachable_without_a_token(path):
         "/ops/compliance/jurisdictions",
         "/ops/inventory/variance",
         "/ops/inventory/count",
+        # Managing bookings is an operator action.
+        "/booking-admin/diary",
+        "/booking-admin/services",
+        "/booking-admin/availability",
+        "/booking-admin/no-shows",
         # Issuing a reset code is a manager action and needs a session —
         # only redeeming one is public.
         "/security/reset/issue",
@@ -106,6 +114,8 @@ def test_requires_a_token(path):
         "/billing/webhook-test",
         "/billing/webhookextra",
         "/publicity",
+        "/booked",
+        "/bookings",
         "/public-data",
         "/docsomething",
     ],

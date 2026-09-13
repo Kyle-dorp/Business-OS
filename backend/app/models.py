@@ -532,6 +532,13 @@ class Service(SQLModel, table=True):
     stripe_price_id: Optional[str] = None  # Stripe Price ID
     active: bool = True
 
+    # Deposit policy. A deposit is the only thing that reliably stops no-shows,
+    # and a no-show on a 90-minute slot costs the whole slot.
+    requires_deposit: bool = False
+    deposit_cents: int = 0
+    # Hours before the slot that a customer may still cancel for free.
+    cancellation_hours: int = 24
+
 
 class Booking(SQLModel, table=True):
     """Customer booking/appointment"""
@@ -549,6 +556,16 @@ class Booking(SQLModel, table=True):
     price: float
     payment_status: str = "pending"  # pending, completed, failed
     stripe_payment_intent_id: Optional[str] = None
+
+    # Tracked separately from `status` so the history survives: a booking that
+    # was a no-show and is later rebooked still counts against reliability.
+    no_show_at: Optional[str] = None
+    cancelled_at: Optional[str] = None
+
+    deposit_cents: int = 0
+    # none | required | held | applied | forfeited
+    deposit_status: str = "none"
+
     created_at: str = Field(default_factory=utc_now_iso)
     updated_at: str = Field(default_factory=utc_now_iso)
 

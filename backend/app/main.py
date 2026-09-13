@@ -98,6 +98,7 @@ from backend.app import ops_models  # noqa: F401
 from backend.app import security as security_module  # noqa: F401  (declares tables)
 from backend.app.ai_agent import router as agent_router
 from backend.app.billing import router as billing_router
+from backend.app.booking_admin import router as booking_admin_router
 from backend.app.booking_public import router as public_booking_router
 from backend.app.preflight import router as ops_router
 from backend.app.security import router as security_router
@@ -122,6 +123,7 @@ app.include_router(agent_router)
 app.include_router(billing_router)
 app.include_router(ops_router)
 app.include_router(security_router)
+app.include_router(booking_admin_router)
 app.include_router(oauth_router)
 # Public booking carries no auth by design — customers are not users.
 app.include_router(public_booking_router)
@@ -387,6 +389,11 @@ PUBLIC_PATHS = {
 # do not exist yet. Prefer PUBLIC_PATHS unless the whole subtree is public.
 PUBLIC_PREFIXES = (
     "/public/",
+    # The customer-facing booking page itself. /public/book/* is the data; this
+    # is the HTML that fetches it. Without this the middleware answers a
+    # customer's booking link with "Sign in required" — which is the whole
+    # feature, broken.
+    "/book/",
     "/docs",
     "/static",
     "/assets",

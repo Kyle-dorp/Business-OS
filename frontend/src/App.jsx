@@ -1,7 +1,13 @@
 import { Component, useEffect, useMemo, useState } from "react";
 import "./App.css";
+// Loaded after App.css on purpose: App.css owns layout and structure, these own
+// the look, and later import wins on equal specificity.
+import "./theme.css";
+import "./theme-pages.css";
 import { api, getBusinessId, getToken, setBusinessId, setToken } from "./api";
 import AuthPage from "./pages/AuthPage";
+import AgentPage from "./pages/AgentPage";
+import PreflightPage from "./pages/PreflightPage";
 import AssistantPage from "./pages/AssistantPage";
 import AvailabilityPage from "./pages/AvailabilityPage";
 import EmployeeAvailabilityPage from "./pages/EmployeeAvailabilityPage";
@@ -37,7 +43,9 @@ const MANAGER_TABS = [
   { id: "inventory", label: "Inventory & assets", icon: "□", module: "inventory" },
   { id: "availability", label: "Availability", icon: "◷", module: "scheduling" },
   { id: "manager", label: "Scheduling", icon: "▦", module: "scheduling" },
-  { id: "assistant", label: "AI Assistant", icon: "✦", module: "assistant" },
+  { id: "preflight", label: "Preflight", icon: "◈", module: "scheduling" },
+  { id: "ask", label: "Ask", icon: "✦" },
+  { id: "assistant", label: "Scheduling AI", icon: "◇", module: "assistant" },
   { id: "notifications", label: "Notifications", icon: "●", module: "notifications" },
   { id: "settings", label: "Settings", icon: "⚙" },
 ];
@@ -140,6 +148,8 @@ export default function App() {
           {["contacts", "sales", "purchasing", "accounting", "reports", "tasks", "inventory"].includes(activeTab) && <PlatformPage section={activeTab} />}
           {activeTab === "availability" && <AvailabilityPage />}{activeTab === "manager" && <ManagerPage />}
           {activeTab === "finance" && <FinancePage />}
+          {activeTab === "preflight" && <PreflightPage />}
+          {activeTab === "ask" && <AgentPage />}
           {activeTab === "assistant" && <AssistantPage />}{activeTab === "notifications" && <NotificationsPage onCountChange={setNotificationCount} />}
           {activeTab === "settings" && <SettingsPage user={user} workspaceRole={workspace?.role} modules={workspace?.modules || []} onModulesChanged={refreshWorkspace} onUserChange={setUser} onLogout={logout} />}
         </> : <>{activeTab === "home" && <EmployeeHomePage />}{activeTab === "my-availability" && <EmployeeAvailabilityPage />}{activeTab === "requests" && <RequestsPage />}{activeTab === "settings" && <SettingsPage user={user} onUserChange={setUser} onLogout={logout} />}</>}

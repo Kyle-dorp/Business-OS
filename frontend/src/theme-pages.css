@@ -1,0 +1,195 @@
+/* ============================================================================
+   Business-EOS — assistant and preflight screens
+   Loaded after theme.css. Split out so the shell styling and the new-feature
+   styling can be worked on independently.
+   ========================================================================= */
+
+/* ------------------------------------------------------------- assistant */
+
+.agent-page { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; min-height: 0; }
+
+.agent-usage { min-width: 190px; text-align: right; }
+.agent-usage-bar {
+  height: 3px; border-radius: 3px; overflow: hidden;
+  background: rgba(246, 240, 234, 0.08); margin-bottom: 0.5rem;
+}
+.agent-usage-bar span { display: block; height: 100%; border-radius: 3px; transition: width 0.5s var(--ease); }
+.agent-usage small { color: var(--faint); font-size: 0.74rem; }
+
+.agent-thread {
+  display: flex; flex-direction: column; gap: 1.1rem;
+  padding: 1.6rem; margin-bottom: 1rem;
+  max-height: 60vh; overflow-y: auto;
+}
+
+.agent-empty { text-align: center; padding: 2rem 1rem; color: var(--muted); }
+.agent-empty p { max-width: 46ch; margin: 0 auto 1.6rem; line-height: 1.7; }
+.agent-starters { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
+.agent-starters button { font-size: 0.9rem; padding: 0.55rem 0.95rem; }
+
+.agent-turn { display: flex; flex-direction: column; gap: 0.7rem; }
+.agent-turn.is-user { align-items: flex-end; }
+.agent-turn.is-assistant { align-items: flex-start; }
+
+.agent-bubble {
+  padding: 0.95rem 1.15rem; border-radius: 16px;
+  max-width: 82%; line-height: 1.65; font-size: 0.97rem;
+  border: 1px solid var(--line-soft);
+}
+.agent-bubble p { margin: 0; }
+.agent-bubble p + p { margin-top: 0.6rem; }
+
+.is-user .agent-bubble {
+  background: rgba(245, 166, 91, 0.1);
+  border-color: rgba(245, 166, 91, 0.2);
+  color: var(--ink);
+  border-bottom-right-radius: 5px;
+}
+.is-assistant .agent-bubble {
+  background: var(--glass);
+  color: var(--ink-2);
+  border-bottom-left-radius: 5px;
+}
+
+.agent-thinking { display: inline-flex; gap: 5px; align-items: center; padding: 1.1rem 1.2rem; }
+.agent-thinking span {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--amber); opacity: 0.4;
+  animation: eos-think 1.2s var(--ease) infinite;
+}
+.agent-thinking span:nth-child(2) { animation-delay: 0.15s; }
+.agent-thinking span:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes eos-think {
+  0%, 100% { opacity: 0.25; transform: translateY(0); }
+  50%      { opacity: 1;    transform: translateY(-3px); }
+}
+
+/* Proposal cards are mint — the colour reserved for money kept and for
+   things that are safe to confirm. */
+.agent-proposal {
+  align-self: flex-start; max-width: 90%;
+  padding: 1.1rem 1.2rem; border-radius: 14px;
+  background: rgba(119, 216, 194, 0.05);
+  border: 1px solid rgba(119, 216, 194, 0.22);
+  transition: opacity 0.4s var(--ease), border-color 0.3s var(--ease);
+}
+.agent-proposal.is-rejected { opacity: 0.45; border-color: var(--line); }
+.agent-proposal.is-applied { border-color: rgba(119, 216, 194, 0.45); }
+
+.agent-proposal-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 1rem; margin-bottom: 0.5rem;
+}
+.agent-proposal-kind {
+  font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--mint); font-weight: 600;
+}
+.agent-proposal-done { font-size: 0.78rem; color: var(--mint); font-weight: 600; }
+.agent-proposal-dismissed { font-size: 0.78rem; color: var(--faint); }
+.agent-proposal-summary { margin: 0 0 0.85rem; color: var(--ink); line-height: 1.6; }
+
+.agent-proposal-changes { display: grid; gap: 0.4rem; margin: 0 0 1rem; }
+.agent-proposal-changes > div { display: flex; gap: 0.7rem; font-size: 0.88rem; }
+.agent-proposal-changes dt { color: var(--faint); min-width: 9rem; text-transform: capitalize; }
+.agent-proposal-changes dd { margin: 0; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+.agent-proposal-actions { display: flex; gap: 0.5rem; }
+.agent-proposal-actions .primary-btn { padding: 0.5rem 1.1rem; font-size: 0.9rem; }
+.agent-proposal-actions .ghost-btn { padding: 0.5rem 1rem; font-size: 0.9rem; }
+.agent-proposal-working { margin: 0; color: var(--muted); font-size: 0.88rem; }
+.agent-proposal-error { margin: 0 0 0.7rem; color: var(--rose); font-size: 0.88rem; }
+
+.agent-escalated { align-self: flex-start; margin: 0; color: var(--amber); font-size: 0.88rem; }
+.agent-error { color: var(--rose); margin: 0 0 0.8rem; font-size: 0.9rem; }
+
+.agent-composer { display: flex; gap: 0.6rem; align-items: flex-end; }
+.agent-composer textarea {
+  flex: 1; resize: none; min-height: 46px; max-height: 160px;
+  padding: 0.8rem 1rem !important;
+  font-family: inherit; font-size: 0.97rem; line-height: 1.5;
+}
+.agent-composer .primary-btn { height: 46px; padding: 0 1.5rem; white-space: nowrap; }
+
+/* -------------------------------------------------------------- preflight */
+
+.preflight-page { max-width: 1180px; margin: 0 auto; }
+
+.preflight-verdict {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 2rem; padding: 1.6rem 1.8rem; margin-bottom: 1rem;
+}
+.preflight-verdict h2 { margin: 0.35rem 0 0; }
+.preflight-verdict-label {
+  font-size: 0.72rem; letter-spacing: 0.16em;
+  text-transform: uppercase; font-weight: 600;
+}
+.preflight-verdict.tone-good { border-color: rgba(119, 216, 194, 0.3); }
+.preflight-verdict.tone-good .preflight-verdict-label { color: var(--mint); }
+.preflight-verdict.tone-warn { border-color: rgba(245, 166, 91, 0.3); }
+.preflight-verdict.tone-warn .preflight-verdict-label { color: var(--amber); }
+.preflight-verdict.tone-bad { border-color: rgba(217, 120, 141, 0.35); }
+.preflight-verdict.tone-bad .preflight-verdict-label { color: var(--rose); }
+
+.preflight-exposure { text-align: right; white-space: nowrap; }
+.preflight-exposure span {
+  display: block; color: var(--faint); font-size: 0.74rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+.preflight-exposure strong {
+  font-family: "Fraunces", serif; font-size: 1.7rem; font-weight: 400;
+  color: var(--rose); font-variant-numeric: tabular-nums;
+}
+
+.preflight-list { padding: 1.3rem 1.6rem; margin-bottom: 1rem; }
+.preflight-list h3 { margin: 0 0 0.7rem; }
+.preflight-list ul { margin: 0; padding-left: 1.1rem; }
+.preflight-list li { color: var(--ink-2); line-height: 1.7; }
+.preflight-list.is-blocking { border-color: rgba(217, 120, 141, 0.28); }
+.preflight-list.is-blocking h3 { color: var(--rose); }
+.preflight-list.is-advisory h3 { color: var(--amber); }
+
+.preflight-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 1rem;
+}
+.preflight-grid .card { padding: 1.4rem 1.6rem; }
+.preflight-grid h3 { margin: 0 0 1rem; }
+
+.preflight-findings {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 0.85rem;
+}
+.preflight-findings li { padding-left: 0.85rem; border-left: 2px solid var(--line); }
+.preflight-findings li.sev-violation { border-left-color: var(--rose); }
+.preflight-findings li.sev-warning { border-left-color: var(--amber); }
+.preflight-findings li.sev-info { border-left-color: var(--line); }
+.preflight-findings p { margin: 0.25rem 0 0; color: var(--ink-2); font-size: 0.9rem; line-height: 1.6; }
+.preflight-findings small { display: block; margin-top: 0.35rem; color: var(--faint); font-size: 0.74rem; }
+
+.finding-top { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; }
+.finding-top strong { color: var(--ink); font-size: 0.94rem; }
+.finding-cost { color: var(--rose); font-variant-numeric: tabular-nums; font-size: 0.88rem; white-space: nowrap; }
+
+.preflight-clear { color: var(--mint); margin: 0; }
+.preflight-disclaimer {
+  margin: 1.2rem 0 0; padding-top: 0.9rem;
+  border-top: 1px solid var(--line-soft);
+  color: var(--faint); font-size: 0.78rem; line-height: 1.6;
+}
+.preflight-error { padding: 1.2rem 1.5rem; color: var(--rose); border-color: rgba(217, 120, 141, 0.28); }
+
+.cov-understaffed { color: var(--rose); }
+.cov-possibly_overstaffed { color: var(--amber); }
+.cov-ok { color: var(--mint); }
+.cost-over_budget { color: var(--rose) !important; }
+.cost-tight { color: var(--amber) !important; }
+.cost-healthy { color: var(--mint) !important; }
+.cost-no_forecast { color: var(--muted) !important; }
+
+@media (max-width: 720px) {
+  .preflight-verdict { flex-direction: column; align-items: flex-start; gap: 1rem; }
+  .preflight-exposure { text-align: left; }
+  .agent-bubble, .agent-proposal { max-width: 100%; }
+}

@@ -1,0 +1,490 @@
+/* ============================================================================
+   Business-EOS — visual language
+   ----------------------------------------------------------------------------
+   Loaded AFTER App.css so it wins on equal specificity. App.css carries the
+   layout and component structure built over months; this file carries the look.
+   Separating them means the design can be reworked without touching behaviour.
+
+   The world: a warm room at night. Deep brown-black ground, light pooling from
+   a few soft sources, fine grain over everything. Interface elements are barely
+   there until you approach them, then they warm up.
+
+   Colour has one job each:
+     amber  — interaction, focus, anything you can touch
+     rose   — money leaving, warnings, variance
+     mint   — money kept, confirmations, healthy states
+   Nothing else gets a colour. That discipline is what stops a glow-heavy
+   interface turning into a fairground.
+   ========================================================================= */
+
+:root {
+  --void: #0E0B0C;
+  --void-lift: #15100F;
+
+  --ink: #F6F0EA;
+  --ink-2: #C6B9B1;
+  --muted: #8C7F79;
+  --faint: #6A5F5A;
+
+  --amber: #F5A65B;
+  --amber-hot: #FFC98F;
+  --amber-deep: #C97A3A;
+  --rose: #D9788D;
+  --mint: #77D8C2;
+
+  --line: rgba(246, 240, 234, 0.10);
+  --line-soft: rgba(246, 240, 234, 0.055);
+  --glass: rgba(246, 240, 234, 0.032);
+  --glass-2: rgba(246, 240, 234, 0.055);
+
+  --ease: cubic-bezier(0.22, 0.72, 0.2, 1);
+
+  /* Older rules in App.css read these names. Remapping them here restyles
+     hundreds of declarations without editing them one at a time. */
+  --navy: #0E0B0C;
+  --navy-2: #15100F;
+  --blue: #F5A65B;
+  --blue-dark: #C97A3A;
+  --blue-soft: rgba(245, 166, 91, 0.10);
+  --purple: #D9788D;
+  --green: #77D8C2;
+  --red: #E8677D;
+  --text: #F6F0EA;
+  --line: rgba(246, 240, 234, 0.10);
+  --surface: rgba(246, 240, 234, 0.035);
+  --shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.85);
+
+  color: var(--ink);
+  background: var(--void);
+  font-family: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* ---------------------------------------------------------------- ground */
+
+html, body, #root { min-height: 100%; }
+
+body {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 300;
+  background: var(--void);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ambient light and grain, painted once behind everything. Fixed so it stays
+   put while content scrolls — the room doesn't move, you do. */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+body::before {
+  background:
+    radial-gradient(58vw 48vw at 10% -8%, rgba(245, 166, 91, 0.10), transparent 62%),
+    radial-gradient(52vw 44vw at 98% 12%, rgba(217, 120, 141, 0.075), transparent 64%),
+    radial-gradient(70vw 62vw at 50% 110%, rgba(201, 122, 58, 0.06), transparent 66%);
+}
+
+body::after {
+  opacity: 0.2;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+}
+
+#root { position: relative; z-index: 1; }
+
+::selection { background: rgba(245, 166, 91, 0.22); color: var(--ink); }
+
+:focus-visible {
+  outline: 2px solid var(--amber-hot);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(246, 240, 234, 0.09);
+  border-radius: 6px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(245, 166, 91, 0.28); background-clip: padding-box; }
+
+/* ------------------------------------------------------------- typography */
+
+h1, h2, h3 {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.018em;
+  color: var(--ink);
+}
+
+h1 { font-size: clamp(1.9rem, 3.4vw, 2.7rem); line-height: 1.08; }
+h2 { font-size: clamp(1.35rem, 2.2vw, 1.8rem); line-height: 1.15; }
+h3 { font-family: "Figtree", sans-serif; font-weight: 600; font-size: 1.02rem; letter-spacing: -0.008em; }
+
+p, span, div, td, th, label, small { color: inherit; }
+
+.eyebrow {
+  color: var(--amber);
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+}
+
+/* ------------------------------------------------------------- boot screen */
+
+.boot-screen {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 1.4rem;
+  background: var(--void);
+  color: var(--ink-2);
+  z-index: 999;
+}
+
+.boot-mark {
+  width: 3.4rem;
+  height: 3.4rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-family: "Fraunces", serif;
+  font-size: 1.5rem;
+  color: var(--void);
+  background: var(--amber);
+  box-shadow: 0 0 44px -6px rgba(245, 166, 91, 0.55);
+}
+
+.boot-pulse {
+  width: 9rem;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--amber), transparent);
+  animation: eos-sweep 1.5s var(--ease) infinite;
+}
+
+@keyframes eos-sweep {
+  0%   { opacity: 0.15; transform: scaleX(0.4); }
+  50%  { opacity: 1;    transform: scaleX(1); }
+  100% { opacity: 0.15; transform: scaleX(0.4); }
+}
+
+/* ----------------------------------------------------------------- shell */
+
+.app, .app.commercial-shell {
+  background: transparent;
+  color: var(--ink);
+}
+
+.drawer {
+  background: rgba(14, 11, 12, 0.72);
+  backdrop-filter: blur(18px) saturate(1.1);
+  border-right: 1px solid var(--line-soft);
+  box-shadow: none;
+}
+
+.drawer-brand {
+  border-bottom: 1px solid var(--line-soft);
+  color: var(--ink);
+}
+.drawer-brand strong { color: var(--ink); font-weight: 700; letter-spacing: -0.02em; }
+.drawer-brand span { color: var(--faint); }
+
+.drawer-logo {
+  background: var(--amber);
+  color: var(--void);
+  font-family: "Fraunces", serif;
+  box-shadow: 0 0 20px -4px rgba(245, 166, 91, 0.5);
+}
+
+.drawer-section-label { color: var(--faint); letter-spacing: 0.16em; }
+
+/* Nav items: invisible until approached, then they warm and mark themselves. */
+.nav-btn {
+  position: relative;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-weight: 400;
+  transition: color 0.25s var(--ease), background-color 0.25s var(--ease),
+              box-shadow 0.3s var(--ease), border-color 0.25s var(--ease);
+}
+
+.nav-btn:hover {
+  color: var(--ink);
+  background: rgba(245, 166, 91, 0.06);
+  border-color: rgba(245, 166, 91, 0.14);
+  box-shadow: 0 0 26px -12px rgba(245, 166, 91, 0.3);
+}
+
+.nav-btn.active {
+  color: var(--ink);
+  font-weight: 600;
+  background: rgba(245, 166, 91, 0.09);
+  border-color: rgba(245, 166, 91, 0.2);
+}
+
+.nav-btn.active::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 20%; bottom: 20%;
+  width: 2px;
+  border-radius: 0 2px 2px 0;
+  background: var(--amber);
+  box-shadow: 0 0 10px 1px rgba(245, 166, 91, 0.6);
+}
+
+.nav-btn .nav-icon { color: var(--amber); opacity: 0.75; }
+.nav-btn.active .nav-icon { opacity: 1; }
+
+.notification-badge {
+  background: var(--rose);
+  color: var(--void);
+  font-weight: 700;
+  box-shadow: 0 0 12px -2px rgba(217, 120, 141, 0.6);
+}
+
+.workspace-switcher .workspace-select {
+  background: var(--glass);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.workspace-switcher .workspace-select:focus { border-color: var(--amber); outline: none; }
+.workspace-switcher button {
+  background: rgba(245, 166, 91, 0.1);
+  border: 1px solid rgba(245, 166, 91, 0.22);
+  color: var(--amber);
+  border-radius: 10px;
+}
+.workspace-switcher button:hover { background: rgba(245, 166, 91, 0.18); }
+
+.drawer-footer, .account-footer {
+  border-top: 1px solid var(--line-soft);
+  color: var(--ink-2);
+}
+.account-footer strong { color: var(--ink); }
+.account-footer span { color: var(--faint); }
+.account-footer button { color: var(--muted); background: transparent; border: 0; }
+.account-footer button:hover { color: var(--amber); }
+
+.account-avatar {
+  background: rgba(245, 166, 91, 0.14);
+  color: var(--amber-hot);
+  border: 1px solid rgba(245, 166, 91, 0.25);
+}
+
+.drawer-backdrop { background: rgba(8, 6, 6, 0.6); backdrop-filter: blur(3px); }
+
+/* ---------------------------------------------------------------- topbar */
+
+.main { background: transparent; }
+
+.topbar {
+  background: rgba(14, 11, 12, 0.62);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--line-soft);
+  box-shadow: none;
+}
+
+.topbar-copy span { color: var(--faint); }
+.topbar-copy strong { color: var(--ink); font-family: "Fraunces", serif; font-weight: 400; letter-spacing: -0.015em; }
+
+.topbar-notification,
+.topbar-profile {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  border-radius: 10px;
+  transition: all 0.25s var(--ease);
+}
+.topbar-notification:hover,
+.topbar-profile:hover {
+  color: var(--ink);
+  background: rgba(245, 166, 91, 0.07);
+  border-color: rgba(245, 166, 91, 0.16);
+  box-shadow: 0 0 24px -12px rgba(245, 166, 91, 0.35);
+}
+.topbar-profile strong { color: var(--ink); }
+.topbar-profile small { color: var(--faint); }
+.topbar-profile > span {
+  background: rgba(245, 166, 91, 0.14);
+  color: var(--amber-hot);
+  border: 1px solid rgba(245, 166, 91, 0.22);
+}
+.topbar-notification b { background: var(--rose); color: var(--void); }
+
+.hamburger span { background: var(--ink-2); }
+
+/* --------------------------------------------------------------- surfaces */
+
+.card,
+.os-form,
+.os-table-wrap,
+.module-settings-card,
+.os-metrics article,
+.os-welcome {
+  background: var(--glass);
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  color: var(--ink-2);
+  box-shadow: 0 22px 54px -30px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  transition: border-color 0.35s var(--ease), box-shadow 0.4s var(--ease),
+              transform 0.35s var(--ease), background-color 0.35s var(--ease);
+}
+
+.os-metrics article:hover,
+.card.interactive:hover {
+  transform: translateY(-2px);
+  background: var(--glass-2);
+  border-color: rgba(245, 166, 91, 0.22);
+  box-shadow: 0 26px 60px -28px rgba(0, 0, 0, 0.85),
+              0 0 44px -20px rgba(245, 166, 91, 0.3);
+}
+
+.os-metrics article span { color: var(--faint); font-weight: 500; }
+.os-metrics article strong {
+  color: var(--ink);
+  font-family: "Fraunces", serif;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+.os-metrics article small { color: var(--muted); }
+
+.os-heading h1 { color: var(--ink); }
+.os-heading p { color: var(--muted); }
+
+.os-welcome h2 { color: var(--ink); }
+.os-welcome p { color: var(--ink-2); }
+
+.os-loop { background: rgba(245, 166, 91, 0.07); color: var(--ink-2); border: 1px solid var(--line-soft); }
+.os-loop b { background: var(--amber); color: var(--void); }
+
+.os-alert {
+  background: rgba(119, 216, 194, 0.08);
+  border: 1px solid rgba(119, 216, 194, 0.22);
+  color: var(--mint);
+}
+
+.os-loading, .os-empty { color: var(--muted) !important; }
+
+/* ----------------------------------------------------------------- tables */
+
+.os-table th {
+  background: transparent;
+  color: var(--faint);
+  border-bottom: 1px solid var(--line);
+  letter-spacing: 0.1em;
+}
+.os-table td {
+  color: var(--ink-2);
+  border-bottom: 1px solid var(--line-soft);
+  font-variant-numeric: tabular-nums;
+}
+.os-table tr:hover td { background: rgba(245, 166, 91, 0.04); color: var(--ink); }
+
+/* ----------------------------------------------------------------- forms */
+
+input, select, textarea {
+  background: var(--glass) !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 10px !important;
+  transition: border-color 0.25s var(--ease), box-shadow 0.3s var(--ease);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none !important;
+  border-color: var(--amber) !important;
+  box-shadow: 0 0 0 3px rgba(245, 166, 91, 0.12) !important;
+}
+
+input::placeholder, textarea::placeholder { color: var(--faint); }
+
+/* Native dropdown lists render in the OS palette, so they need explicit colour
+   or they arrive as black-on-black. */
+select option { background: #17110F; color: var(--ink); }
+
+.os-field { color: var(--muted); }
+.os-field input, .os-field select { font-weight: 400; }
+
+input[type="checkbox"], input[type="radio"] { accent-color: var(--amber); }
+
+/* --------------------------------------------------------------- buttons */
+
+.primary-btn {
+  background: rgba(245, 166, 91, 0.1);
+  color: var(--amber-hot);
+  border: 1px solid rgba(245, 166, 91, 0.28);
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.25s var(--ease);
+}
+.primary-btn:hover {
+  background: rgba(245, 166, 91, 0.18);
+  box-shadow: 0 0 34px -10px rgba(245, 166, 91, 0.45);
+  transform: translateY(-1px);
+}
+.primary-btn:disabled { opacity: 0.45; transform: none; box-shadow: none; }
+
+.ghost-btn, .secondary-btn {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  transition: all 0.25s var(--ease);
+}
+.ghost-btn:hover, .secondary-btn:hover {
+  color: var(--ink);
+  border-color: rgba(245, 166, 91, 0.24);
+  background: rgba(245, 166, 91, 0.06);
+}
+
+.danger-btn { color: var(--rose); border: 1px solid rgba(217, 120, 141, 0.28); background: transparent; }
+.danger-btn:hover { background: rgba(217, 120, 141, 0.12); }
+
+/* ----------------------------------------------------- module toggle rows */
+
+.module-toggle-row {
+  background: var(--glass);
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  transition: all 0.25s var(--ease);
+}
+.module-toggle-row:hover {
+  background: rgba(245, 166, 91, 0.06);
+  border-color: rgba(245, 166, 91, 0.2);
+  box-shadow: 0 0 28px -14px rgba(245, 166, 91, 0.3);
+}
+.module-toggle-row strong { color: var(--ink); }
+.module-toggle-row span { color: var(--muted); }
+.module-safety-note { color: var(--faint); }
+
+/* ------------------------------------------------------------ crash card */
+
+.crash-card { border-color: rgba(217, 120, 141, 0.25); }
+.crash-icon {
+  background: rgba(217, 120, 141, 0.14);
+  color: var(--rose);
+  border: 1px solid rgba(217, 120, 141, 0.3);
+}
+
+/* --------------------------------------------------------------- motion */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

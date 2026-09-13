@@ -82,3 +82,13 @@ body {
     box-shadow: var(--shadow-hover);
   }
 }
+
+/* Spinner used by Button's loading state. Respects reduced-motion by holding
+   still rather than vanishing — the button still reads as busy. */
+@keyframes eos-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [aria-busy="true"] svg { animation: none !important; }
+}

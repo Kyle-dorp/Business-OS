@@ -9,12 +9,13 @@ Two gaps this closes:
 
   2. There was no recovery path. A locked-out owner had to phone the developer.
 
-Recovery is deliberately manager-initiated rather than emailed, because
-UserAccount stores no email address — accounts here are created by a manager
-for staff, not self-registered. Emailing a reset link would require adding a
-column to an existing table, a migration, and an email provider. A manager
-issuing a one-time code is the flow this product actually has, and it works
-today.
+Recovery is manager-initiated by default, because accounts here are created by
+a manager for staff rather than self-registered, and most staff accounts have
+no email address at all. A manager issues a one-time code and reads it out.
+
+Where the account does have an address the code is emailed as well — but the
+manager still sees it, because a reset that depends entirely on an email
+landing is a reset that strands somebody when it goes to spam.
 
 The platform admin can reset a manager, which closes the loop at the top.
 """
@@ -248,11 +249,28 @@ def issue_reset(
 
     log.info("Reset code issued for %r by %r", target.username, actor.username)
 
+    # If the account has an address, send it there too. The manager still sees
+    # the code — an email that lands in spam should not strand somebody.
+    emailed = False
+    if target.email:
+        try:
+            from backend.app import email_service
+            emailed = email_service.password_reset_code(
+                session, target, code, RESET_CODE_TTL_MINUTES
+            ).get("sent", False)
+        except Exception:
+            log.exception("Reset code for %r could not be emailed", target.username)
+
     return IssueResetOut(
         code=code,
         expires_in_minutes=RESET_CODE_TTL_MINUTES,
         username=target.username,
-        note="Read this to them directly. It is shown once and cannot be retrieved.",
+        note=(
+            f"Also emailed to {target.email}. "
+            "Read it to them as well — it is shown here once and cannot be retrieved."
+            if emailed
+            else "Read this to them directly. It is shown once and cannot be retrieved."
+        ),
     )
 
 

@@ -187,3 +187,8 @@
 @media (prefers-reduced-motion: reduce) {
   .brand-orb { animation: none !important; }
 }
+
+.sec-email-stats { display: flex; gap: 1.1rem; margin-bottom: 1.1rem; font-size: 0.88rem; color: var(--muted); }
+.sec-email-log { margin-top: 0.5rem; }
+.sec-email-log td { font-size: 0.85rem; }
+.sec-email-log small { color: var(--faint); font-size: 0.76rem; }

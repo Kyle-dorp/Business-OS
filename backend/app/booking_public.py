@@ -64,6 +64,32 @@ def _live_business(session: Session, business_id: int) -> Business:
     return business
 
 
+def _owner_email(session: Session, business_id: int) -> str:
+    """
+    Who hears about a new booking.
+
+    The owner first, then any admin. Returns blank rather than guessing if
+    nobody has an address on file — a wrong recipient is worse than none.
+    """
+    from backend.app.models import Membership, UserAccount
+
+    memberships = session.exec(
+        select(Membership).where(
+            Membership.business_id == business_id,
+            Membership.active == True,  # noqa: E712
+        )
+    ).all()
+    ranked = sorted(
+        memberships,
+        key=lambda m: {"owner": 0, "admin": 1, "manager": 2}.get(m.role, 9),
+    )
+    for m in ranked:
+        user = session.get(UserAccount, m.user_id)
+        if user and user.email and user.active:
+            return user.email
+    return ""
+
+
 def _hhmm_to_minutes(value: str) -> int:
     hours, minutes = value.split(":")[:2]
     return int(hours) * 60 + int(minutes)
@@ -327,6 +353,18 @@ def book(
         session.commit()
 
     log.info("Booking %s taken for business %s", booking.id, business_id)
+
+    # Confirmations are best-effort. A booking that succeeded and an email that
+    # did not is still a booking — the failure is logged, never raised.
+    try:
+        from backend.app import email_service
+        email_service.booking_confirmation(session, booking, service, business)
+
+        owner_email = _owner_email(session, business_id)
+        if owner_email:
+            email_service.new_booking_alert(session, booking, service, business, owner_email)
+    except Exception:
+        log.exception("Booking %s saved but notification failed", booking.id)
 
     return BookingConfirmation(
         booking_id=booking.id,

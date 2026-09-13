@@ -519,10 +519,32 @@ def _tool_escalate(session: Session, bid: int, user: UserAccount, args: dict) ->
     session.commit()
     session.refresh(ticket)
     log.info("Support ticket %s raised for business %s (%s)", ticket.id, bid, ticket.urgency)
+
+    # Tickets used to pile up silently, which defeats the point of escalating.
+    notified = False
+    try:
+        from backend.app import email_service
+        from backend.app.booking_public import _owner_email
+
+        business = session.get(Business, bid)
+        recipient = _owner_email(session, bid)
+        if recipient and business:
+            notified = email_service.support_escalation(
+                session, ticket, business, recipient
+            ).get("sent", False)
+    except Exception:
+        log.exception("Ticket %s raised but notification failed", ticket.id)
+
     return {
         "escalated": True,
         "ticket_id": ticket.id,
-        "note": "A person has been notified and will follow up.",
+        # Told truthfully. Claiming a person was notified when no email went
+        # out leaves somebody waiting for a reply that is not coming.
+        "note": (
+            "A person has been notified and will follow up."
+            if notified
+            else "This has been logged for a person to pick up."
+        ),
     }
 
 

@@ -238,6 +238,57 @@ function GoogleLink() {
   );
 }
 
+function EmailHealth() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    api("/email/status").then(setData).catch(() => setData({ configured: false, recent: [] }));
+  }, []);
+
+  if (!data) return null;
+
+  return (
+    <section className="card sec-card">
+      <h3>Email</h3>
+      {!data.configured ? (
+        <>
+          <p className="sec-blurb">
+            Not configured. Bookings still work — nobody is told about them.
+            Set <code>RESEND_API_KEY</code> and <code>EMAIL_FROM</code> to turn it on.
+          </p>
+        </>
+      ) : (
+        <>
+          <p className="sec-blurb">Sending as <strong>{data.from_address}</strong>.</p>
+          <div className="sec-email-stats">
+            <span className="sec-ok">{data.sent} sent</span>
+            {data.failed > 0 && <span className="sec-locked">{data.failed} failed</span>}
+            {data.skipped > 0 && <span>{data.skipped} skipped</span>}
+          </div>
+        </>
+      )}
+
+      {data.recent?.length > 0 && (
+        <table className="os-table sec-email-log">
+          <thead><tr><th>To</th><th>What</th><th>Status</th></tr></thead>
+          <tbody>
+            {data.recent.slice(0, 8).map((r, i) => (
+              <tr key={i}>
+                <td>{r.to}</td>
+                <td>{r.template.replace(/_/g, " ")}</td>
+                <td className={r.status === "sent" ? "sec-ok" : r.status === "failed" ? "sec-locked" : ""}>
+                  {r.status}
+                  {r.error && <small title={r.error}> · {r.error.slice(0, 40)}</small>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </section>
+  );
+}
+
 export default function SecurityPage() {
   return (
     <div className="page security-page">
@@ -253,6 +304,7 @@ export default function SecurityPage() {
         <ResetIssuer />
         <Lockouts />
         <GoogleLink />
+        <EmailHealth />
       </div>
     </div>
   );

@@ -354,13 +354,38 @@ PUBLIC_PATHS = {
     "/auth/setup",
     "/auth/login",
     "/auth/seed-businesses",  # Development only
+    # Stripe is not logged in. This endpoint authenticates by verifying the
+    # signature against STRIPE_WEBHOOK_SECRET, which is stronger than a bearer
+    # token here. Exact match, never a prefix — a prefix would also open
+    # /billing/webhook-anything to the world.
+    "/billing/webhook",
 }
+
+# Prefixes that bypass authentication. Only for route families where every
+# member is genuinely public:
+#
+#   /public/   customers booking an appointment are not users and never will
+#              be. These endpoints scope themselves by the business id in the
+#              URL and expose only what a business has deliberately published.
+#
+# Anything added here is reachable by the entire internet, including paths that
+# do not exist yet. Prefer PUBLIC_PATHS unless the whole subtree is public.
+PUBLIC_PREFIXES = (
+    "/public/",
+    "/docs",
+    "/static",
+    "/assets",
+)
 
 
 @app.middleware("http")
 async def authentication_middleware(request: Request, call_next):
     path = request.url.path
-    if request.method == "OPTIONS" or path in PUBLIC_PATHS or path.startswith("/docs") or path.startswith("/static") or path.startswith("/assets"):
+    if (
+        request.method == "OPTIONS"
+        or path in PUBLIC_PATHS
+        or path.startswith(PUBLIC_PREFIXES)
+    ):
         return await call_next(request)
 
     authorization = request.headers.get("Authorization", "")

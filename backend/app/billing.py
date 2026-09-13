@@ -41,7 +41,15 @@ from backend.app.models import (
     UserAccount,
     utc_now_iso,
 )
-from backend.app.modules_registry import ALL_MODULES
+from backend.app.modules_registry import (
+    ALL_MODULES,
+    EACH_MODULE_CENTS,
+    FIRST_MODULE_CENTS,
+    billable,
+    catalogue_payload,
+    quote_cents as catalogue_quote,
+    stitched_cents,
+)
 from backend.app.tenancy import current_business_id
 
 log = logging.getLogger(__name__)
@@ -52,9 +60,6 @@ PRICE_AI_OVERAGE = os.environ.get("STRIPE_PRICE_AI_OVERAGE", "")
 # Billing Meter event name — must match the meter created in the Stripe dashboard.
 METER_EVENT_NAME = os.environ.get("STRIPE_METER_EVENT_NAME", "assistant_tokens")
 APP_URL = os.environ.get("APP_URL", "http://localhost:5173").rstrip("/")
-
-FIRST_MODULE_CENTS = 2900
-EACH_MODULE_CENTS = 1000
 
 BILLING_ROLES = {"owner", "admin"}
 
@@ -87,19 +92,26 @@ def _require_billing_role(session: Session, bid: int, user: UserAccount) -> Memb
 
 
 def enabled_modules(session: Session, bid: int) -> list[str]:
+    """
+    Every module switched on, billable or not.
+
+    A workspace that has never touched module settings has no BusinessModule
+    rows at all, and the app treats absent-as-enabled. Billing must agree, or a
+    brand-new workspace would be quoted $0 while using everything.
+    """
     rows = session.exec(
-        select(BusinessModule).where(
-            BusinessModule.business_id == bid,
-            BusinessModule.enabled == True,  # noqa: E712
-        )
+        select(BusinessModule).where(BusinessModule.business_id == bid)
     ).all()
-    return [r.module_key for r in rows]
+    explicit = {r.module_key: r.enabled for r in rows}
+    return [key for key in ALL_MODULES if explicit.get(key, True)]
 
 
-def quote_cents(module_count: int) -> int:
-    if module_count <= 0:
-        return 0
-    return FIRST_MODULE_CENTS + (module_count - 1) * EACH_MODULE_CENTS
+def billable_modules(session: Session, bid: int) -> list[str]:
+    return billable(enabled_modules(session, bid))
+
+
+def quote_cents(billable_count: int) -> int:
+    return catalogue_quote(billable_count)
 
 
 def _extra_units(module_count: int) -> int:
@@ -132,17 +144,6 @@ def _ensure_customer(session: Session, business: Business, user: UserAccount) ->
 
 # ------------------------------------------------------------------ schemas
 
-class QuoteOut(BaseModel):
-    module_count: int
-    modules: list[str]
-    monthly_cents: int
-    monthly_display: str
-    first_module_cents: int = FIRST_MODULE_CENTS
-    each_additional_cents: int = EACH_MODULE_CENTS
-    status: str
-    current_period_end: Optional[str] = None
-
-
 class UrlOut(BaseModel):
     url: str
 
@@ -151,26 +152,69 @@ class PreviewIn(BaseModel):
     module_keys: list[str]
 
 
+# Subscription states in which the product should keep working. Stripe reports
+# `past_due` while it retries a card — cutting someone off mid-service over a
+# card that expired is how you lose a customer who wanted to pay.
+WORKING_STATES = {"active", "trialing", "past_due", "incomplete"}
+GRACE_STATES = {"past_due", "incomplete"}
+
+
+def _money(cents: int) -> str:
+    return f"${cents / 100:,.0f}"
+
+
 # ------------------------------------------------------------------ routes
 
-@router.get("/quote", response_model=QuoteOut)
+@router.get("/catalogue")
+def catalogue(
+    session: Session = Depends(get_session),
+    user: UserAccount = Depends(user_from_request),
+):
+    """
+    Every module, what it costs here, what it replaces, and whether this
+    workspace has it on. One call powers the whole billing screen.
+    """
+    bid = current_business_id()
+    on = set(enabled_modules(session, bid))
+    return {
+        "modules": [{**m, "enabled": m["key"] in on} for m in catalogue_payload()],
+        "first_module_cents": FIRST_MODULE_CENTS,
+        "each_additional_cents": EACH_MODULE_CENTS,
+    }
+
+
+@router.get("/quote")
 def get_quote(
     session: Session = Depends(get_session),
     user: UserAccount = Depends(user_from_request),
 ):
-    """What this workspace owes for the modules it currently has switched on."""
+    """What this workspace owes, and what the same set would cost elsewhere."""
     bid = current_business_id()
-    mods = enabled_modules(session, bid)
-    cents = quote_cents(len(mods))
+    on = enabled_modules(session, bid)
+    chargeable = billable(on)
+    cents = quote_cents(len(chargeable))
+    elsewhere = stitched_cents(on)
     sub = _subscription(session, bid)
-    return QuoteOut(
-        module_count=len(mods),
-        modules=mods,
-        monthly_cents=cents,
-        monthly_display=f"${cents / 100:,.0f}",
-        status=sub.status if sub else "none",
-        current_period_end=sub.current_period_end if sub else None,
-    )
+    status = sub.status if sub else "none"
+
+    return {
+        "module_count": len(chargeable),
+        "modules": chargeable,
+        "always_on": [k for k in on if k not in chargeable],
+        "monthly_cents": cents,
+        "monthly_display": _money(cents),
+        "stitched_cents": elsewhere,
+        "stitched_display": _money(elsewhere),
+        "saving_cents": max(elsewhere - cents, 0),
+        "saving_display": _money(max(elsewhere - cents, 0)),
+        "first_module_cents": FIRST_MODULE_CENTS,
+        "each_additional_cents": EACH_MODULE_CENTS,
+        "status": status,
+        "working": status in WORKING_STATES or status == "none",
+        "in_grace": status in GRACE_STATES,
+        "needs_subscription": status in ("none", "canceled", "incomplete_expired"),
+        "current_period_end": sub.current_period_end if sub else None,
+    }
 
 
 @router.post("/preview")
@@ -180,17 +224,23 @@ def preview(
     user: UserAccount = Depends(user_from_request),
 ):
     """
-    Price a hypothetical module set without changing anything — this is what
-    the in-app module picker calls as the operator toggles things on and off.
+    Price a hypothetical set without changing anything — what the module picker
+    calls as somebody toggles things on and off.
     """
-    valid = [k for k in body.module_keys if k in ALL_MODULES]
-    cents = quote_cents(len(valid))
-    current = quote_cents(len(enabled_modules(session, current_business_id())))
+    chargeable = billable(body.module_keys)
+    cents = quote_cents(len(chargeable))
+    current = quote_cents(len(billable_modules(session, current_business_id())))
+    elsewhere = stitched_cents(body.module_keys)
+
     return {
-        "module_count": len(valid),
-        "modules": valid,
+        "module_count": len(chargeable),
+        "modules": chargeable,
         "monthly_cents": cents,
-        "monthly_display": f"${cents / 100:,.0f}",
+        "monthly_display": _money(cents),
+        "stitched_cents": elsewhere,
+        "stitched_display": _money(elsewhere),
+        "saving_cents": max(elsewhere - cents, 0),
+        "saving_display": _money(max(elsewhere - cents, 0)),
         "difference_cents": cents - current,
         "unknown_keys": [k for k in body.module_keys if k not in ALL_MODULES],
     }
@@ -209,9 +259,9 @@ def checkout(
     if not business:
         raise HTTPException(404, "Workspace not found.")
 
-    mods = enabled_modules(session, bid)
+    mods = billable_modules(session, bid)
     if not mods:
-        raise HTTPException(400, "Switch on at least one module before subscribing.")
+        raise HTTPException(400, "Switch on at least one billable module before subscribing.")
 
     customer_id = _ensure_customer(session, business, user)
 
@@ -282,7 +332,7 @@ def sync(
     if not sub or not sub.stripe_subscription_id:
         return {"synced": False, "reason": "no active subscription"}
 
-    count = len(enabled_modules(session, bid))
+    count = len(billable_modules(session, bid))
     wanted = _extra_units(count)
 
     live = stripe.Subscription.retrieve(sub.stripe_subscription_id)

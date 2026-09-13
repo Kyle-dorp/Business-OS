@@ -1,0 +1,155 @@
+/* ============================================================================
+   Business-EOS — plan and modules
+   ========================================================================= */
+
+.billing-page { max-width: 1180px; margin: 0 auto; }
+
+.billing-grace { margin-bottom: 1rem; }
+.billing-grace strong { display: block; margin-bottom: 0.25rem; color: var(--rose); }
+
+.billing-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+  margin-top: 1.5rem;
+}
+@media (max-width: 900px) {
+  .billing-layout { grid-template-columns: 1fr; }
+}
+
+/* ------------------------------------------------------------ module rows */
+
+.billing-modules { display: flex; flex-direction: column; gap: 0.6rem; }
+
+.billing-module {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  text-align: left;
+  padding: 1.15rem 1.3rem;
+  border-radius: 14px;
+  background: var(--glass);
+  border: 1px solid var(--line-soft);
+  cursor: pointer;
+  font: inherit;
+  color: var(--ink-2);
+  transition: background-color 0.25s var(--ease), border-color 0.25s var(--ease),
+              box-shadow 0.3s var(--ease), transform 0.25s var(--ease);
+}
+
+.billing-module:hover:not(:disabled) {
+  background: rgba(245, 166, 91, 0.055);
+  border-color: rgba(245, 166, 91, 0.2);
+  box-shadow: 0 0 30px -14px rgba(245, 166, 91, 0.3);
+  transform: translateY(-1px);
+}
+
+.billing-module.is-on {
+  background: rgba(245, 166, 91, 0.07);
+  border-color: rgba(245, 166, 91, 0.26);
+}
+
+/* A pending change is marked so somebody can see what they are about to save
+   without comparing against memory. */
+.billing-module.is-changed { border-color: rgba(119, 216, 194, 0.45); }
+.billing-module.is-changed .bm-check { border-color: var(--mint); color: var(--mint); }
+
+.billing-module.is-fixed { cursor: default; opacity: 0.75; }
+.billing-module:disabled { cursor: default; }
+
+.bm-check {
+  flex: none;
+  width: 1.35rem; height: 1.35rem;
+  margin-top: 0.15rem;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  display: grid; place-items: center;
+  font-size: 0.78rem;
+  color: var(--void);
+  transition: all 0.25s var(--ease);
+}
+.is-on .bm-check {
+  background: var(--amber);
+  border-color: var(--amber);
+  box-shadow: 0 0 12px -1px rgba(245, 166, 91, 0.5);
+}
+.is-on.is-changed .bm-check { background: var(--mint); border-color: var(--mint); }
+
+.bm-body { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; min-width: 0; }
+
+.bm-top { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+.bm-top strong { color: var(--ink); font-size: 1rem; font-weight: 600; }
+
+.bm-price { display: inline-flex; align-items: baseline; gap: 0.5rem; white-space: nowrap; }
+.bm-price s { color: var(--rose); opacity: 0.7; font-size: 0.85rem; }
+.bm-price em {
+  font-style: normal; font-size: 0.76rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--faint);
+}
+.is-on .bm-price em { color: var(--amber); }
+
+.bm-always {
+  font-size: 0.74rem; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--faint);
+}
+
+.bm-tagline { color: var(--amber); font-size: 0.88rem; opacity: 0.85; }
+.bm-desc { color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+.bm-replaces { color: var(--faint); font-size: 0.78rem; margin-top: 0.15rem; }
+
+/* --------------------------------------------------------------- summary */
+
+.billing-summary { position: sticky; top: 6rem; }
+@media (max-width: 900px) { .billing-summary { position: static; } }
+
+.bs-card { padding: 1.6rem 1.7rem; }
+
+.bs-status {
+  display: inline-block;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.72rem; letter-spacing: 0.12em;
+  text-transform: uppercase; font-weight: 600;
+  margin-bottom: 1.3rem;
+}
+.bs-status.tone-good { color: var(--mint); background: rgba(119, 216, 194, 0.1); }
+.bs-status.tone-warn { color: var(--amber); background: rgba(245, 166, 91, 0.1); }
+.bs-status.tone-bad { color: var(--rose); background: rgba(217, 120, 141, 0.1); }
+.bs-status.tone-neutral { color: var(--faint); background: rgba(246, 240, 234, 0.05); }
+
+.bs-price { display: flex; align-items: baseline; gap: 0.4rem; }
+.bs-amount {
+  font-family: "Fraunces", serif;
+  font-size: clamp(2.4rem, 5vw, 3.2rem);
+  font-weight: 400; letter-spacing: -0.03em;
+  color: var(--amber-hot);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 30px rgba(245, 166, 91, 0.25);
+  line-height: 1;
+}
+.bs-per { color: var(--muted); font-size: 0.95rem; }
+
+.bs-breakdown { margin: 0.8rem 0 0; color: var(--muted); font-size: 0.88rem; line-height: 1.6; }
+
+.bs-compare {
+  margin-top: 1.3rem; padding-top: 1.2rem;
+  border-top: 1px solid var(--line-soft);
+  display: flex; flex-direction: column; gap: 0.55rem;
+}
+.bs-compare > div { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+.bs-compare span { color: var(--muted); font-size: 0.88rem; }
+.bs-compare s { color: var(--rose); opacity: 0.75; font-variant-numeric: tabular-nums; }
+.bs-saving strong { color: var(--mint); font-variant-numeric: tabular-nums; font-size: 1.05rem; }
+
+.bs-actions { display: flex; gap: 0.5rem; margin-top: 1.5rem; }
+.bs-actions .primary-btn { flex: 1; padding: 0.75rem 1rem; }
+.bs-actions .ghost-btn { padding: 0.75rem 1rem; }
+
+.bs-renews { margin: 1rem 0 0; color: var(--faint); font-size: 0.82rem; }
+.bs-fine {
+  margin: 1.2rem 0 0; padding-top: 1.1rem;
+  border-top: 1px solid var(--line-soft);
+  color: var(--faint); font-size: 0.8rem; line-height: 1.65;
+}

@@ -5,11 +5,13 @@ import "./App.css";
 import "./theme.css";
 import "./theme-pages.css";
 import "./theme-security.css";
+import "./theme-billing.css";
 import { api, getBusinessId, getToken, setBusinessId, setToken } from "./api";
 import AuthPage from "./pages/AuthPage";
 import AgentPage from "./pages/AgentPage";
 import PreflightPage from "./pages/PreflightPage";
 import SecurityPage from "./pages/SecurityPage";
+import BillingPage from "./pages/BillingPage";
 import AssistantPage from "./pages/AssistantPage";
 import AvailabilityPage from "./pages/AvailabilityPage";
 import EmployeeAvailabilityPage from "./pages/EmployeeAvailabilityPage";
@@ -49,6 +51,7 @@ const MANAGER_TABS = [
   { id: "ask", label: "Ask", icon: "✦" },
   { id: "assistant", label: "Scheduling AI", icon: "◇", module: "assistant" },
   { id: "notifications", label: "Notifications", icon: "●", module: "notifications" },
+  { id: "billing", label: "Plan & billing", icon: "◉" },
   { id: "security", label: "Security", icon: "⛨" },
   { id: "settings", label: "Settings", icon: "⚙" },
 ];
@@ -128,14 +131,14 @@ export default function App() {
     await loadWorkspace(); await switchBusiness(business.id);
   }
 
-  if (initializing) return <div className="boot-screen"><div className="boot-mark">O</div><div className="boot-pulse" /><p>Opening business workspace…</p></div>;
+  if (initializing) return <div className="boot-screen"><div className="boot-mark">E</div><div className="boot-pulse" /><p>Opening business workspace…</p></div>;
   if (!user) return <AuthPage needsSetup={needsSetup} onAuthenticated={authenticated} />;
   const currentLabel = tabs.find((tab) => tab.id === activeTab)?.label || "Home";
 
   return <div className="app commercial-shell">
     {drawerOpen && <button className="drawer-backdrop" aria-label="Close navigation" onClick={() => setDrawerOpen(false)} />}
     <aside className={drawerOpen ? "drawer open" : "drawer"}>
-      <div className="drawer-brand"><div className="drawer-logo">O</div><div><strong>{workspace?.business?.name || "Business-EOS"}</strong><span>Operations + accounting</span></div><button className="drawer-close" onClick={() => setDrawerOpen(false)}>×</button></div>
+      <div className="drawer-brand"><div className="drawer-logo">E</div><div><strong>{workspace?.business?.name || "Business-EOS"}</strong><span>Operations + accounting</span></div><button className="drawer-close" onClick={() => setDrawerOpen(false)}>×</button></div>
       <nav className="drawer-nav">
         <div className="workspace-switcher"><select className="workspace-select" value={workspace?.business?.id || ""} onChange={(e) => switchBusiness(e.target.value)}>{businesses.map((x) => <option key={x.business.id} value={x.business.id}>{x.business.name}</option>)}</select>{user.role === "manager" && <button title="Create another business" onClick={createBusiness}>+</button>}</div>
         <span className="drawer-section-label">WORKSPACE</span>
@@ -154,6 +157,7 @@ export default function App() {
           {activeTab === "preflight" && <PreflightPage />}
           {activeTab === "ask" && <AgentPage />}
           {activeTab === "security" && <SecurityPage />}
+          {activeTab === "billing" && <BillingPage onModulesChanged={refreshWorkspace} />}
           {activeTab === "assistant" && <AssistantPage />}{activeTab === "notifications" && <NotificationsPage onCountChange={setNotificationCount} />}
           {activeTab === "settings" && <SettingsPage user={user} workspaceRole={workspace?.role} modules={workspace?.modules || []} onModulesChanged={refreshWorkspace} onUserChange={setUser} onLogout={logout} />}
         </> : <>{activeTab === "home" && <EmployeeHomePage />}{activeTab === "my-availability" && <EmployeeAvailabilityPage />}{activeTab === "requests" && <RequestsPage />}{activeTab === "settings" && <SettingsPage user={user} onUserChange={setUser} onLogout={logout} />}</>}

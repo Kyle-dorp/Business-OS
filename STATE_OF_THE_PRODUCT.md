@@ -1,6 +1,6 @@
 # State of the product
 
-*Audited 14 September 2026 against commit `ecf9902`. Every figure below was
+*Audited 14 September 2026 against commit `b134a5c`. Every figure below was
 measured or probed, not recalled.*
 
 ---
@@ -9,10 +9,10 @@ measured or probed, not recalled.*
 
 | | |
 |---|---|
-| Backend | 12,901 lines across 26 modules |
+| Backend | ~12,000 lines across 24 modules |
 | Frontend | 5,693 lines |
 | Styling | 3,183 lines |
-| **Tests** | **20 files · 271 functions · 398 passing** |
+| **Tests** | **21 files · 278 functions · 405 passing** |
 | CI | Full suite + reversed order + frontend build, on every push |
 | Migrations | 4 |
 
@@ -24,7 +24,7 @@ now a CI step rather than something I remember to do.
 
 ## 1. The bugs found by testing
 
-This is the part worth reading. **Eleven production bugs surfaced**, and none of
+This is the part worth reading. **Eleven production bugs surfaced**, plus an entire parallel API that had never been run, and none of
 them were found by looking at the code — every one came from running something.
 
 ### Every signup produced an unusable workspace
@@ -122,6 +122,28 @@ created; the response just said nothing about it, so nothing could select or
 display the thing it had just made. One route, found by probing all of them
 rather than trusting a scan that flagged five.
 
+### And a 580-line API nothing had ever called
+`routers.py` mounted 32 routes — inventory, customers, invoicing, payroll, team
+comms, analytics, bookings. Calling each one exactly once:
+
+- **three returned 500 on every call**, written against field names the models
+  do not have (`item.quantity` where the column is `quantity_milli`)
+- **one returned 200 and silently discarded five of the seven fields it was
+  given**, so every item was created with zero stock, zero cost, zero price
+- one returned `{}`
+
+And the frontend referenced none of it. Every screen goes through `/platform/*`,
+`/ops/*` and `/booking-admin/*`; these duplicated `/platform/invoices`,
+`/platform/contacts`, `/platform/inventory` and `/platform/finance/payroll` —
+except without posting anything to the ledger. Worse, the broken inventory route
+wrote junk rows into the same `InventoryItem` table the working Stock
+Intelligence page reads.
+
+Deleted, along with the 351-line `modules/` package it was the only importer of.
+**931 lines removed.** `tests/test_api_surface.py` now pins the shape so a
+parallel surface cannot come back quietly — and that guard was itself verified
+by mounting a rogue `/inventory` router and watching it fail.
+
 **Seven of these eleven were invisible with one tenant, one user, one
 workspace, or one customer who never cancelled.** They were all waiting for the
 second customer.
@@ -141,6 +163,7 @@ Not "written" — **exercised against real code and real data.**
 | **OAuth** | Audience check · issuer check · unverified email refused · empty `aud` cannot match an unset client id |
 | **Compliance** | Eleven jurisdictions · every premium pinned · a bad week in NYC surfaces $145 before publishing |
 | **Billing** | Ladder checked 0→10 modules · every multi-module stack cheaper than buying separately |
+| **The API surface** | No route under a deleted prefix · every route belongs to a declared surface · no shadowed method+path · one invoicing and one payroll implementation · the public booker and operator diary survived |
 | **Payroll** | Cost, cash and liability kept separate · entry balances · ledger agrees with both the payroll record and the cashflow report · remitting does not expense twice · negative and impossible runs refused · cross-tenant payment account refused |
 | **The assistant** | Budget shared with the agent · hard ceiling enforced through the real route · a workspace cannot spend its neighbour's allowance · both surfaces on one model |
 | **The webhook** | Cancellation actually revokes · retries idempotent · a failed payment does *not* cut anyone off · dunning giving up does · resubscribing restores · tenant boundary held · renewal date read from both API shapes |
@@ -155,7 +178,6 @@ Honest list. These have **no test referencing them at all**:
 
 | Module | Risk |
 |---|---|
-| `routers.py` | The module CRUD routers — inventory, customers, invoicing, payroll, team, analytics. Mostly thin, but large. |
 | `admin_routes.py` | Platform-admin surface. Small, but it crosses tenant boundaries by design, which is exactly where a mistake is worst. |
 
 
@@ -201,8 +223,9 @@ Everything else built now has a screen.
 2. **A real Stripe test payment** — follow `STRIPE_TEST_RUNBOOK.md`. The
    handler side is fixed and covered; what remains is a card through Checkout
    in a browser, which needs a Stripe dashboard and twenty minutes.
-3. **Cover `routers.py`** — the module CRUD for inventory, customers,
-   invoicing and payroll UI. Now the largest untested surface.
+3. **Cover `admin_routes.py`** — small, but it crosses tenant boundaries by
+   design, which is exactly where a mistake is worst. The last untested
+   module.
 4. **A support ticket inbox.** Escalations reach your email; there is nowhere
    to work through them.
 5. **Give the agent scheduling tools.** `ai_service.py` is not dead code — it

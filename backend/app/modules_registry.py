@@ -143,6 +143,19 @@ CATALOGUE: List[Module] = [
         replaces="HubSpot Starter, Zoho CRM",
     ),
     Module(
+        key="booking",
+        name="Bookings",
+        tagline="A page that takes appointments",
+        description=(
+            "A public booking page on your own domain, with real slot generation "
+            "from your opening hours, deposits, and no-show history attached to "
+            "every customer."
+        ),
+        icon="◑",
+        market_price=49,
+        replaces="Acuity, Square Appointments, Calendly",
+    ),
+    Module(
         key="tasks",
         name="Tasks",
         tagline="The things that fall through",

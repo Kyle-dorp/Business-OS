@@ -57,7 +57,7 @@ const MANAGER_TABS = [
   { id: "manager", label: "Scheduling", icon: "▦", module: "scheduling" },
   { id: "preflight", label: "Preflight", icon: "◈", module: "scheduling" },
   { id: "compliance", label: "Labor rules", icon: "⚖", module: "scheduling" },
-  { id: "bookings", label: "Bookings", icon: "◑", module: "team" },
+  { id: "bookings", label: "Bookings", icon: "◑", module: "booking" },
   { id: "ask", label: "Ask", icon: "✦" },
   { id: "assistant", label: "Scheduling AI", icon: "◇", module: "assistant" },
   { id: "notifications", label: "Notifications", icon: "●", module: "notifications" },

@@ -53,14 +53,31 @@ def _live_business(session: Session, business_id: int) -> Business:
     if not business or not business.active:
         raise HTTPException(404, "This booking page isn't available.")
 
+    # Absent means enabled, matching how the rest of the app reads module state.
+    # A workspace that has never opened module settings has no rows at all, and
+    # treating that as "off" here while billing treats it as "on" is exactly the
+    # kind of split that hides bugs.
     module = session.exec(
         select(BusinessModule).where(
             BusinessModule.business_id == business_id,
             BusinessModule.module_key == "booking",
         )
     ).first()
-    if not module or not module.enabled:
+    if module and not module.enabled:
         raise HTTPException(404, "This business isn't taking online bookings.")
+
+    # The module being on is not the same as a booking page existing. Without a
+    # published service there is nothing to book, and a live page showing an
+    # empty list looks broken rather than unconfigured.
+    has_service = session.exec(
+        select(Service).where(
+            Service.business_id == business_id,
+            Service.active == True,  # noqa: E712
+        )
+    ).first()
+    if not has_service:
+        raise HTTPException(404, "This business isn't taking online bookings yet.")
+
     return business
 
 

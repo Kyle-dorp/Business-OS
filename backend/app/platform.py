@@ -22,6 +22,7 @@ router = APIRouter(prefix="/platform", tags=["business platform"])
 MODULES = [
     "home", "team", "scheduling", "accounting", "sales", "purchasing",
     "tasks", "inventory", "reports", "assistant", "notifications", "settings",
+    "booking",
 ]
 WRITE_ROLES = {"owner", "admin", "manager", "accountant"}
 ADMIN_ROLES = {"owner", "admin"}

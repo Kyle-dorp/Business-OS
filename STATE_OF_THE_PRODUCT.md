@@ -1,6 +1,6 @@
 # State of the product
 
-*Audited 14 September 2026 against commit `b134a5c`. Every figure below was
+*Audited 14 September 2026 against commit `0443ce9`. Every figure below was
 measured or probed, not recalled.*
 
 ---
@@ -12,7 +12,7 @@ measured or probed, not recalled.*
 | Backend | ~12,000 lines across 24 modules |
 | Frontend | 5,693 lines |
 | Styling | 3,183 lines |
-| **Tests** | **21 files · 278 functions · 405 passing** |
+| **Tests** | **22 files · 299 functions · 430 passing** |
 | CI | Full suite + reversed order + frontend build, on every push |
 | Migrations | 4 |
 
@@ -24,7 +24,7 @@ now a CI step rather than something I remember to do.
 
 ## 1. The bugs found by testing
 
-This is the part worth reading. **Eleven production bugs surfaced**, plus an entire parallel API that had never been run, and none of
+This is the part worth reading. **Twelve production bugs surfaced**, plus an entire parallel API that had never been run and an unauthenticated database wipe, and none of
 them were found by looking at the code — every one came from running something.
 
 ### Every signup produced an unusable workspace
@@ -122,6 +122,34 @@ created; the response just said nothing about it, so nothing could select or
 display the thing it had just made. One route, found by probing all of them
 rather than trusting a scan that flagged five.
 
+### An unauthenticated endpoint that wiped the database
+Found by asking the only question that matters about the admin panel: who can
+become `is_admin`. There was exactly one way.
+
+`POST /auth/seed-businesses` was in `PUBLIC_PATHS` — no authentication at all —
+guarded only by the header `X-Seed-Key: seed-three-businesses-now`, **a literal
+string committed to a repository that is public**. It deleted every
+`UserAccount` and every `Business` in the database, then created an account
+named `admin` with the hardcoded password `Admin123!` and `is_admin=True`.
+
+One request, from anybody who had read the repo, to destroy every workspace and
+sign in as the platform operator who can see every customer's name, plan and
+spend.
+
+It was confirmed live on the deployed API before removal — probed *without* the
+key, so the handler refused on its own key check before touching the database:
+
+```
+POST /auth/seed-businesses -> 403   reached the handler, unauthenticated
+GET  /health               -> 200   the deployment is up
+GET  /admin/customers      -> 401   that boundary was fine
+```
+
+Deleted, and the fix verified live in production afterwards (the same request
+now returns 401). Creating a platform admin moved to `scripts/grant_admin.py`,
+which runs against the database rather than over HTTP, and refuses to revoke
+the last remaining admin.
+
 ### And a 580-line API nothing had ever called
 `routers.py` mounted 32 routes — inventory, customers, invoicing, payroll, team
 comms, analytics, bookings. Calling each one exactly once:
@@ -163,6 +191,7 @@ Not "written" — **exercised against real code and real data.**
 | **OAuth** | Audience check · issuer check · unverified email refused · empty `aud` cannot match an unset client id |
 | **Compliance** | Eleven jurisdictions · every premium pinned · a bad week in NYC surfaces $145 before publishing |
 | **Billing** | Ladder checked 0→10 modules · every multi-module stack cheaper than buying separately |
+| **The admin panel** | Only `is_admin` gets in, and the refusal names the admin check · signed-out is 401 · a tenant cannot discount themselves · the panel does span every workspace, which is the feature · profit shows a loss when there is one · an orphaned workspace does not break the list · no public route deletes · no request body accepts `is_admin` |
 | **The API surface** | No route under a deleted prefix · every route belongs to a declared surface · no shadowed method+path · one invoicing and one payroll implementation · the public booker and operator diary survived |
 | **Payroll** | Cost, cash and liability kept separate · entry balances · ledger agrees with both the payroll record and the cashflow report · remitting does not expense twice · negative and impossible runs refused · cross-tenant payment account refused |
 | **The assistant** | Budget shared with the agent · hard ceiling enforced through the real route · a workspace cannot spend its neighbour's allowance · both surfaces on one model |
@@ -178,7 +207,7 @@ Honest list. These have **no test referencing them at all**:
 
 | Module | Risk |
 |---|---|
-| `admin_routes.py` | Platform-admin surface. Small, but it crosses tenant boundaries by design, which is exactly where a mistake is worst. |
+| `preflight.py` | **Highest, and larger than this table previously admitted — 934 lines.** The four-question pre-publish check is the product's clearest differentiator, and nothing exercises it. Earlier audits listed it as built rather than as untested; that was wrong. |
 
 
 ---
@@ -223,9 +252,8 @@ Everything else built now has a screen.
 2. **A real Stripe test payment** — follow `STRIPE_TEST_RUNBOOK.md`. The
    handler side is fixed and covered; what remains is a card through Checkout
    in a browser, which needs a Stripe dashboard and twenty minutes.
-3. **Cover `admin_routes.py`** — small, but it crosses tenant boundaries by
-   design, which is exactly where a mistake is worst. The last untested
-   module.
+3. **Cover `preflight.py`** — 934 lines, the product's clearest
+   differentiator, and entirely unexercised. The last real gap.
 4. **A support ticket inbox.** Escalations reach your email; there is nowhere
    to work through them.
 5. **Give the agent scheduling tools.** `ai_service.py` is not dead code — it

@@ -1,6 +1,6 @@
 # State of the product
 
-*Audited 14 September 2026 against commit `b6c4b1c`. Every figure below was
+*Audited 14 September 2026 against commit `fc3b2f9`. Every figure below was
 measured or probed, not recalled.*
 
 ---
@@ -12,7 +12,7 @@ measured or probed, not recalled.*
 | Backend | 12,901 lines across 26 modules |
 | Frontend | 5,693 lines |
 | Styling | 3,183 lines |
-| **Tests** | **3,738 lines · 17 files · 203 functions · 330 passing** |
+| **Tests** | **18 files · 223 functions · 350 passing** |
 | CI | Full suite + reversed order + frontend build, on every push |
 | Migrations | 4 |
 
@@ -24,7 +24,7 @@ now a CI step rather than something I remember to do.
 
 ## 1. The bugs found by testing
 
-This is the part worth reading. **Eight production bugs surfaced**, and none of
+This is the part worth reading. **Nine production bugs surfaced**, and none of
 them were found by looking at the code — every one came from running something.
 
 ### Every signup produced an unusable workspace
@@ -76,8 +76,27 @@ instead of `"09:00"` failed generation entirely. It also read `"25:00"` as 1500
 minutes, which is worse: nothing failed, and the solver produced a rota that
 was quietly wrong.
 
-**Five of these eight were invisible with one tenant, one user, or one
-workspace.** They were all waiting for the second customer.
+### A cancelled customer kept every module
+Found while setting up the Stripe test charge, which meant running the webhook
+for the first time. It granted and revoked a module key named `"scheduler"`.
+There is no such module — the registry calls it `"scheduling"` — so the row it
+wrote matched nothing on the way in and nothing on the way out. Probed against
+a real seeded workspace:
+
+| | enabled modules | worth |
+|---|---|---|
+| after `subscription.created` | 13 | $119/mo |
+| after `subscription.deleted` | **13** | **$119/mo** |
+
+**A customer cancelled and kept everything, indefinitely.** The paying
+direction was equally inert; nobody noticed because a fresh workspace has every
+module switched on already, so a payment appeared to work. The same run turned
+up duplicate subscription rows on Stripe retries, and a renewal date read from
+a field newer API versions moved — yielding 1970.
+
+**Six of these nine were invisible with one tenant, one user, one workspace, or
+one customer who never cancelled.** They were all waiting for the second
+customer.
 
 ---
 
@@ -94,6 +113,7 @@ Not "written" — **exercised against real code and real data.**
 | **OAuth** | Audience check · issuer check · unverified email refused · empty `aud` cannot match an unset client id |
 | **Compliance** | Eleven jurisdictions · every premium pinned · a bad week in NYC surfaces $145 before publishing |
 | **Billing** | Ladder checked 0→10 modules · every multi-module stack cheaper than buying separately |
+| **The webhook** | Cancellation actually revokes · retries idempotent · a failed payment does *not* cut anyone off · dunning giving up does · resubscribing restores · tenant boundary held · renewal date read from both API shapes |
 | **Email** | Never raises into the caller · HTML escaped against four injection shapes · duplicates blocked by reference |
 | **Security** | Login throttling · reset codes (1.1 trillion keyspace, ~3.9M years against the throttle) · auth boundary pinned including near-misses |
 
@@ -106,7 +126,6 @@ Honest list. These have **no test referencing them at all**:
 | Module | Risk |
 |---|---|
 | `finance.py` | **Highest.** Budgets, cashflow and payroll routes. The accounting *core* in `platform.py` is well covered, but these seven endpoints are not — and payroll touches money. |
-| `stripe_service.py` | Webhook handlers. Hard to test without Stripe fixtures; a bug means a subscription state that silently diverges from what Stripe believes. |
 | `routers.py` | The module CRUD routers — inventory, customers, invoicing, payroll, team, analytics. Mostly thin, but large. |
 | `admin_routes.py` | Platform-admin surface. Small, but it crosses tenant boundaries by design, which is exactly where a mistake is worst. |
 | `ai_service.py` | The older scheduling assistant, largely superseded by `ai_agent.py`. Possibly worth deleting rather than testing. |
@@ -128,8 +147,10 @@ Everything else built now has a screen.
 
 ## 5. Genuinely missing
 
-- **No test of a real Stripe payment.** Nothing has charged a card. The flow is
-  built and unexercised end to end.
+- **No card has been charged yet.** The handlers are now covered by 20 tests
+  and the broken one is fixed, but nothing has been through Stripe Checkout in
+  a browser. `STRIPE_TEST_RUNBOOK.md` walks it; it needs a human with a
+  dashboard.
 - **No onboarding.** A new workspace lands on an empty dashboard with no
   guidance. It now at least has a working chart of accounts.
 - **No frontend tests.** The build is type-checked on every push, but nothing
@@ -148,9 +169,9 @@ Everything else built now has a screen.
    files reversed, and type-checks and builds the frontend. Both were verified
    green locally before being committed. Everything in section 1 was found by
    running tests that already existed; now a push runs them.
-2. **A real Stripe test payment**, in test mode, end to end — checkout through
-   webhook to an active subscription. It is the one revenue path never
-   exercised.
+2. **A real Stripe test payment** — follow `STRIPE_TEST_RUNBOOK.md`. The
+   handler side is fixed and covered; what remains is a card through Checkout
+   in a browser, which needs a Stripe dashboard and twenty minutes.
 3. **Cover `finance.py`**, especially payroll.
 4. **A support ticket inbox.** Escalations reach your email; there is nowhere
    to work through them.

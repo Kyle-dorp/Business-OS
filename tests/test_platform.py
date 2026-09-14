@@ -1,20 +1,82 @@
-import os
-from pathlib import Path
+"""
+End-to-end accounting across two businesses.
 
-os.environ["DATABASE_URL"] = "sqlite:///./test_business_eos.db"
-Path("test_business_eos.db").unlink(missing_ok=True)
+Database isolation is handled by conftest.py. This file used to set
+DATABASE_URL itself, which only worked when it ran alone: database.py binds its
+engine the first time it is imported, so by the time this module is collected
+in a full suite the setting has no effect. It looked like isolation and was
+not, which is why these tests passed individually and failed together.
 
-from fastapi.testclient import TestClient  # noqa: E402
-from backend.app.main import app  # noqa: E402
+It also assumed it owned the first user. Another module creating an account
+first turned that into a 409 and the whole file went red for a reason that had
+nothing to do with accounting.
+"""
+
+from fastapi.testclient import TestClient
+from backend.app.main import app
+
+OWNER = {"username": "owner", "password": "correct-horse"}
+
+
+def _sign_in(client):
+    """
+    Sign in as the owner, creating the account whichever way is available.
+
+    /auth/setup only works once per database. When another module has already
+    used it, the account is created directly — the point of this file is the
+    accounting flow, not the registration path, and racing for first-run makes
+    the result depend on collection order.
+    """
+    setup = client.post("/auth/setup", json=OWNER)
+    assert setup.status_code in (200, 409), setup.text
+
+    if setup.status_code == 409:
+        from sqlmodel import Session, select
+
+        from backend.app.auth import hash_password
+        from backend.app.database import engine
+        from backend.app.models import UserAccount
+
+        from backend.app.models import Business
+        from backend.app.platform import seed_business
+        from backend.app.tenancy import set_current_business_id
+
+        with Session(engine) as session:
+            existing = session.exec(
+                select(UserAccount).where(UserAccount.username == OWNER["username"])
+            ).first()
+            if not existing:
+                user = UserAccount(
+                    username=OWNER["username"],
+                    password_hash=hash_password(OWNER["password"]),
+                    role="manager",
+                    active=True,
+                )
+                session.add(user)
+                session.flush()
+
+                # A user with no membership is rejected by the auth middleware
+                # before any route runs, so the workspace has to exist too —
+                # the same thing /auth/setup does.
+                business = Business(name="My Business", industry="general", active=True)
+                session.add(business)
+                session.flush()
+
+                set_current_business_id(business.id)
+                try:
+                    seed_business(session, business, user, role="owner")
+                    session.commit()
+                finally:
+                    set_current_business_id(1)
+
+    login = client.post("/auth/login", json=OWNER)
+    assert login.status_code == 200, login.text
+    return {"Authorization": f"Bearer {login.json()['token']}"}
 
 
 def test_complete_multi_business_accounting_flow():
     with TestClient(app) as client:
-        assert client.post("/auth/setup", json={"username": "owner", "password": "correct-horse"}).status_code == 200
-        login = client.post("/auth/login", json={"username": "owner", "password": "correct-horse"})
-        assert login.status_code == 200
-        token = login.json()["token"]
-        auth = {"Authorization": f"Bearer {token}"}
+        auth = _sign_in(client)
 
         bootstrap = client.post("/platform/bootstrap", headers=auth)
         assert bootstrap.status_code == 200
@@ -69,8 +131,7 @@ def test_complete_multi_business_accounting_flow():
 
 def test_rejects_cross_tenant_contact_reference():
     with TestClient(app) as client:
-        login = client.post("/auth/login", json={"username": "owner", "password": "correct-horse"}).json()
-        auth = {"Authorization": f"Bearer {login['token']}"}
+        auth = _sign_in(client)
         businesses = client.get("/platform/businesses", headers=auth).json()
         first, second = businesses[0]["business"]["id"], businesses[1]["business"]["id"]
         first_headers = {**auth, "X-Business-Id": str(first)}

@@ -410,12 +410,34 @@ PUBLIC_PREFIXES = (
 @app.middleware("http")
 async def authentication_middleware(request: Request, call_next):
     path = request.url.path
+
+    # Public booking carries its business in the URL rather than a header, and
+    # still needs the tenant context set: Service, Booking and
+    # BookingAvailability are all tenant-scoped, so every query they make is
+    # filtered by current_business_id(). Left at its default of 1, the booking
+    # page worked for the first business ever created and 404d for every other
+    # one — a bug invisible with a single tenant.
+    public_business_id = None
+    if path.startswith("/public/book/"):
+        remainder = path[len("/public/book/"):].split("/", 1)[0]
+        if remainder.isdigit():
+            public_business_id = int(remainder)
+
     if (
         request.method == "OPTIONS"
         or path in PUBLIC_PATHS
         or path.startswith(PUBLIC_PREFIXES)
     ):
-        return await call_next(request)
+        if public_business_id is None:
+            return await call_next(request)
+        token = set_current_business_id(public_business_id)
+        try:
+            return await call_next(request)
+        finally:
+            # Always reset. The context var is process-wide, and leaking it
+            # would scope the next request on this worker to a stranger's
+            # business.
+            reset_current_business_id(token)
 
     authorization = request.headers.get("Authorization", "")
     if not authorization.startswith("Bearer "):

@@ -34,6 +34,11 @@ DEFAULT_ACCOUNTS = [
     ("1500", "Equipment", "asset", "fixed_asset"),
     ("2000", "Accounts Payable", "liability", "accounts_payable"),
     ("2100", "Credit Card", "liability", "credit_card"),
+    # Tax withheld from employees and employer payroll taxes, both owed to
+    # the authority rather than paid out on payday. Without this account a
+    # payroll run has nowhere to put the money it is holding, and the only
+    # place left is cash — which then shows the business poorer than it is.
+    ("2200", "Payroll Liabilities", "liability", "payroll_liabilities"),
     ("3000", "Owner Equity", "equity", "owner_equity"),
     ("3100", "Retained Earnings", "equity", "retained_earnings"),
     ("4000", "Sales Revenue", "income", "sales"),

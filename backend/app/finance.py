@@ -311,6 +311,11 @@ def create_account(
     session.refresh(account)
     audit(session, business_id, user.id, "account.create", "ledger_account", account.id)
     session.commit()
+    # The audit commit expires every attribute on `account`, and FastAPI
+    # serialises the return value after this request's session has closed — so
+    # without this refresh the caller gets `{}` with a 200. The account really
+    # is created; the response just says nothing about it.
+    session.refresh(account)
     return account
 
 
@@ -348,23 +353,50 @@ def create_payroll_run(
     context=Depends(require_write),
     session: Session = Depends(get_session),
 ):
+    """
+    Record a payroll run and post it to the ledger.
+
+    The arithmetic here is the part worth reading, because it was wrong and it
+    was wrong in a way that does not announce itself. Three different numbers
+    come out of one payroll run and they are not interchangeable:
+
+        cost to the business   gross + employer taxes
+        cash leaving today     gross - employee deductions   (net pay)
+        owed to the authority  employee deductions + employer taxes
+
+    The entry used to be DR payroll expense / CR cash, both for the full cost.
+    That credits cash for money the business still has — the tax it withheld
+    and its own payroll taxes do not leave on payday, they leave when they are
+    remitted. On a $10,000 run with $800 employer taxes and $2,000 withheld it
+    showed $10,800 leaving the bank when $8,000 did, recorded nothing as owed,
+    and then counted the same $2,800 a second time when it was actually paid.
+
+    It also left the ledger disagreeing with this module's own cashflow report,
+    which reads net pay from the PayrollRun row. One payroll run, two answers.
+    """
     business_id, _, user = context
 
-    # Find payroll expense account (subtype payroll or code 6000)
-    payroll_acct = session.exec(
-        select(LedgerAccount).where(
-            LedgerAccount.business_id == business_id,
-            LedgerAccount.subtype == "payroll",
-        )
-    ).first() or session.exec(
-        select(LedgerAccount).where(
-            LedgerAccount.business_id == business_id,
-            LedgerAccount.code == "6000",
-        )
-    ).first()
+    gross_cents = cents(payload.gross_wages)
+    tax_cents = cents(payload.employer_taxes)
+    deduction_cents = cents(payload.deductions)
 
-    if not payroll_acct:
-        raise HTTPException(400, "No payroll expense account found (code 6000 or subtype 'payroll')")
+    # A negative here is a typo, not an instruction. Posted, it would reverse
+    # the entry and quietly credit payroll expense.
+    if gross_cents < 0 or tax_cents < 0 or deduction_cents < 0:
+        raise HTTPException(400, "Payroll amounts cannot be negative")
+    if gross_cents == 0:
+        raise HTTPException(400, "A payroll run needs gross wages")
+    if deduction_cents > gross_cents:
+        raise HTTPException(
+            400,
+            "Deductions cannot exceed gross wages — that would mean paying "
+            "employees a negative amount.",
+        )
+    if payload.period_end < payload.period_start:
+        raise HTTPException(400, "The pay period ends before it starts")
+
+    payroll_acct = _payroll_expense_account(session, business_id)
+    liability_acct = _payroll_liability_account(session, business_id)
 
     payment_acct = session.exec(
         select(LedgerAccount).where(
@@ -375,23 +407,30 @@ def create_payroll_run(
     if not payment_acct:
         raise HTTPException(404, "Payment account not found")
 
-    gross_cents = cents(payload.gross_wages)
-    tax_cents = cents(payload.employer_taxes)
-    deduction_cents = cents(payload.deductions)
     net_pay_cents = gross_cents - deduction_cents
     total_cost = gross_cents + tax_cents
+    withheld_cents = deduction_cents + tax_cents
 
-    # DR Payroll Expense / CR Cash — must balance
-    post_entry(
-        session, business_id, user.id,
-        payload.period_end,
-        f"Payroll {payload.period_start}–{payload.period_end}" + (f": {payload.notes}" if payload.notes else ""),
-        "payroll", None,
-        [
-            {"account_id": payroll_acct.id, "description": "Gross wages + employer taxes", "debit_cents": total_cost, "credit_cents": 0},
-            {"account_id": payment_acct.id, "description": "Net pay disbursed", "debit_cents": 0, "credit_cents": total_cost},
-        ],
-    )
+    lines = [
+        {"account_id": payroll_acct.id, "description": "Gross wages + employer taxes",
+         "debit_cents": total_cost, "credit_cents": 0},
+        {"account_id": payment_acct.id, "description": "Net pay disbursed",
+         "debit_cents": 0, "credit_cents": net_pay_cents},
+    ]
+    # Omitted entirely when nothing is withheld, rather than posting a zero
+    # line that clutters every journal for a business with no deductions.
+    if withheld_cents:
+        lines.append({
+            "account_id": liability_acct.id,
+            "description": "Withholding and employer taxes payable",
+            "debit_cents": 0, "credit_cents": withheld_cents,
+        })
+
+    memo = f"Payroll {payload.period_start}-{payload.period_end}"
+    if payload.notes:
+        memo += f": {payload.notes}"
+
+    post_entry(session, business_id, user.id, payload.period_end, memo, "payroll", None, lines)
 
     run = PayrollRun(
         business_id=business_id,
@@ -409,3 +448,70 @@ def create_payroll_run(
     session.commit()
     session.refresh(run)
     return run
+
+
+def _payroll_expense_account(session: Session, business_id: int) -> LedgerAccount:
+    account = session.exec(
+        select(LedgerAccount).where(
+            LedgerAccount.business_id == business_id,
+            LedgerAccount.subtype == "payroll",
+        )
+    ).first() or session.exec(
+        select(LedgerAccount).where(
+            LedgerAccount.business_id == business_id,
+            LedgerAccount.code == "6000",
+        )
+    ).first()
+    if not account:
+        raise HTTPException(
+            400, "No payroll expense account found (code 6000 or subtype 'payroll')"
+        )
+    return account
+
+
+def _payroll_liability_account(session: Session, business_id: int) -> LedgerAccount:
+    """
+    Get or create it.
+
+    Workspaces seeded before this account existed have no 2200, and refusing to
+    run their payroll until somebody reads a migration note is not a reasonable
+    thing to do to a business on payday. Creating it is safe: it starts at zero
+    and only this path posts to it.
+    """
+    account = session.exec(
+        select(LedgerAccount).where(
+            LedgerAccount.business_id == business_id,
+            LedgerAccount.subtype == "payroll_liabilities",
+        )
+    ).first()
+    if account:
+        return account
+
+    code = "2200"
+    if session.exec(
+        select(LedgerAccount).where(
+            LedgerAccount.business_id == business_id, LedgerAccount.code == code
+        )
+    ).first():
+        # Somebody already used 2200 for something of their own. Take the next
+        # free code rather than colliding or hijacking their account.
+        taken = {
+            a.code for a in session.exec(
+                select(LedgerAccount).where(LedgerAccount.business_id == business_id)
+            ).all()
+        }
+        code = next(c for c in (str(n) for n in range(2201, 2300)) if c not in taken)
+
+    account = LedgerAccount(
+        business_id=business_id,
+        code=code,
+        name="Payroll Liabilities",
+        account_type="liability",
+        subtype="payroll_liabilities",
+        active=True,
+        system=True,
+    )
+    session.add(account)
+    session.commit()
+    session.refresh(account)
+    return account

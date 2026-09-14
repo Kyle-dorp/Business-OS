@@ -1,6 +1,6 @@
 # State of the product
 
-*Audited 14 September 2026 against commit `264d6ce`. Every figure below was
+*Audited 14 September 2026 against commit `ecf9902`. Every figure below was
 measured or probed, not recalled.*
 
 ---
@@ -12,7 +12,7 @@ measured or probed, not recalled.*
 | Backend | 12,901 lines across 26 modules |
 | Frontend | 5,693 lines |
 | Styling | 3,183 lines |
-| **Tests** | **19 files · 236 functions · 363 passing** |
+| **Tests** | **20 files · 271 functions · 398 passing** |
 | CI | Full suite + reversed order + frontend build, on every push |
 | Migrations | 4 |
 
@@ -24,7 +24,7 @@ now a CI step rather than something I remember to do.
 
 ## 1. The bugs found by testing
 
-This is the part worth reading. **Nine production bugs surfaced**, and none of
+This is the part worth reading. **Eleven production bugs surfaced**, and none of
 them were found by looking at the code — every one came from running something.
 
 ### Every signup produced an unusable workspace
@@ -94,9 +94,37 @@ module switched on already, so a payment appeared to work. The same run turned
 up duplicate subscription rows on Stripe retries, and a renewal date read from
 a field newer API versions moved — yielding 1970.
 
-**Six of these nine were invisible with one tenant, one user, one workspace, or
-one customer who never cancelled.** They were all waiting for the second
-customer.
+### Payroll booked withheld tax as cash out of the bank
+One payroll run produces three numbers that are not interchangeable: what it
+costs the business (gross + employer taxes), what actually leaves the bank
+today (net pay), and what is owed to the tax authority (withholding + employer
+taxes). The entry was `DR payroll expense / CR cash`, both for the full cost.
+
+On a $10,000 run with $800 employer taxes and $2,000 withheld:
+
+| | the books said | the truth |
+|---|---|---|
+| cash out of the bank | $10,800 | **$8,000** |
+| owed to the authority | **nothing** | $2,800 |
+
+So the business looked $2,800 poorer than it was, exactly when an operator is
+deciding whether they can afford something — and when that $2,800 was later
+remitted it was expensed a second time. The ledger also disagreed with this
+module's own cashflow report, which reads net pay from the payroll record. One
+payroll run, two answers. Fixed with a three-line entry and a new
+`Payroll Liabilities` account, created on demand for workspaces seeded before
+it existed.
+
+### Creating a ledger account returned `{}`
+200, empty body. The audit commit expired every attribute and FastAPI
+serialised the object after the request's session had closed. The account was
+created; the response just said nothing about it, so nothing could select or
+display the thing it had just made. One route, found by probing all of them
+rather than trusting a scan that flagged five.
+
+**Seven of these eleven were invisible with one tenant, one user, one
+workspace, or one customer who never cancelled.** They were all waiting for the
+second customer.
 
 ---
 
@@ -113,6 +141,7 @@ Not "written" — **exercised against real code and real data.**
 | **OAuth** | Audience check · issuer check · unverified email refused · empty `aud` cannot match an unset client id |
 | **Compliance** | Eleven jurisdictions · every premium pinned · a bad week in NYC surfaces $145 before publishing |
 | **Billing** | Ladder checked 0→10 modules · every multi-module stack cheaper than buying separately |
+| **Payroll** | Cost, cash and liability kept separate · entry balances · ledger agrees with both the payroll record and the cashflow report · remitting does not expense twice · negative and impossible runs refused · cross-tenant payment account refused |
 | **The assistant** | Budget shared with the agent · hard ceiling enforced through the real route · a workspace cannot spend its neighbour's allowance · both surfaces on one model |
 | **The webhook** | Cancellation actually revokes · retries idempotent · a failed payment does *not* cut anyone off · dunning giving up does · resubscribing restores · tenant boundary held · renewal date read from both API shapes |
 | **Email** | Never raises into the caller · HTML escaped against four injection shapes · duplicates blocked by reference |
@@ -126,7 +155,6 @@ Honest list. These have **no test referencing them at all**:
 
 | Module | Risk |
 |---|---|
-| `finance.py` | **Highest.** Budgets, cashflow and payroll routes. The accounting *core* in `platform.py` is well covered, but these seven endpoints are not — and payroll touches money. |
 | `routers.py` | The module CRUD routers — inventory, customers, invoicing, payroll, team, analytics. Mostly thin, but large. |
 | `admin_routes.py` | Platform-admin surface. Small, but it crosses tenant boundaries by design, which is exactly where a mistake is worst. |
 
@@ -173,7 +201,8 @@ Everything else built now has a screen.
 2. **A real Stripe test payment** — follow `STRIPE_TEST_RUNBOOK.md`. The
    handler side is fixed and covered; what remains is a card through Checkout
    in a browser, which needs a Stripe dashboard and twenty minutes.
-3. **Cover `finance.py`**, especially payroll.
+3. **Cover `routers.py`** — the module CRUD for inventory, customers,
+   invoicing and payroll UI. Now the largest untested surface.
 4. **A support ticket inbox.** Escalations reach your email; there is nowhere
    to work through them.
 5. **Give the agent scheduling tools.** `ai_service.py` is not dead code — it

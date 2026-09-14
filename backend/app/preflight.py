@@ -63,25 +63,77 @@ log = logging.getLogger(__name__)
 router = APIRouter(prefix="/ops", tags=["operations"])
 
 
-def _minutes(hhmm: str) -> int:
+def _minutes(hhmm: str) -> Optional[int]:
+    """
+    "HH:MM" to minutes past midnight, or None when it is not a time.
+
+    None rather than a fallback number, because the caller here has to be able
+    to tell the difference. scheduler.parse_time returns a default instead, and
+    that is right for the solver — a bad row should not take down a week's
+    generation. It is wrong here: preflight exists to tell an operator what is
+    wrong with their schedule, so a shift it cannot read is a thing to say out
+    loud, not a thing to quietly score as zero.
+
+    It used to read "25:00" as 1500 and "09:99" as 639, and return 0 for
+    anything unparseable — which, combined with the overnight rule below, made
+    an unreadable shift twenty-four hours long.
+    """
+    if not hhmm:
+        return None
+    parts = str(hhmm).split(":")
+    if len(parts) < 2:
+        return None
     try:
-        h, m = hhmm.split(":")[:2]
-        return int(h) * 60 + int(m)
-    except (ValueError, AttributeError):
-        return 0
+        hour, minute = int(parts[0]), int(parts[1])
+    except (TypeError, ValueError):
+        return None
+    if not (0 <= hour <= 23 and 0 <= minute <= 59):
+        return None
+    return hour * 60 + minute
 
 
 def _shift_hours(shift: ScheduleShift) -> float:
+    """
+    Hours on the clock, or 0.0 for a shift whose times cannot be read.
+
+    Zero is deliberate. The alternative — treating an unreadable shift as
+    running to the same time next day — silently added twenty-four hours of
+    wages and twenty-four staffed hours to the week, which is enough on its own
+    to flip both the cost verdict and the coverage verdict.
+
+    Unreadable shifts are counted separately and reported, so they cannot
+    disappear into a zero.
+    """
     start, end = _minutes(shift.start_time), _minutes(shift.end_time)
+    if start is None or end is None:
+        return 0.0
     if end <= start:
-        end += 24 * 60
+        end += 24 * 60      # a genuine overnight shift
     return (end - start) / 60
+
+
+def _unreadable_shifts(shifts: List[ScheduleShift]) -> List[ScheduleShift]:
+    return [
+        s for s in shifts
+        if _minutes(s.start_time) is None or _minutes(s.end_time) is None
+    ]
 
 
 # --------------------------------------------------------------- the checks
 
-def _labor_cost(session: Session, business_id: int, shifts: List[ScheduleShift]) -> Dict[str, int]:
-    """Scheduled labor cost in cents, per day and total."""
+def _labor_cost(
+    session: Session, business_id: int, shifts: List[ScheduleShift]
+) -> tuple[Dict[str, int], int]:
+    """
+    Scheduled labor cost in cents per day, and how many shifts had no wage.
+
+    That second number is the whole reason this returns a tuple. Rates live on
+    EmployeeCompliance, which a workspace fills in some time after it starts
+    scheduling — so on day one every rate is missing, every shift costs zero,
+    and the week reads as 0% labor. "Clear to publish" is then a statement
+    about data the product does not have, which is the one answer a pre-publish
+    check must never give.
+    """
     rates = {
         c.employee_id: c.hourly_rate_cents
         for c in session.exec(
@@ -90,11 +142,14 @@ def _labor_cost(session: Session, business_id: int, shifts: List[ScheduleShift])
     }
 
     per_day: Dict[str, int] = {}
+    unpriced = 0
     for s in shifts:
-        rate = rates.get(s.employee_id, 0)
+        rate = rates.get(s.employee_id) or 0
+        if rate <= 0:
+            unpriced += 1
         cost = round(_shift_hours(s) * rate)
         per_day[s.date] = per_day.get(s.date, 0) + cost
-    return per_day
+    return per_day, unpriced
 
 
 def _booking_demand(session: Session, business_id: int, days: List[str]) -> Dict[str, dict]:
@@ -226,6 +281,16 @@ def preflight(
     blocking: List[str] = []
     advisories: List[str] = []
 
+    # A shift whose start or end cannot be read contributes no hours and no
+    # wages, so every number below quietly understates the week. Say so first.
+    unreadable = _unreadable_shifts(shifts)
+    if unreadable:
+        noun = "shift" if len(unreadable) == 1 else "shifts"
+        blocking.append(
+            f"{len(unreadable)} {noun} have times that cannot be read "
+            f"(for example {unreadable[0].start_time!r}-{unreadable[0].end_time!r})"
+        )
+
     # ---- 1. legal
     compliance = summarize(check_schedule(session, business_id, schedule_id))
     if compliance["violations"]:
@@ -262,7 +327,7 @@ def preflight(
         coverage.append(row)
 
     # ---- 3. affordable
-    per_day_cost = _labor_cost(session, business_id, shifts)
+    per_day_cost, unpriced_shifts = _labor_cost(session, business_id, shifts)
     labor_cents = sum(per_day_cost.values())
     forecast_cents = _forecast_revenue(session, business_id, days)
     labor_pct = round((labor_cents / forecast_cents) * 100, 1) if forecast_cents else None
@@ -272,20 +337,33 @@ def preflight(
         "forecast_revenue": round(forecast_cents / 100, 2),
         "labor_percent": labor_pct,
         "per_day": {d: round(c / 100, 2) for d, c in sorted(per_day_cost.items())},
+        "shifts_without_a_wage": unpriced_shifts,
     }
     # Hospitality typically targets 25-35% labor. Past 40% the week loses money.
-    if labor_pct is not None:
-        if labor_pct > 40:
-            cost["status"] = "over_budget"
-            blocking.append(f"Labor is {labor_pct}% of forecast revenue")
-        elif labor_pct > 33:
-            cost["status"] = "tight"
-            advisories.append(f"Labor at {labor_pct}% of forecast — tight but workable")
-        else:
-            cost["status"] = "healthy"
-    else:
+    #
+    # Order matters here. Missing wages are checked before the percentage,
+    # because a week with no rates entered computes as 0% labor and reads as
+    # healthy — which is exactly the state a new workspace is in, and exactly
+    # the week an operator most wants a real answer about.
+    if unpriced_shifts:
+        cost["status"] = "no_wage_data"
+        cost["labor_percent"] = None
+        noun = "shift" if unpriced_shifts == 1 else "shifts"
+        advisories.append(
+            f"{unpriced_shifts} {noun} have no hourly rate, so labor cost is "
+            "incomplete and the percentage can't be judged"
+        )
+    elif labor_pct is None:
         cost["status"] = "no_forecast"
         advisories.append("No revenue history yet, so labor percentage can't be judged")
+    elif labor_pct > 40:
+        cost["status"] = "over_budget"
+        blocking.append(f"Labor is {labor_pct}% of forecast revenue")
+    elif labor_pct > 33:
+        cost["status"] = "tight"
+        advisories.append(f"Labor at {labor_pct}% of forecast — tight but workable")
+    else:
+        cost["status"] = "healthy"
 
     # ---- 4. can you actually serve it
     stock = _stock_risk(session, business_id, days)

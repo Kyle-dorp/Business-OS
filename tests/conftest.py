@@ -48,6 +48,29 @@ import pytest  # noqa: E402
 
 
 @pytest.fixture(scope="session", autouse=True)
+def _cheap_password_hashing():
+    """
+    Drop bcrypt to its minimum cost for the duration of the suite.
+
+    bcrypt is deliberately slow — that is the whole point of it in production.
+    In a suite where most fixtures create a user and sign in, that slowness was
+    most of the runtime: 291 seconds, of which roughly 1.1s per test was two
+    hashes and two verifies.
+
+    A suite that takes five minutes is a suite people stop running, and every
+    bug found in this project came from running the suite. So the cost factor
+    goes down and nothing else changes: the same bcrypt, the same hash format,
+    the same verify path. Only the work factor moves, and only under pytest.
+    """
+    import bcrypt
+
+    original = bcrypt.gensalt
+    bcrypt.gensalt = lambda rounds=4, prefix=b"2b": original(4, prefix)
+    yield
+    bcrypt.gensalt = original
+
+
+@pytest.fixture(scope="session", autouse=True)
 def _cleanup_database():
     """
     Create the schema once, and remove the file at the end.

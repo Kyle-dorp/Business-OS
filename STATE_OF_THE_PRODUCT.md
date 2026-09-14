@@ -1,6 +1,6 @@
 # State of the product
 
-*Audited 14 September 2026 against commit `0443ce9`. Every figure below was
+*Audited 14 September 2026 against commit `ff37db6`. Every figure below was
 measured or probed, not recalled.*
 
 ---
@@ -12,19 +12,25 @@ measured or probed, not recalled.*
 | Backend | ~12,000 lines across 24 modules |
 | Frontend | 5,693 lines |
 | Styling | 3,183 lines |
-| **Tests** | **22 files · 299 functions · 430 passing** |
+| **Tests** | **23 files · 330 functions · 474 passing, in 22 seconds** |
 | CI | Full suite + reversed order + frontend build, on every push |
 | Migrations | 4 |
 
-The test suite runs in about twelve seconds and is verified order-independent —
-forwards, repeated, and with the files deliberately reversed. That reversal is
-now a CI step rather than something I remember to do.
+The test suite runs in about twenty-two seconds and is verified
+order-independent — forwards, repeated, and with the files deliberately
+reversed. That reversal is a CI step rather than something I remember to do.
+
+It reached 291 seconds before this audit, almost all of it bcrypt inside
+fixtures that create a user and sign in. bcrypt's slowness is the point of it
+in production, and pointless in a suite, so it now runs at its minimum cost
+factor under pytest only — 291 seconds to 22. A suite nobody waits for is a
+suite nobody runs, and every bug listed below was found by running it.
 
 ---
 
 ## 1. The bugs found by testing
 
-This is the part worth reading. **Twelve production bugs surfaced**, plus an entire parallel API that had never been run and an unauthenticated database wipe, and none of
+This is the part worth reading. **Fourteen production bugs surfaced**, plus an entire parallel API that had never been run and an unauthenticated database wipe, and none of
 them were found by looking at the code — every one came from running something.
 
 ### Every signup produced an unusable workspace
@@ -122,6 +128,34 @@ created; the response just said nothing about it, so nothing could select or
 display the thing it had just made. One route, found by probing all of them
 rather than trusting a scan that flagged five.
 
+### Preflight cleared a week it could not price
+The product's flagship check, and the failure it could least afford. Labor
+rates live on a record a workspace fills in some time *after* it starts
+scheduling, so on day one every rate is missing. `_labor_cost` defaulted a
+missing rate to zero, and the week priced out at 0%.
+
+Same schedule, same staff, same trade history — the only variable is whether
+anybody had entered wages:
+
+| | verdict | labor cost | labor % | status |
+|---|---|---|---|---|
+| no wage data | **publish — "Clear to publish"** | $0.00 | 0.0% | healthy |
+| wages entered | fix | $2,160 | 43.2% | over_budget |
+
+A confident green light on a week that was 43% labor and losing money — and
+the green light is what a brand-new customer sees. The revenue side of the
+same function already handled missing data correctly; the cost side had no
+equivalent guard. It now reports `no_wage_data`, withholds the percentage, and
+names how many shifts have no rate.
+
+### An unreadable shift counted as a twenty-four hour shift
+Preflight kept its own copy of time parsing, which was never hardened when the
+scheduler's was. `"25:00"` read as 1500 minutes, `"09:99"` as 639, and anything
+unparseable as 0 — which the overnight rule then turned into a full day, since
+end was no longer greater than start. One bad row added 24 hours of wages and
+24 staffed hours, enough to flip both the cost verdict and the coverage
+verdict. A test now pins that both files agree on which strings are valid.
+
 ### An unauthenticated endpoint that wiped the database
 Found by asking the only question that matters about the admin panel: who can
 become `is_admin`. There was exactly one way.
@@ -191,6 +225,7 @@ Not "written" — **exercised against real code and real data.**
 | **OAuth** | Audience check · issuer check · unverified email refused · empty `aud` cannot match an unset client id |
 | **Compliance** | Eleven jurisdictions · every premium pinned · a bad week in NYC surfaces $145 before publishing |
 | **Billing** | Ladder checked 0→10 modules · every multi-module stack cheaper than buying separately |
+| **Preflight** | Never clears a week it cannot price · unknown reported as unknown rather than 0% · one unpriced employee withholds the percentage · unreadable shifts are blocking, not silent · understaffed blocks while overstaffed advises · booked *hours* not heads · cancellations do not demand staff · all four checks always answered · another workspace's schedule is a 404 |
 | **The admin panel** | Only `is_admin` gets in, and the refusal names the admin check · signed-out is 401 · a tenant cannot discount themselves · the panel does span every workspace, which is the feature · profit shows a loss when there is one · an orphaned workspace does not break the list · no public route deletes · no request body accepts `is_admin` |
 | **The API surface** | No route under a deleted prefix · every route belongs to a declared surface · no shadowed method+path · one invoicing and one payroll implementation · the public booker and operator diary survived |
 | **Payroll** | Cost, cash and liability kept separate · entry balances · ledger agrees with both the payroll record and the cashflow report · remitting does not expense twice · negative and impossible runs refused · cross-tenant payment account refused |
@@ -203,12 +238,12 @@ Not "written" — **exercised against real code and real data.**
 
 ## 3. Still untested
 
-Honest list. These have **no test referencing them at all**:
+Every backend module now has coverage. What remains is not a module but a
+layer:
 
-| Module | Risk |
+| Gap | Risk |
 |---|---|
-| `preflight.py` | **Highest, and larger than this table previously admitted — 934 lines.** The four-question pre-publish check is the product's clearest differentiator, and nothing exercises it. Earlier audits listed it as built rather than as untested; that was wrong. |
-
+| **The frontend** | 5,693 lines, no tests of any kind. The build is type-checked on every push; nothing exercises a component. |
 
 ---
 
@@ -252,8 +287,9 @@ Everything else built now has a screen.
 2. **A real Stripe test payment** — follow `STRIPE_TEST_RUNBOOK.md`. The
    handler side is fixed and covered; what remains is a card through Checkout
    in a browser, which needs a Stripe dashboard and twenty minutes.
-3. **Cover `preflight.py`** — 934 lines, the product's clearest
-   differentiator, and entirely unexercised. The last real gap.
+3. **The first frontend test.** Every backend module is covered now; the
+   frontend has nothing. Start with the preflight and billing screens, which
+   are the two that show money.
 4. **A support ticket inbox.** Escalations reach your email; there is nowhere
    to work through them.
 5. **Give the agent scheduling tools.** `ai_service.py` is not dead code — it

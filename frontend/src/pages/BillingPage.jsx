@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "../api";
+import { ErrorState, Loading } from "../components/States";
 
 /**
  * Billing and modules, on one screen.
@@ -130,10 +131,10 @@ export default function BillingPage({ onModulesChanged }) {
   }
 
   if (error && !catalogue) {
-    return <div className="page"><section className="card sec-card"><p className="sec-error">{error}</p></section></div>;
+    return <div className="page"><section className="card"><ErrorState error={error} onRetry={load} /></section></div>;
   }
   if (!catalogue || !quote) {
-    return <div className="page"><section className="card os-loading">Loading your plan…</section></div>;
+    return <div className="page"><section className="card"><Loading lines={4} label="Loading your plan" /></section></div>;
   }
 
   const status = STATUS_COPY[quote.status] || STATUS_COPY.none;

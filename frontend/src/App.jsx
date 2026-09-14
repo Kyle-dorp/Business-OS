@@ -9,6 +9,7 @@ import "./theme-billing.css";
 import "./theme-compliance.css";
 import "./theme-inventory.css";
 import "./theme-booking.css";
+import "./theme-app.css";
 import { api, getBusinessId, getToken, setBusinessId, setToken } from "./api";
 import AuthPage from "./pages/AuthPage";
 import AgentPage from "./pages/AgentPage";

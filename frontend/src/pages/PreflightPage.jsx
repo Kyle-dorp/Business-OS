@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
+import { Empty, ErrorState, Loading } from "../components/States";
 
 /**
  * Pre-publish check.
@@ -73,8 +74,17 @@ export default function PreflightPage() {
         </div>
       </div>
 
-      {error && <div className="card preflight-error">{error}</div>}
-      {loading && <div className="card os-loading">Running four checks…</div>}
+      {schedules.length === 0 && !error && (
+        <section className="card">
+          <Empty title="No schedules to check yet" icon="◈">
+            Preflight runs against a schedule. Build one under Scheduling and it
+            will appear here for checking before you publish it.
+          </Empty>
+        </section>
+      )}
+
+      {error && <section className="card"><ErrorState error={error} onRetry={() => setSelected(selected)} /></section>}
+      {loading && <section className="card"><Loading lines={4} label="Running four checks" /></section>}
 
       {result && !loading && (
         <>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
+import { ErrorState } from "../components/States";
 
 /**
  * The conversational data agent.
@@ -211,7 +212,13 @@ export default function AgentPage() {
         <div ref={endRef} />
       </section>
 
-      {error && <p className="agent-error">{error}</p>}
+      {error && (
+        <ErrorState
+          title="The assistant didn't answer"
+          error={error}
+          onRetry={() => { setError(""); send(draft); }}
+        />
+      )}
 
       <div className="agent-composer">
         <textarea

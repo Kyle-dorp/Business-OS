@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "../api";
+import { ErrorState, Loading } from "../components/States";
 
 /**
  * Labor rules and the employee facts they depend on.
@@ -263,8 +264,8 @@ export default function CompliancePage() {
     return Math.round((staff.complete / staff.total) * 100);
   }, [staff]);
 
-  if (error) return <div className="page"><section className="card sec-card"><p className="sec-error">{error}</p></section></div>;
-  if (!profile || !staff) return <div className="page"><section className="card os-loading">Loading rules…</section></div>;
+  if (error) return <div className="page"><section className="card"><ErrorState error={error} onRetry={load} /></section></div>;
+  if (!profile || !staff) return <div className="page"><section className="card"><Loading lines={4} label="Loading rules" /></section></div>;
 
   return (
     <div className="page compliance-page">

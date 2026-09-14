@@ -1,6 +1,6 @@
 # State of the product
 
-*Audited 14 September 2026 against commit `e6f7c1e`. Every figure below was
+*Audited 14 September 2026 against commit `578ba7a`. Every figure below was
 measured or probed, not recalled.*
 
 ---
@@ -12,7 +12,7 @@ measured or probed, not recalled.*
 | Backend | ~12,000 lines across 24 modules |
 | Frontend | 5,693 lines |
 | Styling | 3,183 lines |
-| **Tests** | **backend 23 files · 330 functions · 474 passing in 22s**<br>**frontend 4 files · 85 passing in under a second** |
+| **Tests** | **backend 23 files · 330 functions · 474 passing in 22s**<br>**frontend 6 files · 143 passing in under three seconds** |
 | CI | Backend suite + reversed order + frontend suite + build, on every push |
 | Migrations | 4 |
 
@@ -30,7 +30,7 @@ suite nobody runs, and every bug listed below was found by running it.
 
 ## 1. The bugs found by testing
 
-This is the part worth reading. **Fourteen production bugs surfaced**, plus an entire parallel API that had never been run and an unauthenticated database wipe, and none of
+This is the part worth reading. **Fourteen backend bugs and four frontend bugs surfaced**, plus an entire parallel API that had never been run and an unauthenticated database wipe, and none of
 them were found by looking at the code — every one came from running something.
 
 ### Every signup produced an unusable workspace
@@ -127,6 +127,28 @@ serialised the object after the request's session had closed. The account was
 created; the response just said nothing about it, so nothing could select or
 display the thing it had just made. One route, found by probing all of them
 rather than trusting a scan that flagged five.
+
+### Four on the screens that show money
+Found by writing the first tests for `BillingPage` and `PlatformPage`.
+
+- **Every date defaulted to tomorrow, every evening.** `today()` used
+  `toISOString()`, which is UTC, so from mid-afternoon onwards in the Americas
+  the default date on an invoice, a bill and an expense was the next day. An
+  expense dated tomorrow can fall in the wrong accounting period — the kind of
+  error that surfaces at a reconciliation months later. A correct local
+  implementation already existed in `utils.js` and this file did not use it.
+- **Saving anything said nothing.** `submit()` set "Saved successfully." and
+  then called `load()`, which clears the message. The form emptied and no
+  confirmation ever appeared, so an operator had no way to tell a save from a
+  silent failure.
+- **A half-failed save left the billing page lying.** Modules save one request
+  at a time; a failure partway left the server holding one set and the screen
+  showing another, with a price beside it for modules that were not being
+  billed. It re-reads from the server now — and the first version of that fix
+  had the same message-clearing bug as above, caught by the same test.
+- **An unknown labor share rendered as `—%`.** The backend fix returned
+  `null`; `{labor_percent ?? "—"}%` turned that into a dash of a percent. The
+  backend half of a fix is not the whole fix.
 
 ### Preflight cleared a week it could not price
 The product's flagship check, and the failure it could least afford. Labor
@@ -227,6 +249,7 @@ Not "written" — **exercised against real code and real data.**
 | **Billing** | Ladder checked 0→10 modules · every multi-module stack cheaper than buying separately |
 | **Preflight** | Never clears a week it cannot price · unknown reported as unknown rather than 0% · one unpriced employee withholds the percentage · unreadable shifts are blocking, not silent · understaffed blocks while overstaffed advises · booked *hours* not heads · cancellations do not demand staff · all four checks always answered · another workspace's schedule is a 404 |
 | **The frontend** | Every request carries its workspace header · a 401 signs you out *except* while signing in · week arithmetic across Sunday, month, year and leap day · midnight is 12 AM and noon is 12 PM · an unknown labor share renders as unknown, never as a number · a failed refresh hides stale figures rather than showing them as current |
+| **Money on screen** | The price re-prices from the server, never from the page · a half-failed save re-reads rather than showing a plan the server does not have · checkout is refused when there is nothing to buy · date defaults are local, not UTC · a net loss shows as negative · no figure renders as `NaN` or as raw cents · invoices offer customers and bills offer vendors, and a bill can only be posted to an expense account |
 | **The admin panel** | Only `is_admin` gets in, and the refusal names the admin check · signed-out is 401 · a tenant cannot discount themselves · the panel does span every workspace, which is the feature · profit shows a loss when there is one · an orphaned workspace does not break the list · no public route deletes · no request body accepts `is_admin` |
 | **The API surface** | No route under a deleted prefix · every route belongs to a declared surface · no shadowed method+path · one invoicing and one payroll implementation · the public booker and operator diary survived |
 | **Payroll** | Cost, cash and liability kept separate · entry balances · ledger agrees with both the payroll record and the cashflow report · remitting does not expense twice · negative and impossible runs refused · cross-tenant payment account refused |
@@ -244,7 +267,7 @@ tests. What remains is a matter of breadth rather than of kind:
 
 | Gap | Risk |
 |---|---|
-| **Most frontend pages** | `api.js`, `utils.js`, `States.jsx` and the preflight screen are covered. The other fifteen pages are not — `BillingPage` and `PlatformPage` are the next two that show money. |
+| **The remaining frontend pages** | `api.js`, `utils.js`, `States.jsx` and the three screens that show money — preflight, billing and the accounting core — are covered. Thirteen pages are not, none of them handling money directly. |
 | **No end-to-end test** | Nothing drives a real browser against a real backend. The two suites agree on shapes only because the fixtures were written from the API by hand. |
 
 ---
@@ -289,9 +312,10 @@ Everything else built now has a screen.
 2. **A real Stripe test payment** — follow `STRIPE_TEST_RUNBOOK.md`. The
    handler side is fixed and covered; what remains is a card through Checkout
    in a browser, which needs a Stripe dashboard and twenty minutes.
-3. **Cover the billing screen**, then the platform screen — the two
-   remaining pages that show money. The preflight screen is done and it found
-   a rendering bug on the first run.
+3. **An end-to-end test.** Both suites pass against fixtures written by hand
+   from the API, and three of the four frontend bugs lived in the seam between
+   halves that were each internally consistent. Nothing yet proves the two
+   agree in a browser.
 4. **A support ticket inbox.** Escalations reach your email; there is nowhere
    to work through them.
 5. **Give the agent scheduling tools.** `ai_service.py` is not dead code — it

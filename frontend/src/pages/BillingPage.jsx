@@ -112,6 +112,19 @@ export default function BillingPage({ onModulesChanged }) {
           : "Saved."
       );
     } catch (err) {
+      // Modules are saved one request at a time, so a failure partway through
+      // leaves some applied and some not. Leaving the operator's toggles on
+      // screen would show them a plan the server does not have — and the price
+      // beside it would be for modules they are not being billed for. Re-read
+      // so that what is shown is what is true.
+      try {
+        await load();
+      } catch {
+        /* Re-reading failed too; the save error below is the one to show. */
+      }
+      // After load(), which clears the error as part of starting fresh. Setting
+      // it first would have it wiped, and a silent revert of somebody's toggles
+      // is worse than no revert at all.
       setError(err.message);
     } finally {
       setSaving(false);

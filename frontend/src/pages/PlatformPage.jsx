@@ -1,8 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api";
+import { toIsoDate } from "../utils";
 
 const money = (cents = 0) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
-const today = () => new Date().toISOString().slice(0, 10);
+// toISOString() is UTC. At 7pm in New York it returns tomorrow, so the default
+// due date on an invoice, a bill or an expense was a day out every evening for
+// anybody not on UTC — and an expense dated tomorrow can land in the wrong
+// accounting period. toIsoDate builds the string from the local parts.
+const today = () => toIsoDate(new Date());
 
 function Field({ label, children }) {
   return <label className="os-field"><span>{label}</span>{children}</label>;
@@ -35,7 +40,13 @@ export default function PlatformPage({ section = "overview" }) {
   async function submit(path, body) {
     try {
       await api(path, { method: "POST", body: JSON.stringify(body) });
-      setForm({}); setMessage("Saved successfully."); await load();
+      setForm({});
+      // load() clears the message as part of starting fresh, so the
+      // confirmation has to be set after it. Setting it first meant a save
+      // succeeded and said nothing at all — the form emptied and the operator
+      // had no way to tell whether it had worked.
+      await load();
+      setMessage("Saved successfully.");
     } catch (error) { setMessage(error.message); }
   }
 

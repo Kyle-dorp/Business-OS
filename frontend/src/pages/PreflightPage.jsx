@@ -179,7 +179,10 @@ export default function PreflightPage() {
                 <article>
                   <span>Labor share</span>
                   <strong className={`cost-${result.checks.cost.status}`}>
-                    {result.checks.cost.labor_percent ?? "—"}%
+                    {result.checks.cost.labor_percent === null ||
+                     result.checks.cost.labor_percent === undefined
+                      ? "—"
+                      : `${result.checks.cost.labor_percent}%`}
                   </strong>
                   <small>{result.checks.cost.status?.replace(/_/g, " ")}</small>
                 </article>

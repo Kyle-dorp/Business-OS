@@ -63,6 +63,10 @@ jobs:
         working-directory: frontend
         run: npm ci
 
+      - name: Run the test suite
+        working-directory: frontend
+        run: npm test
+
       - name: Type-check and build
         # `npm run build` is `tsc && vite build`. A broken build is invisible
         # locally until a deploy fails.

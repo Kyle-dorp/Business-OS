@@ -1,6 +1,6 @@
 # State of the product
 
-*Audited 14 September 2026 against commit `ff37db6`. Every figure below was
+*Audited 14 September 2026 against commit `e6f7c1e`. Every figure below was
 measured or probed, not recalled.*
 
 ---
@@ -12,8 +12,8 @@ measured or probed, not recalled.*
 | Backend | ~12,000 lines across 24 modules |
 | Frontend | 5,693 lines |
 | Styling | 3,183 lines |
-| **Tests** | **23 files · 330 functions · 474 passing, in 22 seconds** |
-| CI | Full suite + reversed order + frontend build, on every push |
+| **Tests** | **backend 23 files · 330 functions · 474 passing in 22s**<br>**frontend 4 files · 85 passing in under a second** |
+| CI | Backend suite + reversed order + frontend suite + build, on every push |
 | Migrations | 4 |
 
 The test suite runs in about twenty-two seconds and is verified
@@ -226,6 +226,7 @@ Not "written" — **exercised against real code and real data.**
 | **Compliance** | Eleven jurisdictions · every premium pinned · a bad week in NYC surfaces $145 before publishing |
 | **Billing** | Ladder checked 0→10 modules · every multi-module stack cheaper than buying separately |
 | **Preflight** | Never clears a week it cannot price · unknown reported as unknown rather than 0% · one unpriced employee withholds the percentage · unreadable shifts are blocking, not silent · understaffed blocks while overstaffed advises · booked *hours* not heads · cancellations do not demand staff · all four checks always answered · another workspace's schedule is a 404 |
+| **The frontend** | Every request carries its workspace header · a 401 signs you out *except* while signing in · week arithmetic across Sunday, month, year and leap day · midnight is 12 AM and noon is 12 PM · an unknown labor share renders as unknown, never as a number · a failed refresh hides stale figures rather than showing them as current |
 | **The admin panel** | Only `is_admin` gets in, and the refusal names the admin check · signed-out is 401 · a tenant cannot discount themselves · the panel does span every workspace, which is the feature · profit shows a loss when there is one · an orphaned workspace does not break the list · no public route deletes · no request body accepts `is_admin` |
 | **The API surface** | No route under a deleted prefix · every route belongs to a declared surface · no shadowed method+path · one invoicing and one payroll implementation · the public booker and operator diary survived |
 | **Payroll** | Cost, cash and liability kept separate · entry balances · ledger agrees with both the payroll record and the cashflow report · remitting does not expense twice · negative and impossible runs refused · cross-tenant payment account refused |
@@ -238,12 +239,13 @@ Not "written" — **exercised against real code and real data.**
 
 ## 3. Still untested
 
-Every backend module now has coverage. What remains is not a module but a
-layer:
+Every backend module has coverage, and the frontend now has its first 85
+tests. What remains is a matter of breadth rather than of kind:
 
 | Gap | Risk |
 |---|---|
-| **The frontend** | 5,693 lines, no tests of any kind. The build is type-checked on every push; nothing exercises a component. |
+| **Most frontend pages** | `api.js`, `utils.js`, `States.jsx` and the preflight screen are covered. The other fifteen pages are not — `BillingPage` and `PlatformPage` are the next two that show money. |
+| **No end-to-end test** | Nothing drives a real browser against a real backend. The two suites agree on shapes only because the fixtures were written from the API by hand. |
 
 ---
 
@@ -268,8 +270,8 @@ Everything else built now has a screen.
   dashboard.
 - **No onboarding.** A new workspace lands on an empty dashboard with no
   guidance. It now at least has a working chart of accounts.
-- **No frontend tests.** The build is type-checked on every push, but nothing
-  exercises a component.
+- **No end-to-end test.** Both suites pass against fixtures written by hand
+  from the API. Nothing proves the two halves still agree in a browser.
 - **No rate limiting beyond login.** Cloudflare will absorb volume; the agent
   endpoint has its own budget caps.
 - **No accessibility pass.** Keyboard access was added to clickable cards ad
@@ -287,9 +289,9 @@ Everything else built now has a screen.
 2. **A real Stripe test payment** — follow `STRIPE_TEST_RUNBOOK.md`. The
    handler side is fixed and covered; what remains is a card through Checkout
    in a browser, which needs a Stripe dashboard and twenty minutes.
-3. **The first frontend test.** Every backend module is covered now; the
-   frontend has nothing. Start with the preflight and billing screens, which
-   are the two that show money.
+3. **Cover the billing screen**, then the platform screen — the two
+   remaining pages that show money. The preflight screen is done and it found
+   a rendering bug on the first run.
 4. **A support ticket inbox.** Escalations reach your email; there is nowhere
    to work through them.
 5. **Give the agent scheduling tools.** `ai_service.py` is not dead code — it

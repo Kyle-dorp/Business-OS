@@ -255,16 +255,28 @@ def _fallback_decision(message: str, context: dict) -> AssistantDecision:
     )
 
 
-def decide_with_ai(message: str, context: dict) -> tuple[AssistantDecision, bool]:
-    """Return a structured proposal and whether the Claude API was used."""
+def decide_with_ai(
+    message: str, context: dict
+) -> tuple[AssistantDecision, bool, tuple[int, int]]:
+    """
+    Return a structured proposal, whether the Claude API was used, and the
+    (input, output) tokens it cost.
+
+    The token counts are the point of the third element. This endpoint used to
+    call Anthropic with no accounting of any kind while the newer agent was
+    carefully budgeted and metered — so the cheapest way to run up a bill on
+    somebody else's key was the older page.
+
+    A fallback answer costs nothing, and reports (0, 0).
+    """
     if not ai_is_configured():
-        return _fallback_decision(message, context), False
+        return _fallback_decision(message, context), False, (0, 0)
 
     try:
         from anthropic import Anthropic
 
         client = Anthropic()
-        model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5")
+        model = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-5")
         history = context.get("conversation_history") or []
         always_remember = str(context.get("always_remember") or "").strip()
         database_context = {
@@ -298,8 +310,13 @@ def decide_with_ai(message: str, context: dict) -> tuple[AssistantDecision, bool
         if text.startswith("```"):
             text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text, flags=re.DOTALL)
         parsed = AssistantDecision.model_validate_json(text)
-        return parsed, True
+        usage = getattr(response, "usage", None)
+        tokens = (
+            int(getattr(usage, "input_tokens", 0) or 0),
+            int(getattr(usage, "output_tokens", 0) or 0),
+        )
+        return parsed, True, tokens
     except Exception as error:
         fallback = _fallback_decision(message, context)
         fallback.reply += f" (AI fallback active: {type(error).__name__}.)"
-        return fallback, False
+        return fallback, False, (0, 0)

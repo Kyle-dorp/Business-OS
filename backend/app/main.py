@@ -20,6 +20,8 @@ from backend.app.ai_service import (
     ai_is_configured,
     decide_with_ai,
 )
+# Budgeting lives with the agent; both AI surfaces share one monthly allowance.
+from backend.app.ai_agent import _check_budget, _record_usage
 from backend.app.auth import (
     create_access_token,
     hash_password,
@@ -1256,9 +1258,9 @@ def seed_defaults() -> None:
 def on_startup() -> None:
     try:
         create_db_and_tables()
-        print("✓ Database tables created")
+        print("[ok] Database tables created")
     except Exception as e:
-        print(f"⚠ Error creating database tables: {e}")
+        print(f"[!!] Error creating database tables: {e}")
         import traceback
         error_str = traceback.format_exc()
         startup_errors.append({"stage": "db_init", "error": str(e), "traceback": error_str})
@@ -1266,9 +1268,9 @@ def on_startup() -> None:
 
     try:
         seed_defaults()
-        print("✓ Default data seeded")
+        print("[ok] Default data seeded")
     except Exception as e:
-        print(f"⚠ Error seeding defaults: {e}")
+        print(f"[!!] Error seeding defaults: {e}")
         import traceback
         error_str = traceback.format_exc()
         startup_errors.append({"stage": "seed_defaults", "error": str(e), "traceback": error_str})
@@ -2382,9 +2384,17 @@ def assistant_chat(
     message = payload.message.strip()
     if not message:
         raise HTTPException(status_code=400, detail="Message cannot be blank")
+    # The same monthly pool the Ask agent draws from. One workspace, one AI
+    # budget: a customer does not care which page spent their allowance, and
+    # leaving this page uncapped made it the cheap way to run up a bill.
+    business_id = current_business_id()
+    _check_budget(session, business_id)
+
     thread = _get_or_create_assistant_thread(session, user.id, payload.thread_id)
     context = _assistant_context(session, payload, user.id, thread.id)
-    decision, used_openai = decide_with_ai(message, context)
+    decision, used_openai, (in_tokens, out_tokens) = decide_with_ai(message, context)
+    if in_tokens or out_tokens:
+        _record_usage(session, business_id, in_tokens, out_tokens, feature="assistant")
     decision = _normalize_ai_actions(decision, context)
     user_message = AssistantMessage(
         user_id=user.id,

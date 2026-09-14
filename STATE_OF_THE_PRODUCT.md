@@ -1,6 +1,6 @@
 # State of the product
 
-*Audited 14 September 2026 against commit `fc3b2f9`. Every figure below was
+*Audited 14 September 2026 against commit `264d6ce`. Every figure below was
 measured or probed, not recalled.*
 
 ---
@@ -12,7 +12,7 @@ measured or probed, not recalled.*
 | Backend | 12,901 lines across 26 modules |
 | Frontend | 5,693 lines |
 | Styling | 3,183 lines |
-| **Tests** | **18 files · 223 functions · 350 passing** |
+| **Tests** | **19 files · 236 functions · 363 passing** |
 | CI | Full suite + reversed order + frontend build, on every push |
 | Migrations | 4 |
 
@@ -113,6 +113,7 @@ Not "written" — **exercised against real code and real data.**
 | **OAuth** | Audience check · issuer check · unverified email refused · empty `aud` cannot match an unset client id |
 | **Compliance** | Eleven jurisdictions · every premium pinned · a bad week in NYC surfaces $145 before publishing |
 | **Billing** | Ladder checked 0→10 modules · every multi-module stack cheaper than buying separately |
+| **The assistant** | Budget shared with the agent · hard ceiling enforced through the real route · a workspace cannot spend its neighbour's allowance · both surfaces on one model |
 | **The webhook** | Cancellation actually revokes · retries idempotent · a failed payment does *not* cut anyone off · dunning giving up does · resubscribing restores · tenant boundary held · renewal date read from both API shapes |
 | **Email** | Never raises into the caller · HTML escaped against four injection shapes · duplicates blocked by reference |
 | **Security** | Login throttling · reset codes (1.1 trillion keyspace, ~3.9M years against the throttle) · auth boundary pinned including near-misses |
@@ -128,7 +129,7 @@ Honest list. These have **no test referencing them at all**:
 | `finance.py` | **Highest.** Budgets, cashflow and payroll routes. The accounting *core* in `platform.py` is well covered, but these seven endpoints are not — and payroll touches money. |
 | `routers.py` | The module CRUD routers — inventory, customers, invoicing, payroll, team, analytics. Mostly thin, but large. |
 | `admin_routes.py` | Platform-admin surface. Small, but it crosses tenant boundaries by design, which is exactly where a mistake is worst. |
-| `ai_service.py` | The older scheduling assistant, largely superseded by `ai_agent.py`. Possibly worth deleting rather than testing. |
+
 
 ---
 
@@ -175,7 +176,11 @@ Everything else built now has a screen.
 3. **Cover `finance.py`**, especially payroll.
 4. **A support ticket inbox.** Escalations reach your email; there is nowhere
    to work through them.
-5. **Delete `ai_service.py`** if `ai_agent.py` has genuinely replaced it.
+5. **Give the agent scheduling tools.** `ai_service.py` is not dead code — it
+   is the Scheduling AI page, and it does twelve things the agent cannot
+   (regenerate a rota, adjust a shift, swap an employee). Merging those into
+   `ai_agent.py` as propose/confirm actions would leave one AI surface instead
+   of two. Not urgent; both are now budgeted and on the same model.
 
 ---
 

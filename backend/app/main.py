@@ -397,9 +397,13 @@ PUBLIC_PREFIXES = (
     # customer's booking link with "Sign in required" — which is the whole
     # feature, broken.
     "/book/",
-    "/docs",
-    "/static",
-    "/assets",
+    # Every prefix ends in a slash on purpose. "/docs" without one also matches
+    # /docsomething and /docs-internal — any route somebody adds later whose
+    # name merely begins with those characters would silently become public.
+    # The bare /docs and /redoc pages are exact entries in PUBLIC_PATHS above.
+    "/docs/",
+    "/static/",
+    "/assets/",
 )
 
 
@@ -507,15 +511,27 @@ def setup_first_manager(payload: SetupAccountRequest):
         session.add(business)
         session.flush()
 
-        # Create a Membership linking the user to their business with owner role
-        membership = Membership(
-            business_id=business.id,
-            user_id=user.id,
-            role="owner",
-            active=True,
-        )
-        session.add(membership)
-        session.commit()
+        # Seed the workspace properly rather than creating a bare shell.
+        #
+        # This previously added only the Membership, which left the business
+        # with no chart of accounts, no location and no module rows. Every
+        # account created through signup was born unable to post a journal
+        # entry — and /platform/bootstrap could not repair it, because its
+        # guard sees the membership, concludes the workspace is set up, and
+        # returns without seeding.
+        #
+        # seed_business creates the membership, so it is not added separately.
+        from backend.app.platform import seed_business
+
+        set_current_business_id(business.id)
+        try:
+            seed_business(session, business, user, role="owner")
+            session.commit()
+        finally:
+            # The context var is process-wide; leaving it set would silently
+            # scope the next request on this worker to this business.
+            set_current_business_id(1)
+
         session.refresh(user)
         return {"token": create_access_token(user), "user": _user_dict(user)}
 

@@ -50,7 +50,8 @@ def test_california_daily_overtime_is_separate_from_weekly():
     ca = JURISDICTIONS["ca"]
     assert ca.daily_overtime_hours == 8
     assert ot_premium(40, 40, RATE) == 0
-    assert ot_premium(10, ca.daily_overtime_hours, RATE) == 900
+    # Two hours past the eight-hour threshold, at half-time on $18/hr.
+    assert ot_premium(10, ca.daily_overtime_hours, RATE) == 1800
 
 
 def test_missing_rate_yields_no_figure():

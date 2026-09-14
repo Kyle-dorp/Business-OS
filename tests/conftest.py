@@ -49,7 +49,18 @@ import pytest  # noqa: E402
 
 @pytest.fixture(scope="session", autouse=True)
 def _cleanup_database():
-    """Remove the temporary database once the session finishes."""
+    """
+    Create the schema once, and remove the file at the end.
+
+    Table creation belongs here rather than in each module: it normally happens
+    on application startup, so a test that exercises a function directly —
+    without a TestClient — otherwise finds an empty database and fails with
+    "no such table", which reads like a broken test rather than a missing
+    fixture.
+    """
+    from backend.app.database import create_db_and_tables
+
+    create_db_and_tables()
     yield
     try:
         _TEST_DB.unlink(missing_ok=True)

@@ -40,10 +40,39 @@ class CandidateSlot:
 
 
 def parse_time(value: str, default: int = 0) -> int:
+    """
+    "HH:MM" to minutes past midnight, tolerant of anything else.
+
+    Called in 35 places, most of them inside schedule generation. It previously
+    raised on any string without a colon — so a single row holding "9" instead
+    of "09:00" took down generation for the entire week, surfacing as an
+    unexplained 500 rather than anything an operator could act on.
+
+    It also accepted "25:00" as 1500 and "09:99" as 639, which is worse than
+    crashing: the solver went on to reason about a shift running past midnight,
+    and the schedule came out subtly wrong with nothing to indicate why.
+
+    Out-of-range and unparseable both fall back to the default now. Times reach
+    this from a browser's time input in the normal case, so anything reaching
+    here malformed is bad data rather than a user typing, and the right response
+    is to keep going rather than take the week down.
+    """
     if not value:
         return default
-    hour, minute = value.split(":")[:2]
-    return int(hour) * 60 + int(minute)
+
+    parts = str(value).split(":")
+    if len(parts) < 2:
+        return default
+
+    try:
+        hour, minute = int(parts[0]), int(parts[1])
+    except (TypeError, ValueError):
+        return default
+
+    if not (0 <= hour <= 23 and 0 <= minute <= 59):
+        return default
+
+    return hour * 60 + minute
 
 
 def overlap_minutes(start_a: int, end_a: int, start_b: int, end_b: int) -> int:

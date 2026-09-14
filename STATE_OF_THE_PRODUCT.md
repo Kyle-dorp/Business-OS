@@ -1,201 +1,179 @@
 # State of the product
 
-*Audited 12 September 2026, against commit `e64461f`. Everything below was
-verified by reading the code or probing the deployed API — nothing is assumed.*
+*Audited 14 September 2026 against commit `b6c4b1c`. Every figure below was
+measured or probed, not recalled.*
 
 ---
 
-## 1. What is built and working
+## Scale
 
-### The three things nothing else on the market does
-
-**Preflight** — `/ops/preflight/{schedule_id}`, with a UI.
-Before a schedule publishes, four questions answered in one call: is it legal,
-is it staffed for bookings actually taken, is it affordable against forecast
-revenue, will the ingredients last. Verdict comes back as one word — publish,
-review, or fix.
-
-Deputy answers the first. A POS approximates the third. Nothing answers all
-four, because it needs the schedule, the calendar, the ledger and the stockroom
-in one database. **This is the demo.**
-
-**The conversational agent** — `/agent/chat`, with a UI.
-Ask in plain language, get answers computed from real records. Ask it to change
-something and a proposal card appears with Approve / Discard. Every applied
-change is written to `AuditEvent` with the prompt that produced it.
-
-The boundary is deliberate and worth selling: the agent reads customer notes,
-invoice memos and item descriptions — text other people wrote. If that text
-could trigger a write, the ledger is one clever sentence from being wrong.
-
-**Inventory variance** — `/ops/inventory/variance`, backend only.
-Recipes turn sales into theoretical usage. Subtract logged waste, compare
-against a physical count, and what remains is unexplained shrinkage in dollars,
-ranked worst-first, with an annualised projection. A standalone tool cannot do
-this — it sees stock fall with no idea what should have been consumed.
-
-### Labor compliance — `compliance.py`, surfaced through Preflight
-
-Federal FLSA plus eleven jurisdictions:
-
-- **Fair Workweek** advance notice for NYC, Seattle, Chicago, Philadelphia,
-  Oregon, SF — 14 days each
-- **Clopening** rest gaps with the real premium (NYC $100 flat, Seattle
-  time-and-a-half, Philadelphia $40)
-- **California** daily overtime past 8 and double time past 12
-- **Minors** — school-week vs non-school-week caps, 7am floor, and the curfew
-  that shifts 7pm → 9pm between June and Labor Day
-- **Day-of-rest** statutes in CA, NY, IL
-- Ordinances gate on headcount and industry, so a 20-person Seattle café is not
-  warned about a rule that only bites above 500 employees
-
-Every finding carries its legal citation and a dollar exposure.
-
-### Billing — complete backend, no UI yet
-
-$29 first module + $10 each after, as two Stripe line items, plus metered
-assistant overage via Billing Meters. `/billing/sync` pushes module count onto
-the live subscription and Stripe prorates.
-
-### Public booking — complete backend, no UI yet
-
-Real slot generation from weekly availability, one-hour lead time, and
-availability **re-checked inside the booking transaction** so two people cannot
-take one slot. A booking from a new email also creates a CRM contact.
-
-### The installable app
-
-PWA with home-screen install, app shortcuts, and a service worker that
-deliberately caches **no business data** — shared devices are normal in this
-market.
-
-### The look
-
-Warm near-black ground, ambient light pooling from three sources, film grain.
-Nav items invisible until approached, then they warm and mark themselves.
-Fraunces for headlines, Figtree for everything else.
-
-Colour has one job each: **amber** = interaction, **rose** = money leaving,
-**mint** = money kept. That discipline is what stops a glow-heavy interface
-becoming a fairground.
-
----
-
-## 2. Broken or fixed today
-
-| Issue | Status |
+| | |
 |---|---|
-| **Frontend build failed on every deploy** — Button/Card exported default, seven pages imported named | Fixed `d5f95ce` |
-| **Pages passed `icon`/`loading`/`hoverable` props the components never declared** | Implemented properly, not stubbed |
-| **Stripe webhook returned 401 to every event** — `/billing/webhook` was never in `PUBLIC_PATHS`, so subscriptions would have gone through checkout and never activated | Fixed `59f0fd1` |
-| **Public booking returned 401** — customers are not users; a booking link was unusable | Fixed `59f0fd1` |
-| **Site served the old design** — `import App from './App'` with both `.jsx` and `.tsx` present; Vite resolves `.jsx` first, so every build compiled the wrong app | Fixed `e64461f` |
-| **Fonts never loaded** — theme named Fraunces and Figtree, nothing fetched them, so it would have silently rendered as Georgia + system sans | Fixed `e64461f` |
-| **Webhook path wrong in my own handoff** — I wrote `/webhooks/stripe`; the route is `/billing/webhook` | Corrected |
-| **Migration listed as a task it never was** — `create_db_and_tables()` runs on startup | Corrected |
+| Backend | 12,901 lines across 26 modules |
+| Frontend | 5,693 lines |
+| Styling | 3,183 lines |
+| **Tests** | **3,738 lines · 17 files · 203 functions · 330 passing** |
+| CI | Full suite + reversed order + frontend build, on every push |
+| Migrations | 4 |
 
-### Known-good, verified live
-
-`/health` returns `ai_configured: true`, no startup errors, Postgres connected,
-and all new routes present in the deployed OpenAPI schema.
+The test suite runs in about twelve seconds and is verified order-independent —
+forwards, repeated, and with the files deliberately reversed. That reversal is
+now a CI step rather than something I remember to do.
 
 ---
 
-## 3. Built but invisible — backend with no UI
+## 1. The bugs found by testing
 
-These work if you curl them. A customer cannot reach any of them.
+This is the part worth reading. **Eight production bugs surfaced**, and none of
+them were found by looking at the code — every one came from running something.
 
-| Endpoint | What is missing |
+### Every signup produced an unusable workspace
+`/auth/setup` created the user, business and membership but never called
+`seed_business`. Every account made through normal signup had **no chart of
+accounts**, no location and no module rows: a business that could not post a
+journal entry or issue an invoice from its first second. `/platform/bootstrap`
+could not repair it, because its guard sees the membership, concludes the
+workspace is set up, and returns.
+
+Two tests had been failing on exactly this for some time. Nobody had run them.
+
+### Booking gated on a module key that could not exist
+`booking_public` checked for `module_key == "booking"`, but `"booking"` was not
+in `platform.MODULES`, and the module endpoint rejects anything that is not. No
+such row could ever be created, so **every booking page would have 404'd
+forever.** A feature built, shipped, deployed and structurally unreachable.
+
+### The booking page only worked for business #1
+`Service`, `Booking` and `BookingAvailability` are tenant-scoped, so their
+queries filter by `current_business_id()`. Public requests carry no workspace
+header, leaving it at its default of 1. **Invisible with a single tenant**; it
+would have surfaced as your second customer's link simply not working.
+
+### The Stripe webhook returned 401 to every event
+`/billing/webhook` was never in the public paths. A customer would have
+completed checkout, been charged, and had their subscription never activate.
+
+### An auth bypass on any path starting with `/docs`
+`"/docs"` was a public *prefix*, so `/docsomething` and `/docs-internal`
+bypassed authentication entirely. My own near-miss test caught it — written
+three phases earlier and never executed until this session.
+
+### The variance formula was wrong by 7×
+Unexplained loss was computed as `(counted − expected) + logged waste`. Waste
+had already been deducted, so it was counted twice; and what sales consumed was
+never subtracted at all. A bar missing **1.5L of gin ($45)** was reported as
+11L — **$330**. Wrong in the direction that makes an honest business look like
+it is being robbed, which sends an operator hunting a thief who does not exist.
+
+### Two module registries that disagreed
+Billing validated against a set of modules the product did not have, while the
+ones it did have went unbilled. The first subscription would have priced the
+wrong things.
+
+### A malformed time took down a whole week of scheduling
+`parse_time` raised on any string without a colon — one row holding `"9"`
+instead of `"09:00"` failed generation entirely. It also read `"25:00"` as 1500
+minutes, which is worse: nothing failed, and the solver produced a rota that
+was quietly wrong.
+
+**Five of these eight were invisible with one tenant, one user, or one
+workspace.** They were all waiting for the second customer.
+
+---
+
+## 2. What is verified working
+
+Not "written" — **exercised against real code and real data.**
+
+| Area | Coverage |
 |---|---|
-| `/billing/quote`, `/preview`, `/checkout`, `/portal`, `/sync` | **The entire billing screen.** Nobody can subscribe from inside the app. |
-| `/public/book/{id}` and friends | **The booking page.** The backend takes bookings; there is no page to take them on. |
-| `/ops/inventory/variance` | The shrinkage report — arguably your strongest single feature — has no screen. |
-| `/ops/inventory/menu-engineering` | Recipe margin ranking, no screen. |
-| `/ops/inventory/count` | No way to submit a physical count, which means variance has nothing to measure against. |
-| `/ops/compliance/profile` | No settings UI, so every workspace defaults to federal-only rules. **Jurisdiction rules do nothing until this exists.** |
-| `/agent/support/tickets` | Tickets are created and nothing notifies you. |
-
-**The two that matter most: billing and the compliance profile.** Without
-billing you cannot take money inside the product. Without the profile picker,
-the compliance engine — the thing that beats Deputy — runs in federal-only mode
-for everyone and most of its value is dormant.
+| **Ledger** | Debits equal credits · trial balance balances · accounting equation holds · unbalanced entries refused · cross-business account references refused · drafts excluded · closing date inclusive |
+| **Scheduler** | Real OR-Tools solve · coverage rules filled · **unavailable staff never rostered** · holidays respected · nobody double-booked · deterministic · uncoverable rules reported by name |
+| **Public booking** | Double-booking race held · overlapping slots blocked · tenant boundary on service ids · cancellation releases the slot · no field leakage |
+| **The agent** | Cross-tenant confirm blocked · `business_id` smuggling filtered · double-confirm refused · every applied change audited with its prompt |
+| **OAuth** | Audience check · issuer check · unverified email refused · empty `aud` cannot match an unset client id |
+| **Compliance** | Eleven jurisdictions · every premium pinned · a bad week in NYC surfaces $145 before publishing |
+| **Billing** | Ladder checked 0→10 modules · every multi-module stack cheaper than buying separately |
+| **Email** | Never raises into the caller · HTML escaped against four injection shapes · duplicates blocked by reference |
+| **Security** | Login throttling · reset codes (1.1 trillion keyspace, ~3.9M years against the throttle) · auth boundary pinned including near-misses |
 
 ---
 
-## 4. Completely missing
+## 3. Still untested
 
-- **Notification on escalation.** `SupportTicket` rows pile up silently. Needs
-  an email or SMS provider — Resend or Postmark for email, Twilio for SMS.
-- **Recipe builder.** `Recipe` and `RecipeComponent` tables exist; there is no
-  way to create one. Variance and menu engineering both depend on recipes, so
-  both are inert until this exists.
-- **Employee compliance data.** Date of birth and hourly rate live in
-  `EmployeeCompliance` with no UI. Without DOB the minor rules never fire;
-  without rates every exposure figure is $0.
-- **Booking deposits and no-show protection.** Acuity has these; you do not.
-- **AR auto-chase.** Invoices do not chase themselves.
-- **Password reset.** There is no recovery flow. A locked-out owner needs you.
-- **Email anywhere.** No invoice send, no booking confirmation, no receipt.
-- **Onboarding.** A new workspace lands on an empty dashboard with no guidance.
-- **Rate limiting on auth.** Login has no brute-force protection. Cloudflare
-  will cover some of this; it is not a substitute.
-- **Automated tests for the API.** `test_compliance.py` and
-  `test_auth_boundary.py` cover rules and the auth boundary. The endpoints
-  themselves have none.
+Honest list. These have **no test referencing them at all**:
+
+| Module | Risk |
+|---|---|
+| `finance.py` | **Highest.** Budgets, cashflow and payroll routes. The accounting *core* in `platform.py` is well covered, but these seven endpoints are not — and payroll touches money. |
+| `stripe_service.py` | Webhook handlers. Hard to test without Stripe fixtures; a bug means a subscription state that silently diverges from what Stripe believes. |
+| `routers.py` | The module CRUD routers — inventory, customers, invoicing, payroll, team, analytics. Mostly thin, but large. |
+| `admin_routes.py` | Platform-admin surface. Small, but it crosses tenant boundaries by design, which is exactly where a mistake is worst. |
+| `ai_service.py` | The older scheduling assistant, largely superseded by `ai_agent.py`. Possibly worth deleting rather than testing. |
 
 ---
 
-## 5. Dead code to delete
+## 4. Built but not reachable
 
-Twelve orphan pages and two orphan components, none reachable from `App.jsx`:
+Down to two, from seven at the last audit:
 
-```
-pages/AdminDashboard.tsx   pages/AdminPanel.tsx    pages/Analytics.tsx
-pages/CalendarPage.jsx     pages/Customers.tsx     pages/Dashboard.tsx
-pages/HomePage.jsx         pages/Inventory.tsx     pages/Invoicing.tsx
-pages/Login.tsx            pages/Payroll.tsx       pages/TeamChat.tsx
-components/ChatBubble.tsx  components/Sidebar.tsx
-```
+- **`/agent/support/tickets`** — tickets are created and emailed, but there is
+  no inbox screen to read or resolve them in.
+- **`/billing/report-ai-usage`** — called internally when usage passes the
+  allowance; no operator-facing view of it.
 
-These are the remains of the parallel `.tsx` shell. **They are the same dead
-code that broke every build for weeks** — they still compile, so they are not
-urgent, but they are a trap: the next person to touch them will not know which
-app they belong to. Say the word and they go.
+Everything else built now has a screen.
+
+---
+
+## 5. Genuinely missing
+
+- **No test of a real Stripe payment.** Nothing has charged a card. The flow is
+  built and unexercised end to end.
+- **No onboarding.** A new workspace lands on an empty dashboard with no
+  guidance. It now at least has a working chart of accounts.
+- **No frontend tests.** The build is type-checked on every push, but nothing
+  exercises a component.
+- **No rate limiting beyond login.** Cloudflare will absorb volume; the agent
+  endpoint has its own budget caps.
+- **No accessibility pass.** Keyboard access was added to clickable cards ad
+  hoc, never audited.
 
 ---
 
 ## 6. What I would do next, in order
 
-1. **Billing screen.** You cannot charge anyone from inside the product. The
-   backend is done; this is a single page against `/billing/preview` and
-   `/billing/checkout`.
-2. **Compliance profile picker.** One dropdown that turns the whole labor
-   engine on. Highest value per line of code in the entire codebase.
-3. **Booking page.** Your own module, replacing the third-party scheduler on
-   the landing page, and usable for your own demo calls.
-4. **Recipe builder + count entry.** Turns variance from a dormant endpoint
-   into the number that closes sales.
-5. **Escalation notification.** Tickets that reach your phone.
-6. **Password reset and transactional email.** Unglamorous, and the first thing
-   a real customer will hit.
+1. ~~**Put the suite in CI.**~~ Done — `.github/workflows/tests.yml` runs the
+   full suite on every push and pull request, then runs it again with the test
+   files reversed, and type-checks and builds the frontend. Both were verified
+   green locally before being committed. Everything in section 1 was found by
+   running tests that already existed; now a push runs them.
+2. **A real Stripe test payment**, in test mode, end to end — checkout through
+   webhook to an active subscription. It is the one revenue path never
+   exercised.
+3. **Cover `finance.py`**, especially payroll.
+4. **A support ticket inbox.** Escalations reach your email; there is nowhere
+   to work through them.
+5. **Delete `ai_service.py`** if `ai_agent.py` has genuinely replaced it.
 
 ---
 
 ## 7. Honest assessment
 
-The backend is genuinely ahead of anything at this price point. Preflight and
-the variance engine are real competitive moats — not marketing, structural
-advantages a single-purpose competitor cannot copy without rebuilding as a
-platform.
+The backend is in materially better shape than at the last audit, and the
+reason is specific: **the test suite is now the thing finding bugs, rather than
+a customer.** Eight production faults, five of which only appear with more than
+one tenant or user — the exact class that a solo developer with one test
+workspace never sees.
 
-**The frontend is roughly 40% of the way there.** Two excellent new screens sit
-on top of an app whose other pages have not been touched since the restyle —
-they inherit the new tokens and look consistent, but they were not designed
-against this language.
+The product's differentiators are real and now verified rather than asserted.
+Preflight genuinely answers four questions no competitor answers together. The
+variance engine genuinely computes a number a standalone tool cannot. The
+compliance engine genuinely covers eleven jurisdictions with citations.
 
-**The gap between "impressive backend" and "shippable product" is the billing
-screen and the compliance profile picker.** Those two are the difference
-between a demo that stuns people and a thing that takes money.
+**What it is not yet:** proven against a real customer, a real payment, or a
+second tenant in production. Everything above says the code is correct. None of
+it says the business works.
 
-Nothing here is blocked. Nothing needs rearchitecting. It needs UI for what is
-already built.
+The gap between here and a paying customer is no longer engineering. It is
+Cloudflare, a domain, a Stripe test charge, and somebody to sell it to.

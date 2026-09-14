@@ -1,0 +1,70 @@
+name: tests
+
+# Why this file exists: 70 tests were written and never executed, and when they
+# were finally run they had been failing on a real bug for some time. Nothing
+# catches that except something that runs on every push.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run the test suite
+        # conftest.py points the app at a temporary database and strips every
+        # third-party credential from the environment, so this cannot reach
+        # Stripe, Anthropic, Resend or Google.
+        run: python -m pytest tests/ -q
+
+      - name: Run it again with the files reversed
+        # The suite has been order-dependent twice. Both times it looked green
+        # locally and would have gone red for somebody else. Reversing the file
+        # order is a cheap, deterministic way to keep catching that.
+        run: |
+          FILES=$(ls tests/test_*.py | sort -r | tr '\n' ' ')
+          echo "Order: $FILES"
+          python -m pytest $FILES -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Type-check and build
+        # `npm run build` is `tsc && vite build`. A broken build is invisible
+        # locally until a deploy fails.
+        working-directory: frontend
+        run: npm run build

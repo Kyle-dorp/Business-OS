@@ -124,12 +124,12 @@ input[type="radio"]:focus-visible,
 .hamburger {
   width: 46px;
   height: 46px;
-  border: 1px solid #d8e4f6;
+  border: 1px solid var(--line, rgba(246, 240, 234, 0.08));
   border-radius: 14px;
   display: grid;
   place-items: center;
-  color: #173f86;
-  background: linear-gradient(145deg, #f4f8ff, #e4edff);
+  color: var(--ink-2, #C6B9B1);
+  background: transparent;
   font-size: 1.65rem;
   line-height: 1;
   cursor: pointer;
@@ -171,7 +171,8 @@ input[type="radio"]:focus-visible,
   transition: all .15s ease;
 }
 .nav-btn:hover { color: #fff; background: rgba(255,255,255,.12); }
-.nav-btn.active { color: #fff; background: linear-gradient(135deg, var(--blue), var(--purple)); box-shadow: 0 10px 22px rgba(47,111,237,.24); }
+/* .nav-btn.active is painted by theme-app.css. The blue-to-purple gradient
+   that was here is the pre-redesign palette. */
 .drawer-footer { flex: 0 0 auto; margin-top: auto; padding: 18px; border-top: 1px solid #26344e; }
 .drawer-backdrop { position: fixed; inset: 0; z-index: 40; border: 0; background: rgba(9,17,31,.45); backdrop-filter: blur(2px); cursor: pointer; }
 .toggle-row { display: flex; align-items: center; gap: 10px; color: #c8d4e8; cursor: pointer; font-size: .9rem; }
@@ -209,11 +210,10 @@ input[type="radio"]:focus-visible,
   cursor: pointer;
   transition: transform .14s ease, box-shadow .14s ease, background .14s ease;
 }
-.primary-btn, .small-btn, .approve-btn, .send-button {
-  color: #fff;
-  background: linear-gradient(135deg, var(--blue), #4f69ed);
-  box-shadow: 0 8px 18px rgba(47, 111, 237, .20);
-}
+/* Primary buttons are painted by theme.css. What was here — a blue gradient
+   and a blue drop shadow — is the pre-redesign palette, and because a gradient
+   is a background-image it was never displaced by the theme's background
+   colour. An amber button with a blue glow was the result. */
 .primary-btn { padding: 12px 18px; }
 .small-btn { padding: 9px 12px; }
 .approve-btn { width: 100%; padding: 11px 14px; }
@@ -556,8 +556,11 @@ body {
   height: 76px;
   padding: 0 26px;
   justify-content: space-between;
-  background: rgba(255,255,255,.82);
-  box-shadow: 0 1px 0 rgba(211,220,235,.8), 0 8px 30px rgba(32,52,86,.05);
+  /* Colour intentionally absent. theme-app.css paints the topbar; this rule
+     only sets the shell's geometry. It used to also set a white background,
+     and because `.commercial-shell .topbar` outranks the theme's `.topbar`
+     whatever the load order, the entire app wore a white bar over a dark
+     design. */
 }
 .commercial-shell .hamburger {
   display: flex;
@@ -573,7 +576,7 @@ body {
   width: 100%;
   height: 2px;
   border-radius: 999px;
-  background: #244c91;
+  background: var(--ink-2, #C6B9B1);
 }
 .topbar-copy { margin-right: auto; margin-left: 12px; display: flex; flex-direction: column; line-height: 1.15; }
 .topbar-copy span { color: #7d8ba2; font-size: .7rem; font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
@@ -658,7 +661,7 @@ body {
 .drawer-section-label { margin: 7px 10px 3px; color: #6f83a6; font-size: .64rem; font-weight: 900; letter-spacing: .16em; }
 .commercial-shell .nav-btn { display: flex; align-items: center; gap: 12px; }
 .nav-icon { width: 24px; text-align: center; color: #fff; font-size: 1.02rem; }
-.nav-btn.active .nav-icon { color: #fff; }
+/* .nav-btn.active .nav-icon: see above — theme-app.css owns the active nav. */
 .notification-badge { margin-left: auto; min-width: 23px; height: 23px; display: grid; place-items: center; border-radius: 999px; color: #fff; background: #ef6680; font-size: .68rem; }
 .account-footer { display: grid; grid-template-columns: 38px 1fr auto; align-items: center; gap: 10px; }
 .account-footer .account-avatar { width: 38px; height: 38px; }

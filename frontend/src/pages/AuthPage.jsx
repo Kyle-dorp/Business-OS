@@ -72,6 +72,7 @@ export default function AuthPage({ needsSetup, onAuthenticated }) {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [code, setCode] = useState("");
+  const [businessName, setBusinessName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -85,15 +86,16 @@ export default function AuthPage({ needsSetup, onAuthenticated }) {
     setPassword("");
     setConfirm("");
     setCode("");
+    setBusinessName("");
   }
 
   async function submit(event) {
     event.preventDefault();
     setError("");
 
-    if (mode === "setup" && password !== confirm) return setError("Passwords do not match.");
-    if (mode === "recover" && password !== confirm) return setError("Passwords do not match.");
-    if ((mode === "setup" || mode === "recover") && password.length < 8) {
+    const needsConfirm = mode === "setup" || mode === "signup" || mode === "recover";
+    if (needsConfirm && password !== confirm) return setError("Passwords do not match.");
+    if (needsConfirm && password.length < 8) {
       return setError("Use at least 8 characters.");
     }
 
@@ -113,10 +115,17 @@ export default function AuthPage({ needsSetup, onAuthenticated }) {
         return;
       }
 
-      const result = await api(mode === "setup" ? "/auth/setup" : "/auth/login", {
-        method: "POST",
-        body: JSON.stringify({ username: username.trim(), password }),
-      });
+      const endpoint = {
+        setup: "/auth/setup",
+        signup: "/auth/signup",
+        signin: "/auth/login",
+      }[mode];
+      const body =
+        mode === "signup"
+          ? { username: username.trim(), password, business_name: businessName.trim() }
+          : { username: username.trim(), password };
+
+      const result = await api(endpoint, { method: "POST", body: JSON.stringify(body) });
       setToken(result.token);
       onAuthenticated(result.user);
     } catch (err) {
@@ -145,12 +154,14 @@ export default function AuthPage({ needsSetup, onAuthenticated }) {
 
   const heading = {
     setup: "Create the manager account",
+    signup: "Start your workspace",
     signin: "Welcome back",
     recover: "Reset your password",
   }[mode];
 
   const blurb = {
     setup: "This first account controls employees, schedules, and permissions.",
+    signup: "One account, one bill, everything in one place. Takes about a minute.",
     signin: "Sign in with the username and password your manager created.",
     recover: "Enter the code your manager gave you, then choose a new password.",
   }[mode];
@@ -158,7 +169,8 @@ export default function AuthPage({ needsSetup, onAuthenticated }) {
   const canSubmit =
     mode === "recover"
       ? username.trim() && code.trim() && password && confirm
-      : username.trim() && password && (mode !== "setup" || confirm);
+      : username.trim() && password &&
+        (mode === "signin" || confirm);
 
   return (
     <main className="auth-screen">
@@ -192,12 +204,31 @@ export default function AuthPage({ needsSetup, onAuthenticated }) {
           {error && <div className="alert error">{error}</div>}
           {notice && <div className="alert notice">{notice}</div>}
 
+          {mode === "signup" && (
+            <label className="field-label">
+              Business name
+              <input
+                autoFocus
+                autoComplete="organization"
+                placeholder="Kyle's Barbershop"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+              />
+            </label>
+          )}
+
           <label className="field-label">
             Username
             <input
-              autoFocus
+              autoFocus={mode !== "signup"}
               autoComplete="username"
-              placeholder={mode === "setup" ? "Choose a manager username" : "Enter username"}
+              placeholder={
+                mode === "setup"
+                  ? "Choose a manager username"
+                  : mode === "signup"
+                  ? "Choose a username"
+                  : "Enter username"
+              }
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />
@@ -226,7 +257,7 @@ export default function AuthPage({ needsSetup, onAuthenticated }) {
             />
           </label>
 
-          {(mode === "setup" || mode === "recover") && (
+          {(mode === "setup" || mode === "signup" || mode === "recover") && (
             <label className="field-label">
               Confirm password
               <input
@@ -242,7 +273,7 @@ export default function AuthPage({ needsSetup, onAuthenticated }) {
           <button className="primary-btn auth-submit" disabled={busy || !canSubmit}>
             {busy
               ? "Please wait…"
-              : mode === "setup"
+              : mode === "setup" || mode === "signup"
               ? "Create workspace"
               : mode === "recover"
               ? "Set new password"
@@ -251,11 +282,20 @@ export default function AuthPage({ needsSetup, onAuthenticated }) {
 
           {mode === "signin" && (
             <>
+              <button type="button" className="auth-link" onClick={() => reset("signup")}>
+                New here? Start a workspace
+              </button>
               <button type="button" className="auth-link" onClick={() => reset("recover")}>
                 Locked out? Use a reset code
               </button>
               <GoogleButton onCredential={googleSignIn} onError={setError} />
             </>
+          )}
+
+          {mode === "signup" && (
+            <button type="button" className="auth-link" onClick={() => reset("signin")}>
+              Already have an account? Sign in
+            </button>
           )}
 
           {mode === "recover" && (

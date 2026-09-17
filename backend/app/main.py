@@ -349,6 +349,8 @@ PUBLIC_PATHS = {
     "/auth/setup-status",
     "/auth/setup",
     "/auth/login",
+    # Creating a workspace happens before anybody has a token, by definition.
+    "/auth/signup",
     # Stripe is not logged in. This endpoint authenticates by verifying the
     # signature against STRIPE_WEBHOOK_SECRET, which is stronger than a bearer
     # token here. Exact match, never a prefix — a prefix would also open
@@ -541,6 +543,109 @@ def setup_first_manager(payload: SetupAccountRequest):
 
         session.refresh(user)
         return {"token": create_access_token(user), "user": _user_dict(user)}
+
+
+class SignupRequest(BaseModel):
+    username: str
+    password: str
+    business_name: str = ""
+    industry: str = "general"
+    email: str = ""
+
+
+@app.post("/auth/signup")
+def signup(payload: SignupRequest, request: Request):
+    """
+    Create a workspace. Open to anybody, which is the point.
+
+    /auth/setup already did all of this, but only ever once: its guard refuses
+    as soon as a single UserAccount exists anywhere on the platform. That is
+    right for a self-hosted install and wrong for a product — it meant a
+    prospective customer could reach the sign-in page and had no way at all to
+    get an account, and every new business had to be created by hand.
+
+    The workspace is seeded rather than created bare. Signup used to add only a
+    membership, which left a business with no chart of accounts, no location
+    and no module rows — unable to post a journal entry from its first second,
+    and unrepairable afterwards because /platform/bootstrap sees the membership
+    and concludes the job is done.
+    """
+    from backend.app.security import check_not_locked, record_failure
+
+    username = payload.username.strip()
+    identifier = username.lower()
+    business_name = payload.business_name.strip() or f"{username}'s workspace"
+    email = payload.email.strip().lower()
+
+    # Signup creates rows and hashes a password, so it is as worth throttling
+    # as login is. Keyed the same way, which means one shared restaurant wifi
+    # cannot be used to mass-create workspaces.
+    with Session(engine) as session:
+        check_not_locked(session, identifier)
+
+    if len(username) < 3:
+        raise HTTPException(400, "Username must be at least 3 characters")
+    if len(username) > 64:
+        raise HTTPException(400, "Username must be 64 characters or fewer")
+    if len(payload.password) < 8:
+        raise HTTPException(400, "Password must be at least 8 characters")
+    if len(business_name) > 120:
+        raise HTTPException(400, "Business name must be 120 characters or fewer")
+    if email and "@" not in email:
+        raise HTTPException(400, "That does not look like an email address")
+
+    # Case-insensitively, because sign-in matches that way too. Without this,
+    # "Kyle" and "kyle" could both be created and neither could reliably log in.
+    if username_exists(username):
+        with Session(engine) as session:
+            record_failure(session, identifier)
+        raise HTTPException(409, "That username is taken. Try another.")
+
+    with Session(engine) as session:
+        if email:
+            taken = session.exec(select(UserAccount).where(UserAccount.email == email)).first()
+            if taken:
+                raise HTTPException(409, "There is already an account with that email.")
+
+        user = UserAccount(
+            username=username,
+            password_hash=hash_password(payload.password),
+            role="manager",
+            active=True,
+            email=email or None,
+            auth_provider="password",
+        )
+        session.add(user)
+        session.flush()
+
+        business = Business(
+            name=business_name,
+            legal_name="",
+            industry=payload.industry.strip() or "general",
+            currency="USD",
+            active=True,
+        )
+        session.add(business)
+        session.flush()
+
+        from backend.app.platform import seed_business
+
+        set_current_business_id(business.id)
+        try:
+            seed_business(session, business, user, role="owner")
+            session.commit()
+        finally:
+            # Process-wide. Leaving it set would scope the next request on this
+            # worker to the workspace that just signed up.
+            set_current_business_id(1)
+
+        session.refresh(user)
+        session.refresh(business)
+        return {
+            "token": create_access_token(user),
+            "user": _user_dict(user),
+            "business": {"id": business.id, "name": business.name},
+        }
 
 
 @app.post("/auth/login")

@@ -100,3 +100,46 @@ def stripe_mode() -> str:
     if key.startswith(("sk_live_", "rk_live_")):
         return "live"
     return "malformed"
+
+
+# What checkout needs before it can run at all. Naming the missing one is the
+# difference between "Stripe not configured" — which sends somebody to check
+# the key they already set — and "STRIPE_PUBLIC_KEY is not set".
+STRIPE_REQUIRED = (
+    "STRIPE_SECRET_KEY",
+    "STRIPE_PUBLIC_KEY",
+    "STRIPE_PRICE_BASE",
+    "STRIPE_PRICE_MODULE",
+)
+STRIPE_OPTIONAL = ("STRIPE_WEBHOOK_SECRET", "STRIPE_PRICE_AI_OVERAGE")
+
+
+def stripe_missing() -> list[str]:
+    """The variables checkout needs that are not set."""
+    return [name for name in STRIPE_REQUIRED if not env(name)]
+
+
+def stripe_report() -> dict:
+    """
+    Everything somebody needs to know about Stripe without opening Railway.
+
+    Booleans rather than values — this is a public endpoint, and "is it set"
+    is the whole question anyway.
+    """
+    missing = stripe_missing()
+    report = {
+        "mode": stripe_mode(),
+        "ready_for_checkout": not missing,
+        "set": {name: bool(env(name)) for name in STRIPE_REQUIRED + STRIPE_OPTIONAL},
+    }
+    if missing:
+        report["missing"] = missing
+    # Payments arrive but nothing activates without this one, which is the
+    # quietest way for a billing integration to be broken.
+    if not env("STRIPE_WEBHOOK_SECRET"):
+        report["warning"] = (
+            "STRIPE_WEBHOOK_SECRET is not set. Checkout will work and the "
+            "subscription will never activate, because the webhook that grants "
+            "access cannot be verified."
+        )
+    return report

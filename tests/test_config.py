@@ -151,3 +151,70 @@ def test_a_quoted_live_key_still_reads_as_live(monkeypatch):
     """The bug that started this: it was live all along, and unusable."""
     monkeypatch.setenv("STRIPE_SECRET_KEY", '"sk_live_51ABC"')
     assert stripe_mode() == "live"
+
+
+# ===========================================================================
+# Saying which one is missing
+# ===========================================================================
+
+def test_it_names_the_missing_variable(monkeypatch):
+    """
+    Production had a valid live secret key and no publishable key, and the only
+    thing anybody could see was "Stripe not configured" — which sends you to
+    check the key you already set.
+    """
+    from backend.app.config import stripe_report
+
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_live_51ABC")
+    report = stripe_report()
+
+    assert report["ready_for_checkout"] is False
+    assert "STRIPE_PUBLIC_KEY" in report["missing"]
+    assert "STRIPE_SECRET_KEY" not in report["missing"]
+
+
+def test_it_never_prints_the_values(monkeypatch):
+    """A public endpoint. "Is it set" is the whole question."""
+    from backend.app.config import stripe_report
+
+    monkeypatch.setenv("STRIPE_SECRET_KEY", "sk_live_51SECRETVALUE")
+    assert "51SECRETVALUE" not in str(stripe_report())
+    assert stripe_report()["set"]["STRIPE_SECRET_KEY"] is True
+
+
+def test_a_fully_configured_stripe_is_ready(monkeypatch):
+    from backend.app.config import stripe_report
+
+    for name, value in [
+        ("STRIPE_SECRET_KEY", "sk_test_51ABC"),
+        ("STRIPE_PUBLIC_KEY", "pk_test_51ABC"),
+        ("STRIPE_PRICE_BASE", "price_base"),
+        ("STRIPE_PRICE_MODULE", "price_module"),
+        ("STRIPE_WEBHOOK_SECRET", "whsec_abc"),
+    ]:
+        monkeypatch.setenv(name, value)
+
+    report = stripe_report()
+    assert report["ready_for_checkout"] is True
+    assert "missing" not in report
+    assert "warning" not in report
+
+
+def test_a_missing_webhook_secret_is_warned_about_specifically(monkeypatch):
+    """
+    The quietest way for a billing integration to be broken: the payment
+    succeeds, the customer is charged, and nothing ever activates.
+    """
+    from backend.app.config import stripe_report
+
+    for name, value in [
+        ("STRIPE_SECRET_KEY", "sk_test_51ABC"),
+        ("STRIPE_PUBLIC_KEY", "pk_test_51ABC"),
+        ("STRIPE_PRICE_BASE", "price_base"),
+        ("STRIPE_PRICE_MODULE", "price_module"),
+    ]:
+        monkeypatch.setenv(name, value)
+
+    report = stripe_report()
+    assert report["ready_for_checkout"] is True, "checkout can run without it"
+    assert "never activate" in report["warning"], "but it must say what will happen"

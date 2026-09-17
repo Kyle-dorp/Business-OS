@@ -20,35 +20,77 @@
 
 /* ------------------------------------------------------------ module rows */
 
-.billing-modules { display: flex; flex-direction: column; gap: 0.6rem; }
+/* Ten choices read as a menu, not a list. A single column made the page a
+   scroll; a grid makes it a decision. */
+.billing-modules {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr));
+  gap: 0.7rem;
+  align-content: start;
+}
+@media (max-width: 640px) {
+  .billing-modules { grid-template-columns: 1fr; }
+}
+
+.billing-included {
+  grid-column: 1 / -1;
+  margin: 0.4rem 0 0;
+  color: var(--faint);
+  font-size: 0.82rem;
+}
 
 .billing-module {
+  position: relative;
   display: flex;
-  gap: 1rem;
+  gap: 0.85rem;
   width: 100%;
   text-align: left;
-  padding: 1.15rem 1.3rem;
-  border-radius: 14px;
+  padding: 1.15rem 1.25rem;
+  border-radius: 16px;
   background: var(--glass);
   border: 1px solid var(--line-soft);
   cursor: pointer;
   font: inherit;
   color: var(--ink-2);
-  transition: background-color 0.25s var(--ease), border-color 0.25s var(--ease),
-              box-shadow 0.3s var(--ease), transform 0.25s var(--ease);
+  overflow: hidden;
+  /* Unselected is genuinely quieter. Before, on and off differed by about one
+     and a half percent of amber, which is not a difference somebody can see —
+     so ten modules all looked the same and nothing felt chosen. */
+  opacity: 0.72;
+  transition: background-color 0.3s var(--ease), border-color 0.3s var(--ease),
+              box-shadow 0.35s var(--ease), transform 0.25s var(--ease),
+              opacity 0.3s var(--ease);
 }
 
-.billing-module:hover:not(:disabled) {
-  background: rgba(245, 166, 91, 0.055);
-  border-color: rgba(245, 166, 91, 0.2);
-  box-shadow: 0 0 30px -14px rgba(245, 166, 91, 0.3);
-  transform: translateY(-1px);
+/* The lit edge. Selection reads from the corner of the eye before any text
+   is parsed, which is what "at a glance" has to mean on a grid of ten. */
+.billing-module::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, var(--amber-hot), var(--amber-deep));
+  opacity: 0;
+  transition: opacity 0.3s var(--ease);
+}
+
+.billing-module:hover {
+  opacity: 1;
+  background: rgba(245, 166, 91, 0.05);
+  border-color: rgba(245, 166, 91, 0.22);
+  box-shadow: 0 18px 40px -26px rgba(0, 0, 0, 0.9),
+              0 0 34px -18px rgba(245, 166, 91, 0.45);
+  transform: translateY(-2px);
 }
 
 .billing-module.is-on {
-  background: rgba(245, 166, 91, 0.07);
-  border-color: rgba(245, 166, 91, 0.26);
+  opacity: 1;
+  background: linear-gradient(150deg, rgba(245, 166, 91, 0.1), rgba(245, 166, 91, 0.035));
+  border-color: rgba(245, 166, 91, 0.32);
+  box-shadow: inset 0 1px 0 rgba(255, 201, 143, 0.12);
 }
+.billing-module.is-on::before { opacity: 1; }
+.billing-module.is-on .bm-desc { color: var(--ink-2); }
 
 /* A pending change is marked so somebody can see what they are about to save
    without comparing against memory. */
@@ -97,7 +139,38 @@
 
 .bm-tagline { color: var(--amber); font-size: 0.88rem; opacity: 0.85; }
 .bm-desc { color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
-.bm-replaces { color: var(--faint); font-size: 0.78rem; margin-top: 0.15rem; }
+
+/* The reason to buy it, at the moment of deciding. Held back at rest so the
+   grid stays scannable, and given its own row on hover so the comparison —
+   what this replaces, and what that costs — arrives when it is useful. */
+.bm-argument {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.35s var(--ease), opacity 0.3s var(--ease),
+              margin-top 0.35s var(--ease);
+  margin-top: 0;
+}
+.billing-module:hover .bm-argument,
+.billing-module:focus-visible .bm-argument {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  margin-top: 0.55rem;
+}
+.bm-argument-inner {
+  min-height: 0;
+  overflow: hidden;
+  display: block;
+}
+
+.bm-elsewhere { display: block; color: var(--faint); font-size: 0.8rem; }
+.bm-elsewhere s { color: var(--rose); opacity: 0.8; }
+.bm-replaces { display: block; color: var(--faint); font-size: 0.78rem; margin-top: 0.15rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bm-argument { grid-template-rows: 1fr; opacity: 1; margin-top: 0.55rem; }
+  .billing-module, .billing-module::before { transition: none; }
+}
 
 /* --------------------------------------------------------------- summary */
 
@@ -141,7 +214,14 @@
 .bs-compare > div { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
 .bs-compare span { color: var(--muted); font-size: 0.88rem; }
 .bs-compare s { color: var(--rose); opacity: 0.75; font-variant-numeric: tabular-nums; }
-.bs-saving strong { color: var(--mint); font-variant-numeric: tabular-nums; font-size: 1.05rem; }
+.bs-saving strong {
+  color: var(--mint);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.35rem;
+  font-weight: 500;
+  text-shadow: 0 0 26px rgba(119, 216, 194, 0.3);
+}
+.bs-saving span { color: var(--ink-2); }
 
 .bs-actions { display: flex; gap: 0.5rem; margin-top: 1.5rem; }
 .bs-actions .primary-btn { flex: 1; padding: 0.75rem 1rem; }

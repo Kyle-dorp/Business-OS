@@ -108,7 +108,9 @@ describe("the price on the page", () => {
     render(<BillingPage />);
 
     expect(await screen.findByText("$105")).toBeInTheDocument();
-    expect(screen.getByText("$66/mo")).toBeInTheDocument();
+    // The saving counts, so the figure and the "/mo" are separate nodes.
+    const saving = (await screen.findByText("You keep")).closest("div");
+    expect(saving).toHaveTextContent("$66/mo");
   });
 
   it("hides the comparison when there is nothing to compare", async () => {
@@ -128,7 +130,12 @@ describe("the price on the page", () => {
     await screen.findByText("$39");
     await userEvent.click(screen.getByRole("button", { name: /Bookings/ }));
 
-    expect(await screen.findByText("$49")).toBeInTheDocument();
+    // The figure travels to its new value rather than swapping, so wait for it
+    // to settle rather than for a single frame.
+    await waitFor(
+      () => expect(screen.getByText("$49")).toBeInTheDocument(),
+      { timeout: 3000 },
+    );
   });
 });
 
@@ -146,14 +153,25 @@ describe("choosing modules", () => {
     );
   });
 
-  it("an always-on module cannot be switched off", async () => {
-    // Losing the home screen is not a saving.
+  it("only offers modules that can actually be bought", async () => {
+    // Home, settings and notifications used to be the first three rows of the
+    // chooser, each marked ALWAYS ON — three cards nobody can choose, pushing
+    // the ten they are here to choose below the fold.
     respond();
     render(<BillingPage />);
 
-    const home = await screen.findByRole("button", { name: /Home/ });
-    expect(home).toBeDisabled();
-    expect(screen.getByText("always on")).toBeInTheDocument();
+    await screen.findByText("$39");
+    expect(screen.queryByRole("button", { name: /Home/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Scheduling/ })).toBeInTheDocument();
+  });
+
+  it("still says the always-on modules are included", async () => {
+    // Dropping them from the list must not make them look like a missing
+    // feature. One line, under the grid.
+    respond();
+    render(<BillingPage />);
+
+    expect(await screen.findByText(/Home.*always included/)).toBeInTheDocument();
   });
 
   it("shows what a module replaces, since that is the argument", async () => {

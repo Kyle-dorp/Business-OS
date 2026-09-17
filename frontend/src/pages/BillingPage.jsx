@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "../api";
 import { ErrorState, Loading } from "../components/States";
+import { useCountUp } from "../hooks/useCountUp";
 
 /**
  * Billing and modules, on one screen.
@@ -23,6 +24,17 @@ const STATUS_COPY = {
 
 function money(cents) {
   return `$${Math.round((cents || 0) / 100).toLocaleString()}`;
+}
+
+/**
+ * The price, travelling to its new value as modules are toggled.
+ *
+ * Split out so the animation lives at the leaf: a re-render sixty times a
+ * second would otherwise run the whole page, including the module grid.
+ */
+function CountingMoney({ cents, className }) {
+  const shown = useCountUp(cents || 0);
+  return <span className={className}>{money(shown)}</span>;
 }
 
 export default function BillingPage({ onModulesChanged }) {
@@ -52,6 +64,19 @@ export default function BillingPage({ onModulesChanged }) {
   const selectedKeys = useMemo(
     () => (draft ? Object.keys(draft).filter((k) => draft[k]) : []),
     [draft]
+  );
+
+  // Only what can actually be bought belongs in the chooser. Home, settings and
+  // notifications were rendered as three full cards at the top of the list,
+  // each marked ALWAYS ON — three things nobody can choose, pushing the ten
+  // things they are here to choose below the fold. They get one line instead.
+  const billable = useMemo(
+    () => (catalogue ? catalogue.modules.filter((m) => m.billable) : []),
+    [catalogue]
+  );
+  const included = useMemo(
+    () => (catalogue ? catalogue.modules.filter((m) => !m.billable) : []),
+    [catalogue]
   );
 
   const dirty = useMemo(() => {
@@ -176,38 +201,57 @@ export default function BillingPage({ onModulesChanged }) {
 
       <div className="billing-layout">
         <section className="billing-modules">
-          {catalogue.modules.map((m) => {
+          {billable.map((m) => {
             const on = draft[m.key];
             const changed = on !== m.enabled;
             return (
               <button
                 key={m.key}
                 type="button"
-                className={`billing-module${on ? " is-on" : ""}${m.billable ? "" : " is-fixed"}${changed ? " is-changed" : ""}`}
+                className={`billing-module${on ? " is-on" : ""}${changed ? " is-changed" : ""}`}
                 onClick={() => toggle(m.key, m.billable)}
                 aria-pressed={on}
-                disabled={!m.billable}
               >
                 <span className="bm-check" aria-hidden="true">{on ? "✓" : ""}</span>
                 <span className="bm-body">
                   <span className="bm-top">
                     <strong>{m.name}</strong>
-                    {m.billable ? (
-                      <span className="bm-price">
-                        {m.market_price > 0 && <s>${m.market_price}</s>}
-                        <em>{on ? "included" : "add"}</em>
-                      </span>
-                    ) : (
-                      <span className="bm-always">always on</span>
-                    )}
+                    <span className="bm-price">
+                      <em>{on ? "included" : "add"}</em>
+                    </span>
                   </span>
                   <span className="bm-tagline">{m.tagline}</span>
                   <span className="bm-desc">{m.description}</span>
-                  {m.replaces && <span className="bm-replaces">Replaces {m.replaces}</span>}
+
+                  {/* The argument for this module, revealed on hover — what it
+                      replaces and what that costs elsewhere. Kept out of the
+                      resting state so ten cards read as a menu rather than as
+                      ten paragraphs. */}
+                  {(m.replaces || m.market_price > 0) && (
+                    <span className="bm-argument">
+                      {/* One wrapper, because grid-template-rows: 0fr sizes only
+                          the first row — with two children the second kept its
+                          auto height and the panel never fully collapsed. */}
+                      <span className="bm-argument-inner">
+                        {m.market_price > 0 && (
+                          <span className="bm-elsewhere">
+                            <s>${m.market_price}/mo</s> elsewhere
+                          </span>
+                        )}
+                        {m.replaces && <span className="bm-replaces">Replaces {m.replaces}</span>}
+                      </span>
+                    </span>
+                  )}
                 </span>
               </button>
             );
           })}
+
+          {included.length > 0 && (
+            <p className="billing-included">
+              {included.map((m) => m.name).join(", ")} are always included.
+            </p>
+          )}
         </section>
 
         <aside className="billing-summary">
@@ -215,7 +259,7 @@ export default function BillingPage({ onModulesChanged }) {
             <div className={`bs-status tone-${status.tone}`}>{status.label}</div>
 
             <div className="bs-price">
-              <span className="bs-amount">{money(shown.monthly_cents)}</span>
+              <CountingMoney cents={shown.monthly_cents} className="bs-amount" />
               <span className="bs-per">/month</span>
             </div>
             <p className="bs-breakdown">
@@ -235,7 +279,9 @@ export default function BillingPage({ onModulesChanged }) {
                 {shown.saving_cents > 0 && (
                   <div className="bs-saving">
                     <span>You keep</span>
-                    <strong>{money(shown.saving_cents)}/mo</strong>
+                    <strong>
+                      <CountingMoney cents={shown.saving_cents} />/mo
+                    </strong>
                   </div>
                 )}
               </div>

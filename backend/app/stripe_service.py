@@ -22,9 +22,14 @@ try:
 except ImportError:
     stripe = None
 
-STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
-STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
-STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
+# Read through config.env, which strips the quotes a pasted value keeps. A key
+# set as `"sk_live_..."` is truthy, so the app reported itself configured while
+# every call to Stripe failed on an invalid key.
+from backend.app.config import env
+
+STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY") or None
+STRIPE_PUBLIC_KEY = env("STRIPE_PUBLIC_KEY") or None
+STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET") or None
 
 if STRIPE_SECRET_KEY:
     stripe.api_key = STRIPE_SECRET_KEY

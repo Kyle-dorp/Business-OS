@@ -1284,8 +1284,19 @@ def health_check(response: Response):
     endpoint says degraded and answers 503, which is what an uptime monitor
     needs in order to be worth having.
     """
+    from backend.app.config import check_all, stripe_mode
+
     checks = {}
     healthy = True
+
+    # A credential that kept its quotes is truthy, so every "is it configured"
+    # check passes and every call to the vendor fails. Say so here rather than
+    # leaving it to be found at checkout.
+    misconfigured = check_all()
+    checks["stripe"] = stripe_mode()
+    if misconfigured:
+        checks["config"] = misconfigured
+        healthy = False
 
     try:
         with Session(engine) as session:

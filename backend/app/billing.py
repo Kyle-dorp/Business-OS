@@ -54,11 +54,13 @@ from backend.app.tenancy import current_business_id
 
 log = logging.getLogger(__name__)
 
-PRICE_BASE = os.environ.get("STRIPE_PRICE_BASE", "")
-PRICE_MODULE = os.environ.get("STRIPE_PRICE_MODULE", "")
-PRICE_AI_OVERAGE = os.environ.get("STRIPE_PRICE_AI_OVERAGE", "")
+from backend.app.config import env
+
+PRICE_BASE = env("STRIPE_PRICE_BASE")
+PRICE_MODULE = env("STRIPE_PRICE_MODULE")
+PRICE_AI_OVERAGE = env("STRIPE_PRICE_AI_OVERAGE")
 # Billing Meter event name — must match the meter created in the Stripe dashboard.
-METER_EVENT_NAME = os.environ.get("STRIPE_METER_EVENT_NAME", "assistant_tokens")
+METER_EVENT_NAME = env("STRIPE_METER_EVENT_NAME", "assistant_tokens")
 APP_URL = os.environ.get("APP_URL", "http://localhost:5173").rstrip("/")
 
 BILLING_ROLES = {"owner", "admin"}
@@ -69,7 +71,7 @@ router = APIRouter(prefix="/billing", tags=["billing"])
 # ------------------------------------------------------------------ helpers
 
 def _stripe_ready() -> None:
-    if not os.environ.get("STRIPE_SECRET_KEY"):
+    if not env("STRIPE_SECRET_KEY"):
         raise HTTPException(503, "Billing isn't configured on this deployment.")
     if not (PRICE_BASE and PRICE_MODULE):
         raise HTTPException(503, "Stripe price IDs are missing from the environment.")
@@ -385,7 +387,7 @@ def report_meter_usage(session: Session, business_id: int, tokens: int) -> dict:
         return {"reported": False, "reason": "no stripe customer"}
 
     try:
-        stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
+        stripe.api_key = env("STRIPE_SECRET_KEY")
         stripe.billing.MeterEvent.create(
             event_name=METER_EVENT_NAME,
             payload={

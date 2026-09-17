@@ -12,6 +12,7 @@ import "./theme-booking.css";
 import "./theme-app.css";
 import "./theme-bubble.css";
 import "./theme-today.css";
+import "./theme-charts.css";
 import { api, getBusinessId, getToken, setBusinessId, setToken } from "./api";
 import AssistantBubble from "./components/AssistantBubble";
 import { mondayOf, toIsoDate } from "./utils";

@@ -1,0 +1,212 @@
+/* ============================================================================
+   Business-EOS — charts
+
+   Marks are thin, grid and axes are recessive, and every series that carries
+   meaning is also labelled in text. Colour is a second channel here, never the
+   only one.
+   ========================================================================= */
+
+.chart {
+  margin: 0;
+  padding: 1.4rem 1.5rem 1.2rem;
+  border-radius: 16px;
+  background: var(--glass);
+  border: 1px solid var(--line-soft);
+}
+
+.chart-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.chart-head h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+.chart-head p { margin: 0.25rem 0 0; color: var(--muted); font-size: 0.85rem; }
+.chart-head-right { display: flex; align-items: center; gap: 0.9rem; }
+
+/* A legend is present whenever more than one series is drawn. */
+.chart-legend { display: flex; gap: 0.85rem; }
+.chart-key { display: inline-flex; align-items: center; gap: 0.35rem;
+             color: var(--muted); font-size: 0.8rem; }
+.chart-key::before {
+  content: "";
+  width: 0.7rem; height: 2px; border-radius: 999px;
+}
+.chart-key.is-in::before  { background: var(--mint); }
+.chart-key.is-out::before { background: var(--rose); }
+
+.chart-table-toggle {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.76rem;
+  cursor: pointer;
+  transition: color 0.22s var(--ease), border-color 0.22s var(--ease);
+}
+.chart-table-toggle:hover { color: var(--ink-2); border-color: var(--line); }
+
+/* -------------------------------------------------------------- the plot */
+
+.chart-plot { position: relative; }
+.chart-plot svg { width: 100%; height: auto; display: block; overflow: visible; }
+
+.chart-grid { stroke: var(--line-soft); stroke-width: 1; }
+.chart-tick { fill: var(--faint); font-size: 10px; }
+
+.chart-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.chart-line.is-in  { stroke: var(--mint); }
+.chart-line.is-out { stroke: var(--rose); }
+
+.chart-crosshair { stroke: var(--line); stroke-width: 1; stroke-dasharray: 3 3; }
+
+/* A 2px surface ring, so a marker over a line still reads as a marker. */
+.chart-dot { stroke: var(--void); stroke-width: 2; }
+.chart-dot.is-in  { fill: var(--mint); }
+.chart-dot.is-out { fill: var(--rose); }
+
+.chart-tip {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 10px;
+  background: rgba(21, 16, 15, 0.97);
+  border: 1px solid var(--line);
+  box-shadow: 0 18px 40px -22px rgba(0, 0, 0, 0.9);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2;
+}
+.chart-tip strong { color: var(--ink); font-weight: 500; }
+.chart-tip span { color: var(--muted); }
+.chart-tip .is-in  { color: var(--mint); }
+.chart-tip .is-out { color: var(--rose); }
+
+/* ------------------------------------------------------------- thresholds */
+
+.chart-threshold { stroke-width: 1; stroke-dasharray: 4 4; }
+.chart-threshold.is-healthy { stroke: rgba(119, 216, 194, 0.5); }
+.chart-threshold.is-ceiling { stroke: rgba(217, 120, 141, 0.55); }
+
+.chart-threshold-label { font-size: 9px; letter-spacing: 0.04em; }
+.chart-threshold-label.is-healthy { fill: rgba(119, 216, 194, 0.8); }
+.chart-threshold-label.is-ceiling { fill: rgba(217, 120, 141, 0.85); }
+
+/* One hue for magnitude. Status colour only where it means a state, and the
+   threshold line and its label carry the same meaning in text. */
+.chart-bar {
+  fill: var(--amber-deep);
+  transition: fill 0.2s var(--ease);
+}
+.chart-bar.is-tight { fill: var(--amber); }
+.chart-bar.is-over  { fill: var(--rose); }
+.chart-bar:hover    { fill: var(--amber-hot); }
+
+/* ------------------------------------------------------------ ranked bars */
+
+.chart-bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+
+.chart-bars-row {
+  display: grid;
+  grid-template-columns: minmax(6rem, 10rem) 1fr auto;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.3rem 0.4rem;
+  border-radius: 10px;
+  transition: background-color 0.2s var(--ease);
+}
+.chart-bars-row.is-hover { background: var(--glass); }
+
+.chart-bars-label {
+  color: var(--ink-2);
+  font-size: 0.88rem;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.chart-bars-track {
+  position: relative;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: rgba(246, 240, 234, 0.05);
+  overflow: visible;
+}
+.chart-bars-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--amber-deep);
+  transition: width 0.5s var(--ease), background-color 0.25s var(--ease);
+}
+.chart-bars-row.is-over .chart-bars-fill { background: var(--rose); }
+
+/* Where the line is that the bar should not cross. */
+.chart-bars-limit {
+  position: absolute;
+  top: -3px; bottom: -3px;
+  width: 1px;
+  background: rgba(246, 240, 234, 0.4);
+}
+
+.chart-bars-value {
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-variant-numeric: tabular-nums;
+  min-width: 3rem;
+  text-align: right;
+}
+.chart-bars-row.is-over .chart-bars-value { color: var(--rose); }
+
+.chart-foot {
+  margin: 0.9rem 0 0;
+  color: var(--faint);
+  font-size: 0.78rem;
+  display: flex; align-items: center; gap: 0.45rem;
+}
+.chart-foot-mark {
+  width: 1px; height: 0.8rem;
+  background: rgba(246, 240, 234, 0.4);
+}
+
+/* -------------------------------------------------------------- the table */
+
+.chart-table-wrap { margin-top: 1rem; max-height: 16rem; overflow: auto; }
+.chart-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+.chart-table th, .chart-table td {
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  border-bottom: 1px solid var(--line-soft);
+}
+.chart-table th {
+  position: sticky; top: 0;
+  background: var(--void-lift);
+  color: var(--faint);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
+.chart-table td { color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+  .chart-bars-fill, .chart-bar, .chart-bars-row, .chart-table-toggle { transition: none; }
+}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api";
 import { toIsoDate } from "../utils";
+import { CashChart } from "../components/Charts";
 
 const money = (cents = 0) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 // toISOString() is UTC. At 7pm in New York it returns tomorrow, so the default
@@ -30,7 +31,17 @@ export default function PlatformPage({ section = "overview" }) {
     if (section === "accounting") setData({ expenses: await api("/platform/expenses"), report: await api("/platform/reports/profit-loss") });
     if (section === "tasks") setData(await api("/platform/tasks"));
     if (section === "inventory") setData(await api("/platform/inventory"));
-    if (section === "reports") setData({ profit: await api("/platform/reports/profit-loss"), balance: await api("/platform/reports/balance-sheet"), trial: await api("/platform/reports/trial-balance") });
+    if (section === "reports") {
+      const [profit, balance, trial, today] = await Promise.all([
+        api("/platform/reports/profit-loss"),
+        api("/platform/reports/balance-sheet"),
+        api("/platform/reports/trial-balance"),
+        // Same source as the dashboard, so the two screens cannot disagree
+        // about what the month looked like.
+        api("/platform/today").catch(() => null),
+      ]);
+      setData({ profit, balance, trial, cash: today?.money ?? null });
+    }
   }
 
   useEffect(() => { load().catch((error) => setMessage(error.message)); }, [section]);
@@ -94,7 +105,11 @@ export default function PlatformPage({ section = "overview" }) {
 
   if (section === "inventory") return <div className="page os-page"><Header title="Inventory & assets" copy="Track products, supplies, equipment, and reorder points." /><section className="card os-form"><div className="os-form-grid"><Field label="SKU"><input value={form.sku || ""} onChange={(e) => setForm({ ...form, sku: e.target.value })} /></Field><Field label="Item name"><input value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field><Field label="Type"><select value={form.item_type || "inventory"} onChange={(e) => setForm({ ...form, item_type: e.target.value })}><option value="inventory">Inventory</option><option value="supply">Supply</option><option value="asset">Asset</option><option value="service">Service</option></select></Field><Field label="Starting quantity"><input type="number" value={form.quantity || 0} onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })} /></Field><Field label="Reorder at"><input type="number" value={form.reorder_level || 0} onChange={(e) => setForm({ ...form, reorder_level: Number(e.target.value) })} /></Field></div><button className="primary-btn" onClick={() => submit("/platform/inventory", form)}>Add item</button></section><Notice text={message} /><Table headers={["SKU", "Item", "Type", "On hand", "Reorder at"]} rows={(data || []).map((x) => [x.sku, x.name, x.item_type, x.quantity_milli / 1000, x.reorder_level_milli / 1000])} /></div>;
 
-  if (section === "reports") return <div className="page os-page"><Header title="Financial reports" copy="A live view generated from the double-entry ledger." /><div className="os-metrics compact"><article><span>Revenue</span><strong>{money(data.profit.total_income_cents)}</strong></article><article><span>Expenses</span><strong>{money(data.profit.total_expenses_cents)}</strong></article><article><span>Net income</span><strong>{money(data.profit.net_income_cents)}</strong></article><article><span>Total assets</span><strong>{money(data.balance.totals.asset)}</strong></article></div><section className="card"><h2>Trial balance</h2><Table headers={["Code", "Account", "Debit", "Credit"]} rows={data.trial.rows.map((x) => [x.account.code, x.account.name, money(x.debit_cents), money(x.credit_cents)])} /></section></div>;
+  if (section === "reports") return <div className="page os-page"><Header title="Financial reports" copy="A live view generated from the double-entry ledger." />
+    {data.cash?.series?.length > 0 && (
+      <section className="os-chart-block"><CashChart series={data.cash.series} /></section>
+    )}
+    <div className="os-metrics compact"><article><span>Revenue</span><strong>{money(data.profit.total_income_cents)}</strong></article><article><span>Expenses</span><strong>{money(data.profit.total_expenses_cents)}</strong></article><article><span>Net income</span><strong>{money(data.profit.net_income_cents)}</strong></article><article><span>Total assets</span><strong>{money(data.balance.totals.asset)}</strong></article></div><section className="card"><h2>Trial balance</h2><Table headers={["Code", "Account", "Debit", "Credit"]} rows={data.trial.rows.map((x) => [x.account.code, x.account.name, money(x.debit_cents), money(x.credit_cents)])} /></section></div>;
 
   return null;
 }

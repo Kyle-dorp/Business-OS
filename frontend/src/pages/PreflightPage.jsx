@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import { Empty, ErrorState, Loading } from "../components/States";
+import { LaborChart } from "../components/Charts";
 
 /**
  * Pre-publish check.
@@ -52,6 +53,25 @@ export default function PreflightPage() {
   }, [selected]);
 
   const verdict = result ? VERDICT[result.verdict] || VERDICT.review : null;
+
+  // Labor cost per day as a share of the forecast. The cost side is real
+  // per-day data the check already computes and has never drawn; the revenue
+  // side is a week total, so this divides it evenly and the caption says so —
+  // a Saturday is not an average day, and implying a per-day forecast exists
+  // would be inventing one.
+  const laborDays = (() => {
+    const perDay = result?.checks?.cost?.per_day;
+    const forecast = result?.checks?.cost?.forecast_revenue;
+    if (!perDay || !forecast) return [];
+    const dates = Object.keys(perDay).sort();
+    if (!dates.length) return [];
+    const dailyForecast = forecast / dates.length;
+    if (dailyForecast <= 0) return [];
+    return dates.map((date) => ({
+      date,
+      percent: Math.round((perDay[date] / dailyForecast) * 1000) / 10,
+    }));
+  })();
 
   return (
     <div className="page preflight-page">
@@ -188,6 +208,12 @@ export default function PreflightPage() {
                 </article>
               </div>
             </section>
+
+            {laborDays.length > 0 && (
+              <section className="card preflight-chart">
+                <LaborChart days={laborDays} />
+              </section>
+            )}
 
             {/* 4 — can you serve it */}
             <section className="card">

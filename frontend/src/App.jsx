@@ -10,7 +10,10 @@ import "./theme-compliance.css";
 import "./theme-inventory.css";
 import "./theme-booking.css";
 import "./theme-app.css";
+import "./theme-bubble.css";
 import { api, getBusinessId, getToken, setBusinessId, setToken } from "./api";
+import AssistantBubble from "./components/AssistantBubble";
+import { mondayOf, toIsoDate } from "./utils";
 import AuthPage from "./pages/AuthPage";
 import AgentPage from "./pages/AgentPage";
 import PreflightPage from "./pages/PreflightPage";
@@ -189,5 +192,15 @@ export default function App() {
         </> : <>{activeTab === "home" && <EmployeeHomePage />}{activeTab === "my-availability" && <EmployeeAvailabilityPage />}{activeTab === "requests" && <RequestsPage />}{activeTab === "settings" && <SettingsPage user={user} onUserChange={setUser} onLogout={logout} />}</>}
       </PageErrorBoundary>
     </main>
+
+    {/* Outside <main> on purpose: it is fixed to the viewport, and nesting it
+        in a scrolling region would carry it up the page. Employees get it too
+        — "am I on this weekend" is the question they actually have. */}
+    <AssistantBubble
+      page={activeTab}
+      pageLabel={currentLabel}
+      weekStart={toIsoDate(mondayOf())}
+      attention={notificationCount}
+    />
   </div>;
 }

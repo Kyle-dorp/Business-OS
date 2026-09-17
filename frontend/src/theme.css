@@ -24,7 +24,12 @@
   --ink: #F6F0EA;
   --ink-2: #C6B9B1;
   --muted: #8C7F79;
-  --faint: #6A5F5A;
+  /* 4.55:1 on --void. It was #6A5F5A at 3.17:1, below the 4.5 body floor —
+     and --faint carries labels, metadata and timestamps across every screen,
+     so it was the single most widely-read failing colour in the product.
+     Lightened only as far as passing: further would stop it de-emphasising,
+     and it still sits below --muted so the hierarchy holds. */
+  --faint: #857771;
 
   --amber: #F5A65B;
   --amber-hot: #FFC98F;

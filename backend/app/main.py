@@ -82,6 +82,7 @@ from backend.app.stripe_service import (
     handle_webhook_event,
     stripe_configured,
 )
+from backend.app.today import router as today_router
 from backend.app.admin_routes import admin_router
 
 # These modules declare tables, so they must be imported before create_all()
@@ -106,6 +107,7 @@ startup_errors = []
 app = FastAPI(title="Business EOS API", version="1.0.0")
 app.include_router(platform_router)
 app.include_router(finance_router)
+app.include_router(today_router)
 app.include_router(admin_router)
 app.include_router(agent_router)
 app.include_router(billing_router)

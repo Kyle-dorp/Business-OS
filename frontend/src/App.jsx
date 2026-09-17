@@ -11,9 +11,11 @@ import "./theme-inventory.css";
 import "./theme-booking.css";
 import "./theme-app.css";
 import "./theme-bubble.css";
+import "./theme-today.css";
 import { api, getBusinessId, getToken, setBusinessId, setToken } from "./api";
 import AssistantBubble from "./components/AssistantBubble";
 import { mondayOf, toIsoDate } from "./utils";
+import TodayPage from "./pages/TodayPage";
 import AuthPage from "./pages/AuthPage";
 import AgentPage from "./pages/AgentPage";
 import PreflightPage from "./pages/PreflightPage";
@@ -93,6 +95,11 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("home");
+  // What is actually waiting on somebody — an unpublishable rota, an overdue
+  // invoice, stock about to run out. The bubble rings for this rather than for
+  // the notification count, which the nav already carries and which is a
+  // different question.
+  const [attention, setAttention] = useState(0);
   const [notificationCount, setNotificationCount] = useState(0);
   const [businesses, setBusinesses] = useState([]);
   const [workspace, setWorkspace] = useState(null);
@@ -147,6 +154,13 @@ export default function App() {
   async function authenticated(nextUser) { setUser(nextUser); setNeedsSetup(false); restoreTab(nextUser); await loadWorkspace(); }
   function logout() { setToken(""); setBusinessId(""); setUser(null); setWorkspace(null); setDrawerOpen(false); }
   function changeTab(id) { setActiveTab(id); setDrawerOpen(false); }
+
+  useEffect(() => {
+    if (!user || user.role !== "manager") return;
+    api("/platform/today")
+      .then((d) => setAttention(d?.attention_count ?? 0))
+      .catch(() => {});   // A dashboard that will not load must not break the shell.
+  }, [user, activeTab]);
   async function switchBusiness(id) { setBusinessId(id); setWorkspace(await api("/platform/workspace")); setActiveTab("home"); }
   async function refreshWorkspace() { setWorkspace(await api("/platform/workspace")); }
   async function createBusiness() {
@@ -176,7 +190,7 @@ export default function App() {
       <header className="topbar"><button className="hamburger" aria-label="Open navigation" onClick={() => setDrawerOpen(true)}><span /><span /><span /></button><div className="topbar-copy"><span>{workspace?.business?.name || "Business workspace"}</span><strong>{currentLabel}</strong></div><div className="topbar-actions">{user.role === "manager" && <button className="topbar-notification" onClick={() => changeTab("notifications")}>●{notificationCount > 0 && <b>{notificationCount}</b>}</button>}<button className="topbar-profile" onClick={() => changeTab("settings")}><span>{user.username[0].toUpperCase()}</span><div><strong>{user.username}</strong><small>{workspace?.role || user.role}</small></div></button></div></header>
       <PageErrorBoundary pageKey={activeTab}>
         {user.role === "manager" ? <>
-          {activeTab === "home" && <PlatformPage section="overview" />}
+          {activeTab === "home" && <TodayPage onNavigate={changeTab} />}
           {["contacts", "sales", "purchasing", "accounting", "reports", "tasks", "inventory"].includes(activeTab) && <PlatformPage section={activeTab} />}
           {activeTab === "availability" && <AvailabilityPage />}{activeTab === "manager" && <ManagerPage />}
           {activeTab === "finance" && <FinancePage />}
@@ -200,7 +214,7 @@ export default function App() {
       page={activeTab}
       pageLabel={currentLabel}
       weekStart={toIsoDate(mondayOf())}
-      attention={notificationCount}
+      attention={attention}
     />
   </div>;
 }

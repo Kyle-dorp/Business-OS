@@ -1,0 +1,240 @@
+/* ============================================================================
+   Business-EOS — the first screen
+
+   Four tiles, each of them a door. The rota tile is the largest because it is
+   the thing no competitor can answer, and because on a Monday morning it is
+   the only question that has a deadline.
+   ========================================================================= */
+
+.today-page { max-width: 1240px; margin: 0 auto; }
+
+.today-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: 1rem;
+  margin-top: 1.6rem;
+}
+@media (max-width: 940px) {
+  .today-grid { grid-template-columns: 1fr; }
+}
+
+/* ------------------------------------------------------------------ tiles */
+
+.today-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.55rem;
+  padding: 1.5rem 1.6rem;
+  text-align: left;
+  font: inherit;
+  color: var(--ink-2);
+  overflow: hidden;
+  transition: transform 0.28s var(--ease), border-color 0.28s var(--ease),
+              box-shadow 0.32s var(--ease);
+}
+
+/* Everything that navigates is a button, so the affordance comes from the
+   surface rather than from a chrome button sitting inside a card. */
+button.today-tile { cursor: pointer; }
+button.today-tile:hover {
+  transform: translateY(-2px);
+  border-color: rgba(245, 166, 91, 0.26);
+  box-shadow: 0 26px 54px -32px rgba(0, 0, 0, 0.9),
+              0 0 40px -22px rgba(245, 166, 91, 0.4);
+}
+button.today-tile:hover .today-tile-go { color: var(--amber-hot); transform: translateX(3px); }
+
+.today-tile-label {
+  color: var(--faint);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.today-tile-lead {
+  font-family: "Fraunces", serif;
+  font-weight: 400;
+  font-size: 1.55rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.today-tile-sub { color: var(--muted); font-size: 0.86rem; margin-top: -0.3rem; }
+.today-tile-note { margin: 0; color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+
+.today-tile-go {
+  margin-top: auto;
+  padding-top: 0.9rem;
+  color: var(--amber);
+  font-size: 0.84rem;
+  transition: color 0.25s var(--ease), transform 0.25s var(--ease);
+}
+
+.today-tile-list {
+  margin: 0.35rem 0 0;
+  padding-left: 1rem;
+  color: var(--ink-2);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+.today-tile-list.is-quiet { color: var(--muted); }
+
+/* ------------------------------------------------------------- 1. the rota */
+
+/* Only when it has something to list. A tile that is mostly empty space is
+   what this page was rebuilt to stop. */
+.today-tile.is-rota.is-tall { grid-row: span 2; }
+@media (max-width: 940px) { .today-tile.is-rota.is-tall { grid-row: auto; } }
+
+/* The verdict lights the whole tile, because it is the one thing on this page
+   somebody might act on before finishing their coffee. */
+.today-tile.is-rota::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background: radial-gradient(70% 55% at 12% 0%, var(--tone, transparent), transparent 70%);
+}
+.today-tile.tone-good { --tone: rgba(119, 216, 194, 0.12); }
+.today-tile.tone-warn { --tone: rgba(245, 166, 91, 0.14); }
+.today-tile.tone-bad  { --tone: rgba(217, 120, 141, 0.16); }
+
+.today-verdict {
+  align-self: flex-start;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.today-verdict.tone-good { color: var(--mint); background: rgba(119, 216, 194, 0.12); }
+.today-verdict.tone-warn { color: var(--amber); background: rgba(245, 166, 91, 0.12); }
+.today-verdict.tone-bad  { color: var(--rose);  background: rgba(217, 120, 141, 0.14); }
+
+/* ------------------------------------------------------------ 2. the money */
+
+.today-tile.is-money .today-tile-lead { font-size: 2.3rem; font-variant-numeric: tabular-nums; }
+.today-tile.is-money .today-tile-lead.is-up   { color: var(--mint); }
+.today-tile.is-money .today-tile-lead.is-down { color: var(--rose); }
+
+.today-cash {
+  width: 100%;
+  height: 3.6rem;
+  margin: 0.5rem 0 0.2rem;
+  overflow: visible;
+}
+.today-cash-axis { stroke: var(--line-soft); stroke-width: 0.5; }
+.today-cash-in  { fill: none; stroke: var(--mint); stroke-width: 1.1;
+                  vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.today-cash-out { fill: none; stroke: var(--rose); stroke-width: 1.1;
+                  vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+
+.today-money-split,
+.today-money-owed {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+.today-money-split strong,
+.today-money-owed strong {
+  margin-left: 0.4rem;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+.today-money-split .is-in strong  { color: var(--mint); }
+.today-money-split .is-out strong { color: var(--rose); }
+.today-money-owed {
+  margin-top: 0.6rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--line-soft);
+}
+
+/* ------------------------------------------------------- 3. waiting on you */
+
+.today-attention { list-style: none; margin: 0.3rem 0 0; padding: 0; display: grid; gap: 0.3rem; }
+
+.today-attention-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: background-color 0.22s var(--ease), border-color 0.22s var(--ease),
+              transform 0.22s var(--ease);
+}
+.today-attention-row:hover {
+  background: var(--glass);
+  border-color: var(--line-soft);
+  transform: translateX(2px);
+}
+
+.today-attention-dot {
+  flex: none;
+  width: 0.45rem; height: 0.45rem;
+  border-radius: 50%;
+  background: var(--faint);
+}
+.urgency-high .today-attention-dot   { background: var(--rose);  box-shadow: 0 0 10px rgba(217, 120, 141, 0.7); }
+.urgency-medium .today-attention-dot { background: var(--amber); box-shadow: 0 0 10px rgba(245, 166, 91, 0.6); }
+
+.today-attention-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.1rem; }
+.today-attention-body strong { color: var(--ink); font-size: 0.93rem; font-weight: 500; }
+.today-attention-body span {
+  color: var(--muted); font-size: 0.82rem;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.today-attention-go { flex: none; color: var(--faint); transition: color 0.22s var(--ease); }
+.today-attention-row:hover .today-attention-go { color: var(--amber); }
+
+/* --------------------------------------------------------- 4. what runs out */
+
+.today-stock { list-style: none; margin: 0.4rem 0 0; padding: 0; display: grid; gap: 0.75rem; }
+.today-stock li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.2rem 0.75rem;
+  font-size: 0.9rem;
+}
+.today-stock-name { color: var(--ink); }
+.today-stock-cover { color: var(--muted); font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+
+/* How long it lasts, as a length. A number says four days; a bar that is
+   nearly empty says it before it is read. */
+.today-stock-bar {
+  grid-column: 1 / -1;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--line-soft);
+  overflow: hidden;
+}
+.today-stock-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--amber);
+  transition: width 0.5s var(--ease);
+}
+.today-stock .sev-high .today-stock-bar > span { background: var(--rose); }
+.today-stock .sev-high .today-stock-cover { color: var(--rose); }
+
+@media (prefers-reduced-motion: reduce) {
+  .today-tile, .today-attention-row, .today-tile-go, .today-stock-bar > span {
+    transition: none;
+  }
+}

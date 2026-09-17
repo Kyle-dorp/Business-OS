@@ -1,5 +1,7 @@
 import { Component, useEffect, useMemo, useState } from "react";
-import "./App.css";
+// Loaded first, on purpose: it is legacy page CSS and the design language
+// that follows must win every tie. See the header of the file itself.
+import "./theme-legacy.css";
 // Loaded after App.css on purpose: App.css owns layout and structure, these own
 // the look, and later import wins on equal specificity.
 import "./theme.css";

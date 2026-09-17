@@ -130,16 +130,54 @@ describe("the pre-redesign palette is gone", () => {
     },
   );
 
-  it("App.css no longer paints the root element", () => {
+  it("the legacy stylesheet no longer paints the root element", () => {
     // Its :root block set a light background, a dark ink and its own font
     // stack, over a design built for warm near-black.
-    expect(code("App.css")).not.toMatch(/^:root\s*\{/m);
+    expect(code("theme-legacy.css")).not.toMatch(/^:root\s*\{/m);
   });
 
-  it("App.css has no near-opaque white surfaces left", () => {
-    const whites = code("App.css").match(
+  it("the legacy stylesheet has no near-opaque white surfaces left", () => {
+    const whites = code("theme-legacy.css").match(
       /rgba\(\s*25[0-5]\s*,\s*25[0-5]\s*,\s*25[0-5]\s*,\s*(?:0?\.[5-9]\d*|1)\s*\)/g,
     );
     expect(whites).toBeNull();
+  });
+});
+
+// ------------------------------------------------ the legacy file only shrinks
+
+describe("the legacy stylesheet", () => {
+  it("still exists, because twelve pages have not been restyled yet", () => {
+    // Honest guard rather than an aspiration. The plan said "delete App.css
+    // and nothing changes"; that was wrong — AssistantPage, ManagerPage,
+    // AvailabilityPage, SettingsPage and eight more still need it. When the
+    // last of them is restyled this test is what gets deleted, and the file
+    // with it.
+    expect(fs.existsSync(path.join(SRC, "theme-legacy.css"))).toBe(true);
+    expect(fs.existsSync(path.join(SRC, "App.css"))).toBe(false);
+  });
+
+  it("holds no colour of its own", () => {
+    // Every one of the three times this file repainted the app, it did it by
+    // supplying a colour the theme had not restated. It has none left; this
+    // is what stops the next one going in.
+    const css = code("theme-legacy.css");
+    const literals = css.match(/#[0-9a-fA-F]{3,8}/g) || [];
+    const opaqueRgb = css.match(/rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*(?:0?\.[5-9]\d*|1))?\s*\)/g) || [];
+
+    expect(literals).toEqual([]);
+    expect(opaqueRgb).toEqual([]);
+  });
+
+  it("defines no custom properties", () => {
+    // It defined --text, --muted, --line, --surface and --shadow, all of which
+    // theme.css owns. A second definition is a fight waiting for an import
+    // order to change.
+    expect(code("theme-legacy.css")).not.toMatch(/^\s*--[\w-]+\s*:/m);
+  });
+
+  it("is loaded before the design language, so the theme wins every tie", () => {
+    const app = read("App.jsx");
+    expect(app.indexOf("theme-legacy.css")).toBeLessThan(app.indexOf("theme.css"));
   });
 });

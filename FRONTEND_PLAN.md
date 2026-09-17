@@ -185,6 +185,18 @@ blue glow on amber buttons.
 
 **Done when:** `App.css` is deleted and nothing changes.
 
+> **This was wrong, and phase 6 corrected it.** It assumed only the Scheduling
+> AI page needed `App.css`. Twelve pages do — AssistantPage, ManagerPage,
+> AvailabilityPage, SettingsPage, NotificationsPage, FinancePage,
+> EmployeeHomePage, RequestsPage, PlatformPage, AgentPage, BookingAdminPage,
+> AuthPage. Deleting the file means restyling all twelve, which is a phase of
+> its own rather than a cleanup at the end of this one.
+>
+> What phase 6 did instead: removed 97 rules nothing references, renamed the
+> file `theme-legacy.css` for what it actually is, stripped the last of its
+> colour, and put guards in `theme.test.js` so it can only ever shrink. The
+> bug class is retired; the file outlives it.
+
 ---
 
 ## Order, and why

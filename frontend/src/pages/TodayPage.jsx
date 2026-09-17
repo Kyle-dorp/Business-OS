@@ -69,10 +69,18 @@ export default function TodayPage({ onNavigate }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
 
+  const [setup, setSetup] = useState(null);
+
   const load = useCallback(async () => {
     setError("");
     try {
-      setData(await api("/platform/today"));
+      const [today, onboarding] = await Promise.all([
+        api("/platform/today"),
+        // A checklist that will not load must not take the dashboard with it.
+        api("/platform/onboarding").catch(() => null),
+      ]);
+      setData(today);
+      setSetup(onboarding);
     } catch (err) {
       setError(err?.message || "Couldn't load your workspace.");
     }
@@ -108,6 +116,44 @@ export default function TodayPage({ onNavigate }) {
         </div>
         <button className="ghost-btn" onClick={load}>Refresh</button>
       </div>
+
+      {/* The first ninety seconds. It reads the workspace rather than tracking
+          a wizard, so it is true whether somebody followed it, ignored it, or
+          did the work months ago in a different order — and it disappears for
+          good once there is nothing left on it. */}
+      {setup && !setup.complete && (
+        <section className="card today-setup">
+          <div className="today-setup-head">
+            <div>
+              <span className="today-tile-label">GETTING SET UP</span>
+              <strong className="today-tile-lead">{setup.next.title}</strong>
+              <p className="today-tile-note">{setup.next.why}</p>
+            </div>
+            <div className="today-setup-progress">
+              <span>{setup.done} of {setup.total}</span>
+              <span className="today-setup-track" aria-hidden="true">
+                <span style={{ width: `${(setup.done / setup.total) * 100}%` }} />
+              </span>
+            </div>
+          </div>
+
+          <button type="button" className="primary-btn"
+                  onClick={() => onNavigate?.(setup.next.tab)}>
+            {setup.next.action}
+          </button>
+
+          <ul className="today-setup-list">
+            {setup.steps.map((s) => (
+              <li key={s.key} className={s.done ? "is-done" : ""}>
+                <button type="button" onClick={() => onNavigate?.(s.tab)} disabled={s.done}>
+                  <span className="today-setup-tick" aria-hidden="true">{s.done ? "✓" : ""}</span>
+                  <span>{s.title}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <div className="today-grid">
 

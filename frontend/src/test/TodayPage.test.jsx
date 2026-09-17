@@ -40,8 +40,14 @@ function payload(overrides = {}) {
   };
 }
 
-function respond(data) {
-  api.mockImplementation(() => Promise.resolve(data ?? payload()));
+/** A workspace past its first day — the checklist is finished and gone. */
+const SETUP_DONE = { steps: [], done: 0, total: 0, next: null, complete: true };
+
+function respond(data, setup = SETUP_DONE) {
+  api.mockImplementation((path) => {
+    if (path === "/platform/onboarding") return Promise.resolve(setup);
+    return Promise.resolve(data ?? payload());
+  });
 }
 
 beforeEach(() => {
@@ -316,5 +322,88 @@ describe("before the data arrives", () => {
     await userEvent.click(screen.getByRole("button", { name: "Refresh" }));
 
     await waitFor(() => expect(api.mock.calls.length).toBeGreaterThan(before));
+  });
+});
+
+
+// ===========================================================================
+// Getting set up
+// ===========================================================================
+
+describe("the setup checklist", () => {
+  const halfway = {
+    done: 2,
+    total: 5,
+    complete: false,
+    next: { key: "rota", title: "Build a week", why: "Then Preflight can check it.",
+            tab: "manager", action: "Build this week" },
+    steps: [
+      { key: "staff", title: "Add your team", done: true, tab: "manager" },
+      { key: "positions", title: "Say what people do", done: true, tab: "manager" },
+      { key: "rota", title: "Build a week", done: false, tab: "manager" },
+      { key: "contacts", title: "Add a customer", done: false, tab: "contacts" },
+      { key: "billing", title: "Start your subscription", done: false, tab: "billing" },
+    ],
+  };
+
+  it("leads with the one thing to do next", async () => {
+    respond(payload(), halfway);
+    render(<TodayPage />);
+
+    // "Build a week" is both the headline and a row in the list below it —
+    // the next step is always also a step.
+    expect(await screen.findAllByText("Build a week")).toHaveLength(2);
+    expect(screen.getByText("Then Preflight can check it.")).toBeInTheDocument();
+  });
+
+  it("says how far along they are", async () => {
+    respond(payload(), halfway);
+    render(<TodayPage />);
+
+    expect(await screen.findByText("2 of 5")).toBeInTheDocument();
+  });
+
+  it("the action goes where the work is", async () => {
+    const onNavigate = vi.fn();
+    respond(payload(), halfway);
+    render(<TodayPage onNavigate={onNavigate} />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "Build this week" }));
+    expect(onNavigate).toHaveBeenCalledWith("manager");
+  });
+
+  it("every remaining step is its own door", async () => {
+    const onNavigate = vi.fn();
+    respond(payload(), halfway);
+    render(<TodayPage onNavigate={onNavigate} />);
+
+    await userEvent.click(await screen.findByRole("button", { name: /Add a customer/ }));
+    expect(onNavigate).toHaveBeenCalledWith("contacts");
+  });
+
+  it("a finished step is not a door any more", async () => {
+    respond(payload(), halfway);
+    render(<TodayPage />);
+
+    expect(await screen.findByRole("button", { name: /Add your team/ })).toBeDisabled();
+  });
+
+  it("disappears for good once there is nothing left on it", async () => {
+    // A finished checklist that will not leave is clutter.
+    respond();
+    render(<TodayPage />);
+
+    await screen.findByText("No rota yet");
+    expect(screen.queryByText("GETTING SET UP")).not.toBeInTheDocument();
+  });
+
+  it("a checklist that will not load does not take the dashboard with it", async () => {
+    api.mockImplementation((path) => {
+      if (path === "/platform/onboarding") return Promise.reject(new Error("nope"));
+      return Promise.resolve(payload());
+    });
+    render(<TodayPage />);
+
+    expect(await screen.findByText("No rota yet")).toBeInTheDocument();
   });
 });

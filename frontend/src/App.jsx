@@ -51,29 +51,63 @@ class PageErrorBoundary extends Component {
   }
 }
 
+/**
+ * Twenty-one flat entries was not a navigation, it was an inventory — and it
+ * meant a new workspace's first impression was twenty-one things nobody had
+ * set up yet. Ninety.io, the incumbent with comparable surface area, groups
+ * everything behind six doors.
+ *
+ * The tab ids are unchanged on purpose. Routing, the saved-tab restore and
+ * every onNavigate call in the app address these by id, so grouping is a
+ * change to how the list is drawn and to nothing else.
+ */
 const MANAGER_TABS = [
-  { id: "home", label: "Overview", icon: "⌂" },
-  { id: "contacts", label: "Customers & vendors", icon: "◎", module: "team" },
-  { id: "sales", label: "Sales & invoices", icon: "$", module: "sales" },
-  { id: "purchasing", label: "Bills & purchasing", icon: "↓", module: "purchasing" },
-  { id: "accounting", label: "Bookkeeping", icon: "≡", module: "accounting" },
-  { id: "finance", label: "Finance", icon: "$", module: "accounting" },
-  { id: "reports", label: "Reports", icon: "↗", module: "reports" },
-  { id: "tasks", label: "Tasks", icon: "✓", module: "tasks" },
-  { id: "inventory", label: "Inventory & assets", icon: "□", module: "inventory" },
-  { id: "inventory-intel", label: "Stock intelligence", icon: "◉", module: "inventory" },
-  { id: "availability", label: "Availability", icon: "◷", module: "scheduling" },
-  { id: "manager", label: "Scheduling", icon: "▦", module: "scheduling" },
-  { id: "preflight", label: "Preflight", icon: "◈", module: "scheduling" },
-  { id: "compliance", label: "Labor rules", icon: "⚖", module: "scheduling" },
-  { id: "bookings", label: "Bookings", icon: "◑", module: "booking" },
+  { id: "home", label: "Today", icon: "⌂" },
+
+  { group: "Money", items: [
+    { id: "sales", label: "Sales & invoices", icon: "$", module: "sales" },
+    { id: "purchasing", label: "Bills & purchasing", icon: "↓", module: "purchasing" },
+    { id: "accounting", label: "Bookkeeping", icon: "≡", module: "accounting" },
+    { id: "finance", label: "Finance", icon: "$", module: "accounting" },
+    { id: "reports", label: "Reports", icon: "↗", module: "reports" },
+  ]},
+
+  { group: "People", items: [
+    { id: "manager", label: "Scheduling", icon: "▦", module: "scheduling" },
+    { id: "availability", label: "Availability", icon: "◷", module: "scheduling" },
+    { id: "preflight", label: "Preflight", icon: "◈", module: "scheduling" },
+    { id: "compliance", label: "Labor rules", icon: "⚖", module: "scheduling" },
+    { id: "assistant", label: "Scheduling AI", icon: "◇", module: "assistant" },
+  ]},
+
+  { group: "Stock", items: [
+    { id: "inventory", label: "Inventory & assets", icon: "□", module: "inventory" },
+    { id: "inventory-intel", label: "Stock intelligence", icon: "◉", module: "inventory" },
+  ]},
+
+  { group: "Guests", items: [
+    { id: "bookings", label: "Bookings", icon: "◑", module: "booking" },
+    { id: "contacts", label: "Customers & vendors", icon: "◎", module: "team" },
+  ]},
+
+  { group: "Work", items: [
+    { id: "tasks", label: "Tasks", icon: "✓", module: "tasks" },
+    { id: "notifications", label: "Notifications", icon: "●", module: "notifications" },
+  ]},
+
   { id: "ask", label: "Ask", icon: "✦" },
-  { id: "assistant", label: "Scheduling AI", icon: "◇", module: "assistant" },
-  { id: "notifications", label: "Notifications", icon: "●", module: "notifications" },
-  { id: "billing", label: "Plan & billing", icon: "◉" },
-  { id: "security", label: "Security", icon: "⛨" },
-  { id: "settings", label: "Settings", icon: "⚙" },
+
+  { group: "Settings", items: [
+    { id: "settings", label: "Workspace", icon: "⚙" },
+    { id: "billing", label: "Plan & billing", icon: "◉" },
+    { id: "security", label: "Security", icon: "⛨" },
+  ]},
 ];
+
+/** Every leaf, flattened — for id lookups, which do not care about grouping. */
+function flatten(entries) {
+  return entries.flatMap((entry) => (entry.group ? entry.items : [entry]));
+}
 const EMPLOYEE_TABS = [
   { id: "home", label: "Home", icon: "⌂" },
   { id: "my-availability", label: "My availability", icon: "◷" },
@@ -109,12 +143,21 @@ export default function App() {
   const tabs = useMemo(() => {
     if (user?.role !== "manager") return EMPLOYEE_TABS;
     const configured = new Map((workspace?.modules || []).map((item) => [item.module_key, item.enabled]));
-    return MANAGER_TABS.filter((tab) => !tab.module || configured.get(tab.module) !== false);
+    const allowed = (tab) => !tab.module || configured.get(tab.module) !== false;
+
+    return MANAGER_TABS.flatMap((entry) => {
+      if (!entry.group) return allowed(entry) ? [entry] : [];
+      // A heading with nothing under it is worse than no heading.
+      const items = entry.items.filter(allowed);
+      return items.length ? [{ ...entry, items }] : [];
+    });
   }, [user?.role, workspace?.modules]);
+
+  const flatTabs = useMemo(() => flatten(tabs), [tabs]);
 
   function restoreTab(nextUser) {
     const saved = localStorage.getItem(`business-eos.active-tab.${nextUser.id}`);
-    const allowed = (nextUser.role === "manager" ? MANAGER_TABS : EMPLOYEE_TABS).some((tab) => tab.id === saved);
+    const allowed = flatten(nextUser.role === "manager" ? MANAGER_TABS : EMPLOYEE_TABS).some((tab) => tab.id === saved);
     setActiveTab(allowed ? saved : "home");
   }
 
@@ -151,8 +194,8 @@ export default function App() {
     return () => window.clearInterval(interval);
   }, [user, activeTab]);
   useEffect(() => {
-    if (user && !tabs.some((tab) => tab.id === activeTab)) setActiveTab("home");
-  }, [tabs, activeTab, user]);
+    if (user && !flatTabs.some((tab) => tab.id === activeTab)) setActiveTab("home");
+  }, [flatTabs, activeTab, user]);
 
   async function authenticated(nextUser) { setUser(nextUser); setNeedsSetup(false); restoreTab(nextUser); await loadWorkspace(); }
   function logout() { setToken(""); setBusinessId(""); setUser(null); setWorkspace(null); setDrawerOpen(false); }
@@ -176,7 +219,7 @@ export default function App() {
   if (bookingBusinessId) return <PublicBookingPage businessId={bookingBusinessId} />;
   if (initializing) return <div className="boot-screen"><div className="boot-mark">E</div><div className="boot-pulse" /><p>Opening business workspace…</p></div>;
   if (!user) return <AuthPage needsSetup={needsSetup} onAuthenticated={authenticated} />;
-  const currentLabel = tabs.find((tab) => tab.id === activeTab)?.label || "Home";
+  const currentLabel = flatTabs.find((tab) => tab.id === activeTab)?.label || "Today";
 
   return <div className="app commercial-shell">
     {drawerOpen && <button className="drawer-backdrop" aria-label="Close navigation" onClick={() => setDrawerOpen(false)} />}
@@ -185,7 +228,35 @@ export default function App() {
       <nav className="drawer-nav">
         <div className="workspace-switcher"><select className="workspace-select" value={workspace?.business?.id || ""} onChange={(e) => switchBusiness(e.target.value)}>{businesses.map((x) => <option key={x.business.id} value={x.business.id}>{x.business.name}</option>)}</select>{user.role === "manager" && <button title="Create another business" onClick={createBusiness}>+</button>}</div>
         <span className="drawer-section-label">WORKSPACE</span>
-        {tabs.map((tab) => <button key={tab.id} className={activeTab === tab.id ? "nav-btn active" : "nav-btn"} onClick={() => changeTab(tab.id)}><span className="nav-icon">{tab.icon}</span><span>{tab.label}</span>{tab.id === "notifications" && notificationCount > 0 && <span className="notification-badge">{notificationCount}</span>}</button>)}
+        {tabs.map((entry) => {
+          // The glyphs are decorative — several of them are announced as
+          // punctuation by a screen reader, so the label carries the meaning
+          // and the icon is hidden.
+          const NavButton = (tab) => (
+            <button
+              key={tab.id}
+              className={activeTab === tab.id ? "nav-btn active" : "nav-btn"}
+              onClick={() => changeTab(tab.id)}
+              aria-current={activeTab === tab.id ? "page" : undefined}
+            >
+              <span className="nav-icon" aria-hidden="true">{tab.icon}</span>
+              <span>{tab.label}</span>
+              {tab.id === "notifications" && notificationCount > 0 && (
+                <span className="notification-badge" aria-label={`${notificationCount} unread`}>
+                  {notificationCount}
+                </span>
+              )}
+            </button>
+          );
+
+          if (!entry.group) return NavButton(entry);
+          return (
+            <div className="nav-group" key={entry.group}>
+              <span className="nav-group-label">{entry.group}</span>
+              {entry.items.map(NavButton)}
+            </div>
+          );
+        })}
       </nav>
       <div className="drawer-footer account-footer"><div className="account-avatar">{user.username[0].toUpperCase()}</div><div><strong>{user.username}</strong><span>{workspace?.role || user.role}</span></div><button title="Log out" onClick={logout}>↪</button></div>
     </aside>

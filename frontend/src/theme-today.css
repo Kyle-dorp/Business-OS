@@ -238,3 +238,109 @@ button.today-tile:hover .today-tile-go { color: var(--amber-hot); transform: tra
     transition: none;
   }
 }
+
+/* --------------------------------------------------------- getting set up
+
+   Above the tiles, because on day one the tiles are all zeros and this is the
+   only thing on the page with anything to say. Gone entirely once it has
+   nothing left — a finished checklist that will not leave is clutter. */
+
+.today-setup {
+  grid-column: 1 / -1;
+  margin-top: 1.6rem;
+  padding: 1.5rem 1.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  border-color: rgba(245, 166, 91, 0.22);
+  background: linear-gradient(150deg, rgba(245, 166, 91, 0.07), transparent 60%);
+}
+
+.today-setup-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+/* The tiles get this from .today-tile being a column flex; this head is a
+   plain div, so the label was sitting inline with the heading and reading as
+   "GETTING SET UPAdd your team". */
+.today-setup-head > div:first-child {
+  flex: 1;
+  min-width: 14rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+.today-setup .primary-btn { align-self: flex-start; }
+
+.today-setup-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  align-items: flex-end;
+  min-width: 8rem;
+}
+.today-setup-progress > span:first-child {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+.today-setup-track {
+  width: 8rem; height: 4px;
+  border-radius: 999px;
+  background: var(--line-soft);
+  overflow: hidden;
+}
+.today-setup-track > span {
+  display: block; height: 100%;
+  border-radius: 999px;
+  background: var(--amber);
+  transition: width 0.55s var(--ease);
+}
+
+.today-setup-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.9rem 0 0;
+  border-top: 1px solid var(--line-soft);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.4rem;
+}
+.today-setup-list button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 0.86rem;
+  cursor: pointer;
+  transition: color 0.2s var(--ease);
+}
+.today-setup-list button:hover { color: var(--amber); }
+.today-setup-list .is-done button { color: var(--faint); cursor: default; }
+.today-setup-list .is-done span:last-child { text-decoration: line-through; }
+
+.today-setup-tick {
+  width: 1.05rem; height: 1.05rem;
+  flex: none;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  font-size: 0.66rem;
+  color: var(--void);
+}
+.today-setup-list .is-done .today-setup-tick {
+  background: var(--mint);
+  border-color: var(--mint);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .today-setup-track > span, .today-setup-list button { transition: none; }
+}

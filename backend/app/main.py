@@ -78,7 +78,6 @@ from backend.app.platform import account_balances, router as platform_router
 from backend.app.finance import router as finance_router
 from backend.app.stripe_service import (
     STRIPE_WEBHOOK_SECRET,
-    create_checkout_session,
     handle_webhook_event,
     stripe_configured,
 )
@@ -306,12 +305,6 @@ class ReviewAvailabilityRequest(BaseModel):
 
 class AssistantMemoryUpdate(BaseModel):
     content: str = ""
-
-
-class CheckoutSessionRequest(BaseModel):
-    plan: Literal["starter", "professional", "enterprise"]
-    success_url: str
-    cancel_url: str
 
 
 class WebhookEvent(BaseModel):
@@ -814,32 +807,11 @@ def update_user(user_id: int, payload: AdminUserUpdateRequest, request: Request)
 # ---------------------------------------------------------------------------
 
 
-@app.post("/billing/checkout-session")
-def create_stripe_checkout(payload: CheckoutSessionRequest, request: Request):
-    """
-    Create a Stripe Checkout session for the current business to subscribe to the Scheduler.
-
-    Requires manager access. Returns the Checkout URL to redirect the user to Stripe.
-    """
-    manager_from_request(request)
-    business_id = current_business_id()
-
-    if not stripe_configured():
-        raise HTTPException(
-            status_code=503,
-            detail="Billing is not configured. Please contact support.",
-        )
-
-    try:
-        checkout_url = create_checkout_session(
-            business_id=business_id,
-            plan=payload.plan,
-            success_url=payload.success_url,
-            cancel_url=payload.cancel_url,
-        )
-        return {"checkout_url": checkout_url}
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+# The Scheduler-tier checkout that used to live here is gone. It priced a
+# subscription at $99/$299/$999 for plans this product does not sell, minted
+# a second Stripe customer at a made-up email address, and wrote no
+# business_id into subscription metadata — so the webhook could never have
+# matched what it created. The real one is POST /billing/checkout.
 
 
 @app.get("/billing/subscription")

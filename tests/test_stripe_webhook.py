@@ -392,3 +392,71 @@ def test_an_unrecognised_event_is_ignored_quietly(workspace):
     handle_webhook_event({"type": "charge.dispute.created", "data": {"object": {}}})
     handle_webhook_event({})
     assert _access(bid) == before
+
+
+# ===========================================================================
+# The gate in front of the route
+# ===========================================================================
+#
+# Everything above calls handle_webhook_event directly, which is how a bug
+# living one layer up survived a file written specifically about the revenue
+# path: the route was never exercised, only the handler behind it.
+#
+# The route asked stripe_configured(), and stripe_configured() required
+# STRIPE_PUBLIC_KEY. A publishable key is a browser credential. This product
+# never opens Stripe in the browser — checkout is a server-side redirect and
+# the key is not sent to the frontend, referenced by it, or passed to Stripe
+# anywhere. It is required and unused.
+#
+# The cost is not cosmetic. With the key absent, every webhook Stripe delivers
+# is answered 503. The payment succeeds, the customer is charged, and nothing
+# ever activates — the precise failure that STRIPE_WEBHOOK_SECRET's warning
+# exists to prevent, reintroduced by the check meant to guard it.
+
+import backend.app.stripe_service as stripe_service
+
+
+def test_the_webhook_answers_stripe_without_a_publishable_key(client, monkeypatch):
+    """
+    A browser credential must not stand between a payment and the access it
+    bought. 400 is the right answer to an unsigned body; 503 means the
+    delivery never reached signature verification at all.
+    """
+    monkeypatch.setattr(stripe_service, "STRIPE_SECRET_KEY", "sk_test_51ABC")
+    monkeypatch.setattr(stripe_service, "STRIPE_PUBLIC_KEY", None)
+    monkeypatch.setattr(stripe_service, "STRIPE_WEBHOOK_SECRET", "whsec_abc")
+
+    response = client.post(
+        "/billing/webhook",
+        content=b'{"type":"customer.subscription.deleted"}',
+        headers={"Stripe-Signature": "t=1,v1=nonsense"},
+    )
+
+    assert response.status_code != 503, "configuration rejected a real delivery"
+    assert response.status_code == 400
+
+
+def test_configured_does_not_mean_holding_a_browser_credential(monkeypatch):
+    monkeypatch.setattr(stripe_service, "STRIPE_SECRET_KEY", "sk_test_51ABC")
+    monkeypatch.setattr(stripe_service, "STRIPE_PUBLIC_KEY", None)
+
+    assert stripe_service.stripe_configured() is True
+
+
+def test_no_secret_key_is_still_unconfigured(monkeypatch):
+    """The one credential that does do something."""
+    monkeypatch.setattr(stripe_service, "STRIPE_SECRET_KEY", None)
+    monkeypatch.setattr(stripe_service, "STRIPE_PUBLIC_KEY", "pk_test_51ABC")
+
+    assert stripe_service.stripe_configured() is False
+
+
+def test_the_webhook_still_refuses_when_stripe_is_genuinely_unconfigured(client, monkeypatch):
+    monkeypatch.setattr(stripe_service, "STRIPE_SECRET_KEY", None)
+
+    response = client.post(
+        "/billing/webhook",
+        content=b"{}",
+        headers={"Stripe-Signature": "t=1,v1=nonsense"},
+    )
+    assert response.status_code == 503

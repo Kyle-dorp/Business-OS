@@ -21,7 +21,8 @@ from backend.app.config import check_all, env, malformed, stripe_mode
 @pytest.fixture(autouse=True)
 def _clean(monkeypatch):
     for name in ("STRIPE_SECRET_KEY", "STRIPE_PUBLIC_KEY", "STRIPE_WEBHOOK_SECRET",
-                 "STRIPE_PRICE_BASE", "ANTHROPIC_API_KEY", "RESEND_API_KEY"):
+                 "STRIPE_PRICE_BASE", "STRIPE_PRICE_MODULE", "STRIPE_PRICE_AI_OVERAGE",
+                 "ANTHROPIC_API_KEY", "RESEND_API_KEY"):
         monkeypatch.delenv(name, raising=False)
     yield
 
@@ -159,9 +160,9 @@ def test_a_quoted_live_key_still_reads_as_live(monkeypatch):
 
 def test_it_names_the_missing_variable(monkeypatch):
     """
-    Production had a valid live secret key and no publishable key, and the only
-    thing anybody could see was "Stripe not configured" — which sends you to
-    check the key you already set.
+    Production had a valid live secret key and no price IDs, and the only thing
+    anybody could see was "Stripe not configured" — which sends you to check the
+    key you already set.
     """
     from backend.app.config import stripe_report
 
@@ -169,8 +170,30 @@ def test_it_names_the_missing_variable(monkeypatch):
     report = stripe_report()
 
     assert report["ready_for_checkout"] is False
-    assert "STRIPE_PUBLIC_KEY" in report["missing"]
+    assert "STRIPE_PRICE_BASE" in report["missing"]
     assert "STRIPE_SECRET_KEY" not in report["missing"]
+
+
+def test_a_publishable_key_is_not_required(monkeypatch):
+    """
+    It was, for a while, and a deployment with every working credential set
+    reported itself not ready for checkout because of a browser credential the
+    code never reads. Checkout is a server-side redirect; Stripe.js never runs.
+    """
+    from backend.app.config import stripe_report
+
+    for name, value in [
+        ("STRIPE_SECRET_KEY", "sk_live_51ABC"),
+        ("STRIPE_PRICE_BASE", "price_base"),
+        ("STRIPE_PRICE_MODULE", "price_module"),
+    ]:
+        monkeypatch.setenv(name, value)
+
+    report = stripe_report()
+    assert report["ready_for_checkout"] is True
+    assert "missing" not in report
+    # Still reported, because a wrong one is worth seeing.
+    assert report["set"]["STRIPE_PUBLIC_KEY"] is False
 
 
 def test_it_never_prints_the_values(monkeypatch):
@@ -218,3 +241,28 @@ def test_a_missing_webhook_secret_is_warned_about_specifically(monkeypatch):
     report = stripe_report()
     assert report["ready_for_checkout"] is True, "checkout can run without it"
     assert "never activate" in report["warning"], "but it must say what will happen"
+
+
+# ===========================================================================
+# Using the cleaned value, not just checking it
+# ===========================================================================
+#
+# Cleaning a credential and then reading the raw one is worse than not cleaning
+# it, because the check now passes and the call still fails. `_stripe_ready()`
+# validated `env("STRIPE_SECRET_KEY")` and then assigned
+# `os.environ["STRIPE_SECRET_KEY"]` to `stripe.api_key` — undoing the fix on the
+# line after making it, for the one value it mattered for.
+
+def test_the_key_handed_to_stripe_is_the_cleaned_one(monkeypatch):
+    import stripe
+
+    from backend.app import billing
+
+    monkeypatch.setenv("STRIPE_SECRET_KEY", '"sk_test_51ABC"')
+    monkeypatch.setattr(billing, "PRICE_BASE", "price_base")
+    monkeypatch.setattr(billing, "PRICE_MODULE", "price_module")
+    monkeypatch.setattr(stripe, "api_key", None, raising=False)
+
+    billing._stripe_ready()
+
+    assert stripe.api_key == "sk_test_51ABC", "the quotes travelled into the API call"

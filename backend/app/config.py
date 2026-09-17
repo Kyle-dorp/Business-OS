@@ -107,11 +107,18 @@ def stripe_mode() -> str:
 # the key they already set — and "STRIPE_PUBLIC_KEY is not set".
 STRIPE_REQUIRED = (
     "STRIPE_SECRET_KEY",
-    "STRIPE_PUBLIC_KEY",
     "STRIPE_PRICE_BASE",
     "STRIPE_PRICE_MODULE",
 )
-STRIPE_OPTIONAL = ("STRIPE_WEBHOOK_SECRET", "STRIPE_PRICE_AI_OVERAGE")
+# STRIPE_PUBLIC_KEY is here rather than above because nothing reads it.
+# Checkout is a server-side redirect — Stripe.js never runs in the browser, so
+# the publishable key is never sent to the frontend or passed to Stripe. It sat
+# in REQUIRED for a while and reported a fully working deployment as not ready.
+STRIPE_OPTIONAL = (
+    "STRIPE_WEBHOOK_SECRET",
+    "STRIPE_PRICE_AI_OVERAGE",
+    "STRIPE_PUBLIC_KEY",
+)
 
 
 def stripe_missing() -> list[str]:

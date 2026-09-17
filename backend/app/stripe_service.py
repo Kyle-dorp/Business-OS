@@ -36,85 +36,17 @@ if STRIPE_SECRET_KEY:
 
 
 def stripe_configured() -> bool:
-    """Check if Stripe is properly configured."""
-    return bool(stripe and STRIPE_SECRET_KEY and STRIPE_PUBLIC_KEY)
-
-
-def create_checkout_session(
-    business_id: int,
-    plan: str,
-    success_url: str,
-    cancel_url: str,
-) -> Optional[str]:
     """
-    Create a Stripe Checkout session for a business.
+    Whether Stripe calls can actually be made.
 
-    Args:
-        business_id: The Business.id to subscribe
-        plan: Plan key (e.g., "starter", "professional", "enterprise")
-        success_url: URL to redirect to after successful payment
-        cancel_url: URL to redirect to if user cancels
-
-    Returns:
-        Checkout session URL, or None if Stripe is not configured
+    The secret key, and nothing else. This used to also require
+    STRIPE_PUBLIC_KEY, which meant a missing *browser* credential answered
+    every incoming webhook with 503 — the payment succeeds, the customer is
+    charged, and access never switches on. Checkout here is a server-side
+    redirect: Stripe.js never runs, and the publishable key is not sent to the
+    frontend or passed to Stripe anywhere. It was required and unused.
     """
-    if not stripe_configured():
-        return None
-
-    # Define pricing for each plan (in cents)
-    # These should match your Stripe Product/Price IDs; for MVP, using placeholder amounts
-    PLAN_PRICES = {
-        "starter": 9900,  # $99/month
-        "professional": 29900,  # $299/month
-        "enterprise": 99900,  # $999/month
-    }
-
-    if plan not in PLAN_PRICES:
-        raise ValueError(f"Unknown plan: {plan}")
-
-    with Session(engine) as session:
-        business = session.get(Business, business_id)
-        if not business:
-            raise ValueError(f"Business {business_id} not found")
-
-        # Create or retrieve Stripe customer
-        existing_sub = session.exec(
-            select(Subscription).where(Subscription.business_id == business_id)
-        ).first()
-
-        if existing_sub and existing_sub.stripe_customer_id:
-            customer_id = existing_sub.stripe_customer_id
-        else:
-            customer = stripe.Customer.create(
-                email=f"billing@{business.name.lower().replace(' ', '')}.local",
-                metadata={"business_id": business_id, "business_name": business.name},
-            )
-            customer_id = customer.id
-
-        # Create checkout session
-        checkout_session = stripe.checkout.Session.create(
-            customer=customer_id,
-            mode="subscription",
-            line_items=[
-                {
-                    "price_data": {
-                        "currency": "usd",
-                        "product_data": {
-                            "name": f"Scheduler {plan.title()} Plan",
-                            "description": f"Scheduler module - {plan} tier",
-                        },
-                        "unit_amount": PLAN_PRICES[plan],
-                        "recurring": {"interval": "month"},
-                    },
-                    "quantity": 1,
-                }
-            ],
-            success_url=success_url,
-            cancel_url=cancel_url,
-            metadata={"business_id": business_id, "plan": plan},
-        )
-
-        return checkout_session.url
+    return bool(stripe and STRIPE_SECRET_KEY)
 
 
 # ---------------------------------------------------------------------------

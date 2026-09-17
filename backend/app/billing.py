@@ -75,7 +75,9 @@ def _stripe_ready() -> None:
         raise HTTPException(503, "Billing isn't configured on this deployment.")
     if not (PRICE_BASE and PRICE_MODULE):
         raise HTTPException(503, "Stripe price IDs are missing from the environment.")
-    stripe.api_key = os.environ["STRIPE_SECRET_KEY"]
+    # env(), not os.environ — the raw value is where the quotes still are,
+    # and assigning it here would undo the cleaning done one line above.
+    stripe.api_key = env("STRIPE_SECRET_KEY")
 
 
 def _require_billing_role(session: Session, bid: int, user: UserAccount) -> Membership:

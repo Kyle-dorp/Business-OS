@@ -6,7 +6,7 @@ import re
 from datetime import datetime, timedelta, timezone
 from typing import Literal, Optional
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -1162,8 +1162,42 @@ def home():
 
 
 @app.get("/health")
-def health_check():
-    return {"status": "ok", "ai_configured": ai_is_configured(), "startup_errors": startup_errors}
+def health_check(response: Response):
+    """
+    Whether the app can actually serve a request, not whether the process is up.
+
+    This used to return {"status": "ok"} without touching the database. It went
+    on saying so for days while every sign-in returned a 500, because the
+    production schema was missing four columns on useraccount and health never
+    read a user. A green check that cannot go red is decoration.
+
+    So it reads the one table the front door depends on. If that fails, the
+    endpoint says degraded and answers 503, which is what an uptime monitor
+    needs in order to be worth having.
+    """
+    checks = {}
+    healthy = True
+
+    try:
+        with Session(engine) as session:
+            session.exec(select(UserAccount).limit(1)).first()
+        checks["database"] = "ok"
+    except Exception as exc:
+        checks["database"] = f"{type(exc).__name__}: {exc}"[:200]
+        healthy = False
+
+    if startup_errors:
+        healthy = False
+
+    if not healthy:
+        response.status_code = 503
+
+    return {
+        "status": "ok" if healthy else "degraded",
+        "checks": checks,
+        "ai_configured": ai_is_configured(),
+        "startup_errors": startup_errors,
+    }
 
 @app.get("/debug/status")
 def debug_status():

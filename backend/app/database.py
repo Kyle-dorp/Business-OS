@@ -118,6 +118,33 @@ def apply_lightweight_migrations() -> None:
     # Admin user support.
     _add_column_if_missing("useraccount", "is_admin", "BOOLEAN", "false")
 
+    # Email and OAuth identity — migration c3a71f2e9d04.
+    #
+    # These are repeated here rather than left to Alembic alone because Alembic
+    # can fail to run at all: production sat stamped at a revision that no
+    # longer existed in the repository, so `alembic upgrade head` errored on
+    # every deploy and these columns were never added. The symptom was a 500
+    # from anything that read a user — including sign-in — while /health stayed
+    # green, because health does not touch the table.
+    #
+    # Adding them here means the app repairs its own schema on boot whatever
+    # state Alembic is in.
+    _add_column_if_missing("useraccount", "email", "VARCHAR", "NULL", nullable=True)
+    _add_column_if_missing("useraccount", "email_verified", "BOOLEAN", "false")
+    _add_column_if_missing("useraccount", "auth_provider", "VARCHAR", "'password'")
+    _add_column_if_missing("useraccount", "provider_subject", "VARCHAR", "NULL", nullable=True)
+
+    # Booking deposits and no-shows — migration d8b24c1a7f36, never run for the
+    # same reason. Without these the public booker and the operator diary both
+    # fail on any query that reads a service or a booking.
+    _add_column_if_missing("service", "requires_deposit", "BOOLEAN", "false")
+    _add_column_if_missing("service", "deposit_cents", "INTEGER", "0")
+    _add_column_if_missing("service", "cancellation_hours", "INTEGER", "24")
+    _add_column_if_missing("booking", "no_show_at", "VARCHAR", "NULL", nullable=True)
+    _add_column_if_missing("booking", "cancelled_at", "VARCHAR", "NULL", nullable=True)
+    _add_column_if_missing("booking", "deposit_cents", "INTEGER", "0")
+    _add_column_if_missing("booking", "deposit_status", "VARCHAR", "'none'")
+
     # Business plan/pricing tracking.
     _add_column_if_missing("business", "plan", "VARCHAR", "'starter'")
     _add_column_if_missing("business", "monthly_price_cents", "INTEGER", "0")

@@ -1,3 +1,4 @@
+import logging
 """
 Stripe integration for subscription management.
 
@@ -26,6 +27,8 @@ except ImportError:
 # set as `"sk_live_..."` is truthy, so the app reported itself configured while
 # every call to Stripe failed on an invalid key.
 from backend.app.config import env
+
+log = logging.getLogger(__name__)
 
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY") or None
 STRIPE_PUBLIC_KEY = env("STRIPE_PUBLIC_KEY") or None
@@ -106,6 +109,16 @@ def handle_webhook_event(event: dict) -> None:
             _handle_payment_failed(session, data)
         elif event_type == "invoice.payment_succeeded":
             _handle_payment_succeeded(session, data)
+        elif event_type == "checkout.session.completed":
+            # A one-off payment for assistant credit. Subscriptions arrive as
+            # customer.subscription.* and are handled above; this event is only
+            # interesting when its metadata says it is a top-up, which
+            # credit_from_checkout checks before touching anything.
+            from backend.app.ai_wallet import credit_from_checkout
+
+            if credit_from_checkout(session, data):
+                log.info("Credited an assistant top-up for business %s",
+                         (data.get("metadata") or {}).get("business_id"))
 
 
 def _period_end(data: dict) -> str:

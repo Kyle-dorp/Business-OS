@@ -33,7 +33,30 @@ export default function CreditMeter({ refreshKey = 0 }) {
   const [open, setOpen] = useState(false);
   const [breakdown, setBreakdown] = useState(null);
   const [error, setError] = useState("");
+  const [buying, setBuying] = useState(null);
+  const [buyError, setBuyError] = useState("");
   const root = useRef(null);
+
+  /**
+   * Buying credit hands off to Stripe and credits nothing here.
+   *
+   * The wallet moves when Stripe says the money arrived, in the webhook.
+   * Crediting on the redirect would credit anybody who can type a success URL.
+   */
+  async function buy(amount) {
+    setBuying(amount);
+    setBuyError("");
+    try {
+      const { url } = await api("/ai/topup", {
+        method: "POST",
+        body: JSON.stringify({ dollars: amount }),
+      });
+      window.location.href = url;
+    } catch (problem) {
+      setBuyError(problem?.message || "Checkout could not be opened.");
+      setBuying(null);
+    }
+  }
 
   const load = useCallback(async () => {
     try {
@@ -134,6 +157,25 @@ export default function CreditMeter({ refreshKey = 0 }) {
                   <span>{money(row.spent)}</span>
                 </div>
               ))}
+            </div>
+          )}
+
+          {usage.topup_choices?.length > 0 && (
+            <div className="credit-topup">
+              <p className="credit-panel-title">Add credit</p>
+              <div className="credit-topup-row">
+                {usage.topup_choices.map((amount) => (
+                  <button
+                    key={amount}
+                    className="eos-btn eos-btn-quiet eos-btn-sm"
+                    disabled={buying !== null}
+                    onClick={() => buy(amount)}
+                  >
+                    {buying === amount ? "Opening…" : `$${amount}`}
+                  </button>
+                ))}
+              </div>
+              {buyError && <p className="credit-error">{buyError}</p>}
             </div>
           )}
 

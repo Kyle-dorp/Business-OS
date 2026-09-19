@@ -362,3 +362,152 @@ def ai_breakdown(
             key=lambda item: -item["spent"],
         ),
     }
+
+
+# ===========================================================================
+# Buying more
+# ===========================================================================
+#
+# Top-ups are a one-off payment, not a subscription line. Somebody who needs
+# another $10 of assistant this month should not be signing up to $10 a month
+# forever, and a plan change is a heavier decision than "I ran out on a
+# Tuesday".
+#
+# Sold at cost, like the included allowance. That is the whole claim, and it is
+# only true if the price of a top-up is the number of dollars it credits.
+
+class TopUp(BaseModel):
+    dollars: int
+
+
+@router.post("/topup")
+def start_topup(
+    payload: TopUp,
+    session: Session = Depends(get_session),
+    user: UserAccount = Depends(user_from_request),
+):
+    """
+    A Stripe Checkout session for assistant credit.
+
+    Nothing is credited here. The wallet moves when Stripe says the money
+    arrived, in the webhook — crediting on the redirect would mean crediting
+    anybody who can construct a URL.
+    """
+    import stripe
+
+    from backend.app.billing import APP_URL, _ensure_customer, _stripe_ready
+    from backend.app.models import Business
+
+    bid = current_business_id()
+    if _role(session, bid, user.id) not in SPEND_ROLES:
+        raise HTTPException(403, "Only an owner or admin can buy assistant credit.")
+
+    if payload.dollars not in TOPUP_CHOICES_DOLLARS:
+        raise HTTPException(
+            400,
+            f"Pick one of ${', $'.join(str(x) for x in TOPUP_CHOICES_DOLLARS)}.",
+        )
+
+    _stripe_ready()
+    business = session.get(Business, bid)
+    if not business:
+        raise HTTPException(404, "Workspace not found.")
+
+    customer_id = _ensure_customer(session, business, user)
+
+    try:
+        checkout = stripe.checkout.Session.create(
+            mode="payment",
+            customer=customer_id,
+            line_items=[{
+                "price_data": {
+                    "currency": "usd",
+                    "unit_amount": payload.dollars * 100,
+                    "product_data": {
+                        "name": f"${payload.dollars} of assistant credit",
+                        "description": (
+                            "Charged at what we pay for it, with no markup. "
+                            "Does not expire."
+                        ),
+                    },
+                },
+                "quantity": 1,
+            }],
+            # The webhook reads these. Without them a completed payment is a
+            # charge nobody can attribute to a workspace.
+            metadata={
+                "kind": "ai_topup",
+                "business_id": str(bid),
+                "dollars": str(payload.dollars),
+            },
+            payment_intent_data={"metadata": {"kind": "ai_topup", "business_id": str(bid)}},
+            success_url=f"{APP_URL}/app?topup=success",
+            cancel_url=f"{APP_URL}/app?topup=cancelled",
+        )
+    except stripe.error.StripeError as exc:
+        raise HTTPException(
+            502, f"Couldn't start checkout: {exc.user_message or 'Stripe error'}"
+        )
+
+    return {"url": checkout.url}
+
+
+def credit_from_checkout(session: Session, data: dict) -> bool:
+    """
+    Credit a completed top-up. Called from the webhook.
+
+    Returns whether anything was credited, so the webhook can say so in its
+    log rather than silently doing nothing on an event it did not recognise.
+
+    Idempotent by Stripe's session id: Stripe redelivers events routinely, on
+    its own retry schedule and again if the endpoint is slow, and crediting a
+    $50 top-up three times because of a retry is the kind of bug that is only
+    ever found by the customer.
+    """
+    metadata = data.get("metadata") or {}
+    if metadata.get("kind") != "ai_topup":
+        return False
+
+    if data.get("payment_status") not in (None, "paid"):
+        return False
+
+    try:
+        business_id = int(metadata["business_id"])
+        amount = int(metadata["dollars"])
+    except (KeyError, TypeError, ValueError):
+        return False
+
+    reference = str(data.get("id") or "")
+    if reference and _already_credited(session, reference):
+        return False
+
+    add_credit(session, business_id, amount * MILLI_PER_DOLLAR)
+    _record_credit(session, business_id, reference, amount)
+    return True
+
+
+def _already_credited(session: Session, reference: str) -> bool:
+    return session.exec(
+        select(ApiUsage).where(ApiUsage.feature == f"topup:{reference}")
+    ).first() is not None
+
+
+def _record_credit(session: Session, business_id: int, reference: str, dollars_paid: int) -> None:
+    """
+    A row saying the top-up happened.
+
+    Written to ApiUsage with a zero cost rather than to a table of its own: it
+    is the same ledger, it makes the receipt findable next to the spending it
+    paid for, and the feature key doubles as the idempotency record above.
+    """
+    from datetime import date as _date
+
+    session.add(ApiUsage(
+        business_id=business_id,
+        date=_date.today().isoformat(),
+        feature=f"topup:{reference}",
+        tokens_used=0,
+        vendor_cost_milli=0,
+        cost_cents=-dollars_paid * 100,
+    ))
+    session.commit()

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, setToken } from "../api";
+import AssistantAccess from "../components/AssistantAccess";
 
 const MODULE_OPTIONS = [
   ["team", "Customers & vendors", "People and companies you buy from or sell to."],
@@ -84,6 +85,11 @@ export default function SettingsPage({ user, workspaceRole, modules = [], onModu
   return <div className="page">
     <div className="page-header"><div><span className="eyebrow">WORKSPACE CONTROLS</span><h1>Settings</h1><p>Choose what appears, manage your sign-in, and control access.</p></div>{saved && <div className="save-toast">✓ {saved}</div>}</div>
     {error && <div className="alert error">{error}</div>}
+
+    {/* Owners and admins only: it decides who can spend the workspace's
+        assistant credit, which is the same question as who can spend its
+        money. */}
+    {["owner", "admin"].includes(workspaceRole) && <AssistantAccess />}
 
     {user.role === "manager" && ["owner", "admin"].includes(workspaceRole) && <section className="card module-settings-card">
       <div className="section-title"><div><span className="eyebrow">KEEP IT COMFORTABLE</span><h2>Choose what this business uses</h2><p>Hidden tools keep their data and can be turned back on anytime.</p></div><div className="module-preset-actions"><button className="secondary-btn compact" disabled={modulesBusy} onClick={() => applyPreset(true)}>Use a simple menu</button><button className="secondary-btn compact" disabled={modulesBusy} onClick={() => applyPreset(false)}>Show everything</button></div></div>

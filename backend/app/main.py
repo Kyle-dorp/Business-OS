@@ -9,6 +9,7 @@ from typing import Literal, Optional
 from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from sqlmodel import Session, select
@@ -391,6 +392,35 @@ PUBLIC_PREFIXES = (
 )
 
 
+def _identify(token: str):
+    """
+    Token to (user, memberships) — every database touch of authentication in
+    one synchronous function.
+
+    It is one function so the middleware can hand the whole thing to a thread.
+    This used to be two separate queries inline in an `async def` middleware,
+    which meant every authenticated request blocked the event loop twice while
+    it waited on the database. Measured against a public path that also reads
+    the database:
+
+        public          c=1  167.8 req/s   c=24  217.0 req/s   p95   115ms
+        authenticated   c=1   33.8 req/s   c=24    0.2 req/s   p95 22802ms
+
+    The authenticated path did not merely run slower, it stopped scaling and
+    then fell over — 96 of 120 requests failed at twenty-four concurrent. One
+    fifty-person rota publishing at once is past that.
+    """
+    user = user_from_token(token)
+    with Session(engine) as session:
+        memberships = session.exec(
+            select(Membership).where(
+                Membership.user_id == user.id,
+                Membership.active == True,  # noqa: E712
+            )
+        ).all()
+    return user, memberships
+
+
 @app.middleware("http")
 async def authentication_middleware(request: Request, call_next):
     path = request.url.path
@@ -430,7 +460,9 @@ async def authentication_middleware(request: Request, call_next):
         return JSONResponse(status_code=401, content={"detail": "Sign in required"})
 
     try:
-        user = user_from_token(authorization.removeprefix("Bearer ").strip())
+        user, memberships = await run_in_threadpool(
+            _identify, authorization.removeprefix("Bearer ").strip()
+        )
     except HTTPException as error:
         from fastapi.responses import JSONResponse
 
@@ -439,10 +471,6 @@ async def authentication_middleware(request: Request, call_next):
     request.state.user = user
 
     requested_business = request.headers.get("X-Business-Id")
-    with Session(engine) as tenant_session:
-        memberships = tenant_session.exec(select(Membership).where(
-            Membership.user_id == user.id, Membership.active == True  # noqa: E712
-        )).all()
 
     # Determine which business_id to use
     try:

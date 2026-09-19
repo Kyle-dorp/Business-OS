@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { api } from "../api";
 import {
+import { Loading } from "../components/States";
   DAYS,
   DAY_NAMES,
   formatDate,
@@ -464,7 +465,7 @@ export default function ManagerPage() {
     }
   }
 
-  if (!settings) return <div className="page"><div className="loading-card">Loading manager setup…</div></div>;
+  if (!settings) return <div className="page"><div className="card"><Loading rows={4} label="Loading manager setup" /></div></div>;
 
   return (
     <div className="page">

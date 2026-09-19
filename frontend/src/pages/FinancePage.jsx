@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api";
+import { Loading } from "../components/States";
 
 const money = (cents = 0, compact = false) => {
   if (compact && Math.abs(cents) >= 100000) {
@@ -71,7 +72,7 @@ function DashboardTab() {
       .catch((e) => setMsg(e.message));
   }, []);
 
-  if (!data) return <div className="os-loading">Loading financial dashboard…</div>;
+  if (!data) return <div><Loading rows={3} label="Loading financial dashboard" /></div>;
   const { pl, bs, sum } = data;
   const netMargin = pl.total_income_cents > 0
     ? ((pl.net_income_cents / pl.total_income_cents) * 100).toFixed(1) : 0;

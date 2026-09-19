@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { API } from "../api";
+import { Loading } from "../components/States";
 
 /**
  * The page a customer sees.
@@ -134,7 +135,7 @@ export default function PublicBookingPage({ businessId }) {
   }
 
   if (!page) {
-    return <main className="pb-screen"><section className="pb-card os-loading">Loading…</section></main>;
+    return <main className="pb-screen"><section className="pb-card"><Loading rows={3} label="Loading" /></section></main>;
   }
 
   if (confirmed) {

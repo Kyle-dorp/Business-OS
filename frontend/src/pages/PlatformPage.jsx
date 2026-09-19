@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { api } from "../api";
 import { toIsoDate } from "../utils";
 import { CashChart } from "../components/Charts";
+import { Loading } from "../components/States";
 
 const money = (cents = 0) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 // toISOString() is UTC. At 7pm in New York it returns tomorrow, so the default
@@ -61,7 +62,7 @@ export default function PlatformPage({ section = "overview" }) {
     } catch (error) { setMessage(error.message); }
   }
 
-  if (!data && !["contacts"].includes(section)) return <div className="page"><div className="os-loading">Loading workspace…</div>{message && <p className="os-alert">{message}</p>}</div>;
+  if (!data && !["contacts"].includes(section)) return <div className="page"><div><Loading rows={3} label="Loading workspace" /></div>{message && <p className="os-alert">{message}</p>}</div>;
 
   if (section === "overview") return <div className="page os-page">
     <div className="os-heading"><div><span className="eyebrow">BUSINESS COMMAND CENTER</span><h1>Today at a glance</h1><p>Money, work, and operations in one place.</p></div><button className="primary-btn" onClick={load}>Refresh</button></div>

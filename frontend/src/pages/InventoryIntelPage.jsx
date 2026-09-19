@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "../api";
+import { Loading } from "../components/States";
 
 /**
  * Recipes, counts, waste, and what the three of them together reveal.
@@ -35,7 +36,7 @@ function Variance({ onGoToRecipes }) {
   }, [days]);
 
   if (error) return <p className="sec-error">{error}</p>;
-  if (!data) return <section className="card os-loading">Working out where it went…</section>;
+  if (!data) return <section className="card"><Loading rows={3} label="Working out where it went" /></section>;
 
   const leak = data.total_unexplained_value < 0;
 
@@ -279,7 +280,7 @@ function Recipes() {
     } catch (err) { setError(err.message); } finally { setBusy(false); }
   }
 
-  if (!data) return <section className="card os-loading">Loading recipes…</section>;
+  if (!data) return <section className="card"><Loading rows={3} label="Loading recipes" /></section>;
 
   const sellable = data.items.filter((i) => i.sales_price > 0 || i.item_type === "service");
 
@@ -358,7 +359,7 @@ function CountStock() {
     } catch (err) { setError(err.message); } finally { setBusy(""); }
   }
 
-  if (!items) return <section className="card os-loading">Loading stock…</section>;
+  if (!items) return <section className="card"><Loading rows={3} label="Loading stock" /></section>;
 
   const shown = filter
     ? items.filter((i) => `${i.name} ${i.sku}`.toLowerCase().includes(filter.toLowerCase()))
@@ -466,7 +467,7 @@ function Waste() {
     } catch (err) { setError(err.message); } finally { setBusy(false); }
   }
 
-  if (!data) return <section className="card os-loading">Loading waste log…</section>;
+  if (!data) return <section className="card"><Loading rows={3} label="Loading waste log" /></section>;
 
   return (
     <>
@@ -560,7 +561,7 @@ function Menu() {
   }, []);
 
   if (error) return <p className="sec-error">{error}</p>;
-  if (!data) return <section className="card os-loading">Ranking your menu…</section>;
+  if (!data) return <section className="card"><Loading rows={3} label="Ranking your menu" /></section>;
   if (!data.recipes.length) {
     return (
       <section className="card inv-empty-state">

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, API, getBusinessId } from "../api";
+import { Loading } from "../components/States";
 
 /**
  * The operator's side of bookings: the diary, services, opening hours, and
@@ -108,7 +109,7 @@ function Diary() {
   useEffect(() => { load(); }, [load]);
 
   if (error) return <p className="sec-error">{error}</p>;
-  if (!data) return <section className="card os-loading">Loading the diary…</section>;
+  if (!data) return <section className="card"><Loading rows={3} label="Loading the diary" /></section>;
 
   const bookingUrl = `${API}/book/${getBusinessId()}`;
 
@@ -199,7 +200,7 @@ function Services() {
     } catch (err) { setError(err.message); }
   }
 
-  if (!rows) return <section className="card os-loading">Loading services…</section>;
+  if (!rows) return <section className="card"><Loading rows={3} label="Loading services" /></section>;
 
   return (
     <>
@@ -332,7 +333,7 @@ function Hours() {
     } catch (err) { setError(err.message); }
   }
 
-  if (!data) return <section className="card os-loading">Loading hours…</section>;
+  if (!data) return <section className="card"><Loading rows={3} label="Loading hours" /></section>;
 
   return (
     <>
@@ -393,7 +394,7 @@ function NoShows() {
   }, []);
 
   if (error) return <p className="sec-error">{error}</p>;
-  if (!data) return <section className="card os-loading">Counting the cost…</section>;
+  if (!data) return <section className="card"><Loading rows={3} label="Counting the cost" /></section>;
 
   if (data.no_show_count === 0) {
     return (

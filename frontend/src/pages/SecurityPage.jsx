@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../api";
+import { Loading } from "../components/States";
 
 /**
  * Account security: who is locked out, issuing reset codes, and linking Google.
@@ -100,7 +101,7 @@ function Lockouts() {
   }, [load]);
 
   if (error) return <section className="card sec-card"><p className="sec-error">{error}</p></section>;
-  if (!data) return <section className="card sec-card os-loading">Checking sign-in attempts…</section>;
+  if (!data) return <section className="card sec-card"><Loading rows={3} label="Checking sign-in attempts" /></section>;
 
   return (
     <section className="card sec-card">

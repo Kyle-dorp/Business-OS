@@ -11,7 +11,7 @@
 .agent-usage { min-width: 190px; text-align: right; }
 .agent-usage-bar {
   height: 3px; border-radius: 3px; overflow: hidden;
-  background: rgba(246, 240, 234, 0.08); margin-bottom: 0.5rem;
+  background: color-mix(in srgb, var(--ink) 8%, transparent); margin-bottom: 0.5rem;
 }
 .agent-usage-bar span { display: block; height: 100%; border-radius: 3px; transition: width 0.5s var(--ease); }
 .agent-usage small { color: var(--faint); font-size: 0.74rem; }
@@ -40,8 +40,8 @@
 .agent-bubble p + p { margin-top: 0.6rem; }
 
 .is-user .agent-bubble {
-  background: rgba(245, 166, 91, 0.1);
-  border-color: rgba(245, 166, 91, 0.2);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 20%, transparent);
   color: var(--ink);
   border-bottom-right-radius: 5px;
 }
@@ -54,7 +54,7 @@
 .agent-thinking { display: inline-flex; gap: 5px; align-items: center; padding: 1.1rem 1.2rem; }
 .agent-thinking span {
   width: 6px; height: 6px; border-radius: 50%;
-  background: var(--amber); opacity: 0.4;
+  background: var(--accent); opacity: 0.4;
   animation: eos-think 1.2s var(--ease) infinite;
 }
 .agent-thinking span:nth-child(2) { animation-delay: 0.15s; }
@@ -70,12 +70,12 @@
 .agent-proposal {
   align-self: flex-start; max-width: 90%;
   padding: 1.1rem 1.2rem; border-radius: 14px;
-  background: rgba(119, 216, 194, 0.05);
-  border: 1px solid rgba(119, 216, 194, 0.22);
+  background: color-mix(in srgb, var(--mint) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mint) 22%, transparent);
   transition: opacity 0.4s var(--ease), border-color 0.3s var(--ease);
 }
 .agent-proposal.is-rejected { opacity: 0.45; border-color: var(--line); }
-.agent-proposal.is-applied { border-color: rgba(119, 216, 194, 0.45); }
+.agent-proposal.is-applied { border-color: color-mix(in srgb, var(--mint) 45%, transparent); }
 
 .agent-proposal-head {
   display: flex; justify-content: space-between; align-items: baseline;
@@ -100,7 +100,7 @@
 .agent-proposal-working { margin: 0; color: var(--muted); font-size: 0.88rem; }
 .agent-proposal-error { margin: 0 0 0.7rem; color: var(--rose); font-size: 0.88rem; }
 
-.agent-escalated { align-self: flex-start; margin: 0; color: var(--amber); font-size: 0.88rem; }
+.agent-escalated { align-self: flex-start; margin: 0; color: var(--accent); font-size: 0.88rem; }
 .agent-error { color: var(--rose); margin: 0 0 0.8rem; font-size: 0.9rem; }
 
 .agent-composer { display: flex; gap: 0.6rem; align-items: flex-end; }
@@ -124,11 +124,11 @@
   font-size: 0.72rem; letter-spacing: 0.16em;
   text-transform: uppercase; font-weight: 600;
 }
-.preflight-verdict.tone-good { border-color: rgba(119, 216, 194, 0.3); }
+.preflight-verdict.tone-good { border-color: color-mix(in srgb, var(--mint) 30%, transparent); }
 .preflight-verdict.tone-good .preflight-verdict-label { color: var(--mint); }
-.preflight-verdict.tone-warn { border-color: rgba(245, 166, 91, 0.3); }
-.preflight-verdict.tone-warn .preflight-verdict-label { color: var(--amber); }
-.preflight-verdict.tone-bad { border-color: rgba(217, 120, 141, 0.35); }
+.preflight-verdict.tone-warn { border-color: color-mix(in srgb, var(--accent) 30%, transparent); }
+.preflight-verdict.tone-warn .preflight-verdict-label { color: var(--accent); }
+.preflight-verdict.tone-bad { border-color: color-mix(in srgb, var(--rose) 35%, transparent); }
 .preflight-verdict.tone-bad .preflight-verdict-label { color: var(--rose); }
 
 .preflight-exposure { text-align: right; white-space: nowrap; }
@@ -145,9 +145,9 @@
 .preflight-list h3 { margin: 0 0 0.7rem; }
 .preflight-list ul { margin: 0; padding-left: 1.1rem; }
 .preflight-list li { color: var(--ink-2); line-height: 1.7; }
-.preflight-list.is-blocking { border-color: rgba(217, 120, 141, 0.28); }
+.preflight-list.is-blocking { border-color: color-mix(in srgb, var(--rose) 28%, transparent); }
 .preflight-list.is-blocking h3 { color: var(--rose); }
-.preflight-list.is-advisory h3 { color: var(--amber); }
+.preflight-list.is-advisory h3 { color: var(--accent); }
 
 .preflight-grid {
   display: grid;
@@ -163,7 +163,7 @@
 }
 .preflight-findings li { padding-left: 0.85rem; border-left: 2px solid var(--line); }
 .preflight-findings li.sev-violation { border-left-color: var(--rose); }
-.preflight-findings li.sev-warning { border-left-color: var(--amber); }
+.preflight-findings li.sev-warning { border-left-color: var(--accent); }
 .preflight-findings li.sev-info { border-left-color: var(--line); }
 .preflight-findings p { margin: 0.25rem 0 0; color: var(--ink-2); font-size: 0.9rem; line-height: 1.6; }
 .preflight-findings small { display: block; margin-top: 0.35rem; color: var(--faint); font-size: 0.74rem; }
@@ -178,13 +178,13 @@
   border-top: 1px solid var(--line-soft);
   color: var(--faint); font-size: 0.78rem; line-height: 1.6;
 }
-.preflight-error { padding: 1.2rem 1.5rem; color: var(--rose); border-color: rgba(217, 120, 141, 0.28); }
+.preflight-error { padding: 1.2rem 1.5rem; color: var(--rose); border-color: color-mix(in srgb, var(--rose) 28%, transparent); }
 
 .cov-understaffed { color: var(--rose); }
-.cov-possibly_overstaffed { color: var(--amber); }
+.cov-possibly_overstaffed { color: var(--accent); }
 .cov-ok { color: var(--mint); }
 .cost-over_budget { color: var(--rose) !important; }
-.cost-tight { color: var(--amber) !important; }
+.cost-tight { color: var(--accent) !important; }
 .cost-healthy { color: var(--mint) !important; }
 .cost-no_forecast { color: var(--muted) !important; }
 

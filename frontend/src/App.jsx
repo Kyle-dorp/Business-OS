@@ -15,8 +15,11 @@ import "./theme-app.css";
 import "./theme-bubble.css";
 import "./theme-today.css";
 import "./theme-charts.css";
+import "./theme-switch.css";
 import { api, getBusinessId, getToken, setBusinessId, setToken } from "./api";
 import AssistantBubble from "./components/AssistantBubble";
+import ThemeSwitch from "./components/ThemeSwitch";
+import { useTheme } from "./hooks/useTheme";
 import { mondayOf, toIsoDate } from "./utils";
 import TodayPage from "./pages/TodayPage";
 import AuthPage from "./pages/AuthPage";
@@ -129,6 +132,7 @@ export default function App() {
   const bookingBusinessId = publicBookingBusinessId();
   const [initializing, setInitializing] = useState(true);
   const [needsSetup, setNeedsSetup] = useState(false);
+  const { theme, setTheme, accent, setAccent } = useTheme();
   const [user, setUser] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("home");
@@ -218,7 +222,16 @@ export default function App() {
 
   if (bookingBusinessId) return <PublicBookingPage businessId={bookingBusinessId} />;
   if (initializing) return <div className="boot-screen"><div className="boot-mark">E</div><div className="boot-pulse" /><p>Opening business workspace…</p></div>;
-  if (!user) return <AuthPage needsSetup={needsSetup} onAuthenticated={authenticated} />;
+  if (!user) {
+    return (
+      <>
+        <div className="auth-theme-switch">
+          <ThemeSwitch theme={theme} setTheme={setTheme} accent={accent} setAccent={setAccent} />
+        </div>
+        <AuthPage needsSetup={needsSetup} onAuthenticated={authenticated} />
+      </>
+    );
+  }
   const currentLabel = flatTabs.find((tab) => tab.id === activeTab)?.label || "Today";
 
   return <div className="app commercial-shell">
@@ -261,7 +274,7 @@ export default function App() {
       <div className="drawer-footer account-footer"><div className="account-avatar">{user.username[0].toUpperCase()}</div><div><strong>{user.username}</strong><span>{workspace?.role || user.role}</span></div><button title="Log out" onClick={logout}>↪</button></div>
     </aside>
     <main className="main">
-      <header className="topbar"><button className="hamburger" aria-label="Open navigation" onClick={() => setDrawerOpen(true)}><span /><span /><span /></button><div className="topbar-copy"><span>{workspace?.business?.name || "Business workspace"}</span><strong>{currentLabel}</strong></div><div className="topbar-actions">{user.role === "manager" && <button className="topbar-notification" onClick={() => changeTab("notifications")}>●{notificationCount > 0 && <b>{notificationCount}</b>}</button>}<button className="topbar-profile" onClick={() => changeTab("settings")}><span>{user.username[0].toUpperCase()}</span><div><strong>{user.username}</strong><small>{workspace?.role || user.role}</small></div></button></div></header>
+      <header className="topbar"><button className="hamburger" aria-label="Open navigation" onClick={() => setDrawerOpen(true)}><span /><span /><span /></button><div className="topbar-copy"><span>{workspace?.business?.name || "Business workspace"}</span><strong>{currentLabel}</strong></div><div className="topbar-actions"><ThemeSwitch theme={theme} setTheme={setTheme} accent={accent} setAccent={setAccent} />{user.role === "manager" && <button className="topbar-notification" onClick={() => changeTab("notifications")}>●{notificationCount > 0 && <b>{notificationCount}</b>}</button>}<button className="topbar-profile" onClick={() => changeTab("settings")}><span>{user.username[0].toUpperCase()}</span><div><strong>{user.username}</strong><small>{workspace?.role || user.role}</small></div></button></div></header>
       <PageErrorBoundary pageKey={activeTab}>
         {user.role === "manager" ? <>
           {activeTab === "home" && <TodayPage onNavigate={changeTab} />}

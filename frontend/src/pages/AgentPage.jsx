@@ -26,7 +26,7 @@ function Usage({ usage }) {
   return (
     <div className="agent-usage" title={`${usage.tokens_used?.toLocaleString()} of ${usage.included_allowance?.toLocaleString()} tokens this month`}>
       <div className="agent-usage-bar">
-        <span style={{ width: `${pct}%`, background: over ? "var(--rose)" : "var(--amber)" }} />
+        <span style={{ width: `${pct}%`, background: over ? "var(--rose)" : "var(--accent)" }} />
       </div>
       <small>
         {over

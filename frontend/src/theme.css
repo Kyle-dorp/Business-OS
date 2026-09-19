@@ -5,19 +5,81 @@
    layout and component structure built over months; this file carries the look.
    Separating them means the design can be reworked without touching behaviour.
 
-   The world: a warm room at night. Deep brown-black ground, light pooling from
-   a few soft sources, fine grain over everything. Interface elements are barely
-   there until you approach them, then they warm up.
+   Three themes share one set of token names: dark (a warm room at night),
+   light (daylight) and neutral (the same room with the warmth taken out).
+   The accent is a separate axis — a ramp swapped by [data-accent] — so the
+   two choices multiply instead of forking the stylesheet.
 
    Colour has one job each:
-     amber  — interaction, focus, anything you can touch
+     accent — interaction, focus, anything you can touch
      rose   — money leaving, warnings, variance
      mint   — money kept, confirmations, healthy states
    Nothing else gets a colour. That discipline is what stops a glow-heavy
    interface turning into a fairground.
    ========================================================================= */
 
-:root {
+/* ===========================================================================
+   Accent families
+   ---------------------------------------------------------------------------
+   Each family is a ramp, not a colour. Themes pick rungs from it, which is
+   what lets the accent be swapped without re-checking every screen: the dark
+   themes take a bright rung, the light theme takes a dark one, and both land
+   above the 4.5:1 floor by construction.
+
+   Money keeps its own colours in every family — mint is kept, rose is leaving
+   — so an accent can never be mistaken for a number going the wrong way.
+   ======================================================================== */
+
+:root,
+[data-accent="amber"] {
+  --a-200: #FFD9AF;
+  --a-300: #FFC98F;
+  --a-400: #F5A65B;
+  --a-500: #E08A3C;
+  --a-600: #A85F27;
+  --a-700: #82491D;
+}
+
+[data-accent="indigo"] {
+  --a-200: #C7D2FE;
+  --a-300: #A5B4FC;
+  --a-400: #818CF8;
+  --a-500: #6366F1;
+  --a-600: #4F46E5;
+  --a-700: #4338CA;
+}
+
+[data-accent="azure"] {
+  --a-200: #BFDBFE;
+  --a-300: #93C5FD;
+  --a-400: #60A5FA;
+  --a-500: #3B82F6;
+  --a-600: #1D6FE0;
+  --a-700: #1A5AB8;
+}
+
+[data-accent="violet"] {
+  --a-200: #DDD6FE;
+  --a-300: #C4B5FD;
+  --a-400: #A78BFA;
+  --a-500: #8B5CF6;
+  --a-600: #7C3AED;
+  --a-700: #6D28D9;
+}
+
+/* ===========================================================================
+   Themes
+   ---------------------------------------------------------------------------
+   Same token names, three grounds. Nothing downstream knows which is active:
+   --line and --glass are mixed from --ink, so overlays that are white on a
+   dark ground become black on a light one without a single extra rule.
+   ======================================================================== */
+
+/* -------------------------------------------------------- dark (default) */
+/* A warm room at night. Deep brown-black ground, light pooling from a few
+   soft sources. */
+:root,
+[data-theme="dark"] {
   --void: #0E0B0C;
   --void-lift: #15100F;
 
@@ -26,43 +88,132 @@
   --muted: #8C7F79;
   /* 4.55:1 on --void. It was #6A5F5A at 3.17:1, below the 4.5 body floor —
      and --faint carries labels, metadata and timestamps across every screen,
-     so it was the single most widely-read failing colour in the product.
-     Lightened only as far as passing: further would stop it de-emphasising,
-     and it still sits below --muted so the hierarchy holds. */
+     so it was the single most widely-read failing colour in the product. */
   --faint: #857771;
 
-  --amber: #F5A65B;
-  --amber-hot: #FFC98F;
-  --amber-deep: #C97A3A;
+  --accent: var(--a-400);
+  --accent-hot: var(--a-300);
+  --accent-deep: var(--a-600);
+
   --rose: #D9788D;
   --mint: #77D8C2;
 
-  --line: rgba(246, 240, 234, 0.10);
-  --line-soft: rgba(246, 240, 234, 0.055);
-  --glass: rgba(246, 240, 234, 0.032);
-  --glass-2: rgba(246, 240, 234, 0.055);
+  --glow-1: 10%;
+  --glow-2: 7.5%;
+  --glow-3: 6%;
+  --grain: 0.2;
+  --grain-blend: overlay;
+  --shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.85);
 
+  --line: color-mix(in srgb, var(--ink) 10%, transparent);
+  --line-soft: color-mix(in srgb, var(--ink) 5.5%, transparent);
+  --glass: color-mix(in srgb, var(--ink) 3.2%, transparent);
+  --glass-2: color-mix(in srgb, var(--ink) 5.5%, transparent);
+  --surface: color-mix(in srgb, var(--ink) 3.5%, transparent);
+}
+
+/* ----------------------------------------------------------------- light */
+/* Daylight. Warm white rather than pure white — pure white next to a warm
+   accent reads blue, and the product is warm everywhere else. */
+[data-theme="light"] {
+  --void: #FBFAF8;
+  --void-lift: #FFFFFF;
+
+  --ink: #1B1512;
+  --ink-2: #4A4340;
+  --muted: #6A615D;
+  /* 4.76:1 on the light ground. It was #7C726D at 4.489:1 — failing the body
+     floor by eleven thousandths, which is exactly how --faint failed on the
+     dark ground too. Both times it looked fine and both times the arithmetic
+     said otherwise. */
+  --faint: #786E69;
+
+  --accent: var(--a-600);
+  --accent-hot: var(--a-700);
+  --accent-deep: var(--a-500);
+
+  --rose: #B23A55;
+  --mint: #12775F;
+
+  --glow-1: 7%;
+  --glow-2: 5%;
+  --glow-3: 4%;
+  --grain: 0.055;
+  --grain-blend: multiply;
+  --shadow: 0 18px 44px -26px rgba(24, 18, 15, 0.28);
+
+  /* On a dark ground a raised surface is a white tint. On a light one that
+     would be a stain, so it is white itself, lifted off the warm-white ground
+     by a border and a soft shadow instead of by brightness. */
+  --line: color-mix(in srgb, var(--ink) 13%, transparent);
+  --line-soft: color-mix(in srgb, var(--ink) 8%, transparent);
+  --glass: color-mix(in srgb, #FFFFFF 78%, transparent);
+  --glass-2: #FFFFFF;
+  --surface: #FFFFFF;
+}
+
+/* --------------------------------------------------------------- neutral */
+/* The same room with the warmth taken out. Cool graphite, no brown, for
+   people who find the warm dark too much like a lounge and not enough like
+   a tool. */
+[data-theme="neutral"] {
+  --void: #0D0E11;
+  --void-lift: #15171C;
+
+  --ink: #ECEEF1;
+  --ink-2: #BAC0C9;
+  --muted: #868D98;
+  --faint: #7E858F;
+
+  --accent: var(--a-400);
+  --accent-hot: var(--a-300);
+  --accent-deep: var(--a-600);
+
+  --rose: #E58399;
+  --mint: #6FD6BF;
+
+  --glow-1: 6%;
+  --glow-2: 4.5%;
+  --glow-3: 3.5%;
+  --grain: 0.12;
+  --grain-blend: overlay;
+  --shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.8);
+
+  --line: color-mix(in srgb, var(--ink) 10%, transparent);
+  --line-soft: color-mix(in srgb, var(--ink) 5.5%, transparent);
+  --glass: color-mix(in srgb, var(--ink) 3.2%, transparent);
+  --glass-2: color-mix(in srgb, var(--ink) 5.5%, transparent);
+  --surface: color-mix(in srgb, var(--ink) 3.5%, transparent);
+}
+
+/* ===========================================================================
+   Derived — identical in every theme, because they are mixed from the tokens
+   above rather than restated.
+   ======================================================================== */
+
+:root {
   --ease: cubic-bezier(0.22, 0.72, 0.2, 1);
 
-  /* Older rules in App.css read these names. Remapping them here restyles
-     hundreds of declarations without editing them one at a time. */
-  --navy: #0E0B0C;
-  --navy-2: #15100F;
-  --blue: #F5A65B;
-  --blue-dark: #C97A3A;
-  --blue-soft: rgba(245, 166, 91, 0.10);
-  --purple: #D9788D;
-  --green: #77D8C2;
-  --red: #E8677D;
-  --text: #F6F0EA;
-  --line: rgba(246, 240, 234, 0.10);
-  --surface: rgba(246, 240, 234, 0.035);
-  --shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.85);
+  /* Older rules in theme-legacy.css read these names. Remapping them here
+     restyles hundreds of declarations without editing them one at a time. */
+  --navy: var(--void);
+  --navy-2: var(--void-lift);
+  --blue: var(--accent);
+  --blue-dark: var(--accent-deep);
+  --blue-soft: color-mix(in srgb, var(--accent) 10%, transparent);
+  --purple: var(--rose);
+  --green: var(--mint);
+  --red: var(--rose);
+  --text: var(--ink);
 
   color: var(--ink);
   background: var(--void);
   font-family: "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  /* The ground changing under you is the one transition worth having. */
+  transition: background-color 280ms var(--ease), color 280ms var(--ease);
 }
+
 
 /* ---------------------------------------------------------------- ground */
 
@@ -88,24 +239,31 @@ body::after {
 }
 
 body::before {
+  /* Alphas come from the theme. A glow that reads as light pooling on a dark
+     ground reads as a stain on a white one, so the light theme turns them
+     most of the way down rather than off — off is flat, and flat is what
+     this was trying to stop being. */
   background:
-    radial-gradient(58vw 48vw at 10% -8%, rgba(245, 166, 91, 0.10), transparent 62%),
-    radial-gradient(52vw 44vw at 98% 12%, rgba(217, 120, 141, 0.075), transparent 64%),
-    radial-gradient(70vw 62vw at 50% 110%, rgba(201, 122, 58, 0.06), transparent 66%);
+    radial-gradient(58vw 48vw at 10% -8%, color-mix(in srgb, var(--accent) var(--glow-1), transparent), transparent 62%),
+    radial-gradient(52vw 44vw at 98% 12%, color-mix(in srgb, var(--rose) var(--glow-2), transparent), transparent 64%),
+    radial-gradient(70vw 62vw at 50% 110%, color-mix(in srgb, var(--accent-deep) var(--glow-3), transparent), transparent 66%);
 }
 
 body::after {
-  opacity: 0.2;
-  mix-blend-mode: overlay;
+  /* overlay on a dark ground, multiply on a light one — overlay on white is
+     invisible, and grain is what stops large flat areas looking like a
+     placeholder. */
+  opacity: var(--grain);
+  mix-blend-mode: var(--grain-blend);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
 }
 
 #root { position: relative; z-index: 1; }
 
-::selection { background: rgba(245, 166, 91, 0.22); color: var(--ink); }
+::selection { background: color-mix(in srgb, var(--accent) 22%, transparent); color: var(--ink); }
 
 :focus-visible {
-  outline: 2px solid var(--amber-hot);
+  outline: 2px solid var(--accent-hot);
   outline-offset: 3px;
   border-radius: 6px;
 }
@@ -113,12 +271,12 @@ body::after {
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(246, 240, 234, 0.09);
+  background: color-mix(in srgb, var(--ink) 9%, transparent);
   border-radius: 6px;
   border: 3px solid transparent;
   background-clip: padding-box;
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(245, 166, 91, 0.28); background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--accent) 28%, transparent); background-clip: padding-box; }
 
 /* ------------------------------------------------------------- typography */
 
@@ -136,7 +294,7 @@ h3 { font-family: "Figtree", sans-serif; font-weight: 600; font-size: 1.02rem; l
 p, span, div, td, th, label, small { color: inherit; }
 
 .eyebrow {
-  color: var(--amber);
+  color: var(--accent);
   font-weight: 600;
   font-size: 0.72rem;
   letter-spacing: 0.14em;
@@ -165,15 +323,15 @@ p, span, div, td, th, label, small { color: inherit; }
   font-family: "Fraunces", serif;
   font-size: 1.5rem;
   color: var(--void);
-  background: var(--amber);
-  box-shadow: 0 0 44px -6px rgba(245, 166, 91, 0.55);
+  background: var(--accent);
+  box-shadow: 0 0 44px -6px color-mix(in srgb, var(--accent) 55%, transparent);
 }
 
 .boot-pulse {
   width: 9rem;
   height: 2px;
   border-radius: 2px;
-  background: linear-gradient(90deg, transparent, var(--amber), transparent);
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
   animation: eos-sweep 1.5s var(--ease) infinite;
 }
 
@@ -191,7 +349,7 @@ p, span, div, td, th, label, small { color: inherit; }
 }
 
 .drawer {
-  background: rgba(14, 11, 12, 0.72);
+  background: color-mix(in srgb, var(--void) 72%, transparent);
   backdrop-filter: blur(18px) saturate(1.1);
   border-right: 1px solid var(--line-soft);
   box-shadow: none;
@@ -205,10 +363,10 @@ p, span, div, td, th, label, small { color: inherit; }
 .drawer-brand span { color: var(--faint); }
 
 .drawer-logo {
-  background: var(--amber);
+  background: var(--accent);
   color: var(--void);
   font-family: "Fraunces", serif;
-  box-shadow: 0 0 20px -4px rgba(245, 166, 91, 0.5);
+  box-shadow: 0 0 20px -4px color-mix(in srgb, var(--accent) 50%, transparent);
 }
 
 .drawer-section-label { color: var(--faint); letter-spacing: 0.16em; }
@@ -227,16 +385,16 @@ p, span, div, td, th, label, small { color: inherit; }
 
 .nav-btn:hover {
   color: var(--ink);
-  background: rgba(245, 166, 91, 0.06);
-  border-color: rgba(245, 166, 91, 0.14);
-  box-shadow: 0 0 26px -12px rgba(245, 166, 91, 0.3);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 14%, transparent);
+  box-shadow: 0 0 26px -12px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .nav-btn.active {
   color: var(--ink);
   font-weight: 600;
-  background: rgba(245, 166, 91, 0.09);
-  border-color: rgba(245, 166, 91, 0.2);
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .nav-btn.active::before {
@@ -245,18 +403,18 @@ p, span, div, td, th, label, small { color: inherit; }
   left: 0; top: 20%; bottom: 20%;
   width: 2px;
   border-radius: 0 2px 2px 0;
-  background: var(--amber);
-  box-shadow: 0 0 10px 1px rgba(245, 166, 91, 0.6);
+  background: var(--accent);
+  box-shadow: 0 0 10px 1px color-mix(in srgb, var(--accent) 60%, transparent);
 }
 
-.nav-btn .nav-icon { color: var(--amber); opacity: 0.75; }
+.nav-btn .nav-icon { color: var(--accent); opacity: 0.75; }
 .nav-btn.active .nav-icon { opacity: 1; }
 
 .notification-badge {
   background: var(--rose);
   color: var(--void);
   font-weight: 700;
-  box-shadow: 0 0 12px -2px rgba(217, 120, 141, 0.6);
+  box-shadow: 0 0 12px -2px color-mix(in srgb, var(--rose) 60%, transparent);
 }
 
 .workspace-switcher .workspace-select {
@@ -265,14 +423,14 @@ p, span, div, td, th, label, small { color: inherit; }
   border: 1px solid var(--line);
   border-radius: 10px;
 }
-.workspace-switcher .workspace-select:focus { border-color: var(--amber); outline: none; }
+.workspace-switcher .workspace-select:focus { border-color: var(--accent); outline: none; }
 .workspace-switcher button {
-  background: rgba(245, 166, 91, 0.1);
-  border: 1px solid rgba(245, 166, 91, 0.22);
-  color: var(--amber);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--accent);
   border-radius: 10px;
 }
-.workspace-switcher button:hover { background: rgba(245, 166, 91, 0.18); }
+.workspace-switcher button:hover { background: color-mix(in srgb, var(--accent) 18%, transparent); }
 
 .drawer-footer, .account-footer {
   border-top: 1px solid var(--line-soft);
@@ -281,22 +439,22 @@ p, span, div, td, th, label, small { color: inherit; }
 .account-footer strong { color: var(--ink); }
 .account-footer span { color: var(--faint); }
 .account-footer button { color: var(--muted); background: transparent; border: 0; }
-.account-footer button:hover { color: var(--amber); }
+.account-footer button:hover { color: var(--accent); }
 
 .account-avatar {
-  background: rgba(245, 166, 91, 0.14);
-  color: var(--amber-hot);
-  border: 1px solid rgba(245, 166, 91, 0.25);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent-hot);
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
-.drawer-backdrop { background: rgba(8, 6, 6, 0.6); backdrop-filter: blur(3px); }
+.drawer-backdrop { background: color-mix(in srgb, var(--void) 60%, transparent); backdrop-filter: blur(3px); }
 
 /* ---------------------------------------------------------------- topbar */
 
 .main { background: transparent; }
 
 .topbar {
-  background: rgba(14, 11, 12, 0.62);
+  background: color-mix(in srgb, var(--void) 62%, transparent);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--line-soft);
   box-shadow: none;
@@ -316,16 +474,16 @@ p, span, div, td, th, label, small { color: inherit; }
 .topbar-notification:hover,
 .topbar-profile:hover {
   color: var(--ink);
-  background: rgba(245, 166, 91, 0.07);
-  border-color: rgba(245, 166, 91, 0.16);
-  box-shadow: 0 0 24px -12px rgba(245, 166, 91, 0.35);
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 16%, transparent);
+  box-shadow: 0 0 24px -12px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 .topbar-profile strong { color: var(--ink); }
 .topbar-profile small { color: var(--faint); }
 .topbar-profile > span {
-  background: rgba(245, 166, 91, 0.14);
-  color: var(--amber-hot);
-  border: 1px solid rgba(245, 166, 91, 0.22);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent-hot);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
 }
 .topbar-notification b { background: var(--rose); color: var(--void); }
 
@@ -353,9 +511,9 @@ p, span, div, td, th, label, small { color: inherit; }
 .card.interactive:hover {
   transform: translateY(-2px);
   background: var(--glass-2);
-  border-color: rgba(245, 166, 91, 0.22);
+  border-color: color-mix(in srgb, var(--accent) 22%, transparent);
   box-shadow: 0 26px 60px -28px rgba(0, 0, 0, 0.85),
-              0 0 44px -20px rgba(245, 166, 91, 0.3);
+              0 0 44px -20px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .os-metrics article span { color: var(--faint); font-weight: 500; }
@@ -373,12 +531,12 @@ p, span, div, td, th, label, small { color: inherit; }
 .os-welcome h2 { color: var(--ink); }
 .os-welcome p { color: var(--ink-2); }
 
-.os-loop { background: rgba(245, 166, 91, 0.07); color: var(--ink-2); border: 1px solid var(--line-soft); }
-.os-loop b { background: var(--amber); color: var(--void); }
+.os-loop { background: color-mix(in srgb, var(--accent) 7%, transparent); color: var(--ink-2); border: 1px solid var(--line-soft); }
+.os-loop b { background: var(--accent); color: var(--void); }
 
 .os-alert {
-  background: rgba(119, 216, 194, 0.08);
-  border: 1px solid rgba(119, 216, 194, 0.22);
+  background: color-mix(in srgb, var(--mint) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mint) 22%, transparent);
   color: var(--mint);
 }
 
@@ -397,7 +555,7 @@ p, span, div, td, th, label, small { color: inherit; }
   border-bottom: 1px solid var(--line-soft);
   font-variant-numeric: tabular-nums;
 }
-.os-table tr:hover td { background: rgba(245, 166, 91, 0.04); color: var(--ink); }
+.os-table tr:hover td { background: color-mix(in srgb, var(--accent) 4%, transparent); color: var(--ink); }
 
 /* ----------------------------------------------------------------- forms */
 
@@ -411,8 +569,8 @@ input, select, textarea {
 
 input:focus, select:focus, textarea:focus {
   outline: none !important;
-  border-color: var(--amber) !important;
-  box-shadow: 0 0 0 3px rgba(245, 166, 91, 0.12) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent) !important;
 }
 
 input::placeholder, textarea::placeholder { color: var(--faint); }
@@ -424,21 +582,21 @@ select option { background: #17110F; color: var(--ink); }
 .os-field { color: var(--muted); }
 .os-field input, .os-field select { font-weight: 400; }
 
-input[type="checkbox"], input[type="radio"] { accent-color: var(--amber); }
+input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 
 /* --------------------------------------------------------------- buttons */
 
 .primary-btn {
-  background: rgba(245, 166, 91, 0.1);
-  color: var(--amber-hot);
-  border: 1px solid rgba(245, 166, 91, 0.28);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent-hot);
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
   border-radius: 10px;
   font-weight: 600;
   transition: all 0.25s var(--ease);
 }
 .primary-btn:hover {
-  background: rgba(245, 166, 91, 0.18);
-  box-shadow: 0 0 34px -10px rgba(245, 166, 91, 0.45);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  box-shadow: 0 0 34px -10px color-mix(in srgb, var(--accent) 45%, transparent);
   transform: translateY(-1px);
 }
 .primary-btn:disabled { opacity: 0.45; transform: none; box-shadow: none; }
@@ -452,12 +610,12 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--amber); }
 }
 .ghost-btn:hover, .secondary-btn:hover {
   color: var(--ink);
-  border-color: rgba(245, 166, 91, 0.24);
-  background: rgba(245, 166, 91, 0.06);
+  border-color: color-mix(in srgb, var(--accent) 24%, transparent);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
 }
 
-.danger-btn { color: var(--rose); border: 1px solid rgba(217, 120, 141, 0.28); background: transparent; }
-.danger-btn:hover { background: rgba(217, 120, 141, 0.12); }
+.danger-btn { color: var(--rose); border: 1px solid color-mix(in srgb, var(--rose) 28%, transparent); background: transparent; }
+.danger-btn:hover { background: color-mix(in srgb, var(--rose) 12%, transparent); }
 
 /* ----------------------------------------------------- module toggle rows */
 
@@ -468,9 +626,9 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--amber); }
   transition: all 0.25s var(--ease);
 }
 .module-toggle-row:hover {
-  background: rgba(245, 166, 91, 0.06);
-  border-color: rgba(245, 166, 91, 0.2);
-  box-shadow: 0 0 28px -14px rgba(245, 166, 91, 0.3);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 20%, transparent);
+  box-shadow: 0 0 28px -14px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 .module-toggle-row strong { color: var(--ink); }
 .module-toggle-row span { color: var(--muted); }
@@ -478,11 +636,11 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--amber); }
 
 /* ------------------------------------------------------------ crash card */
 
-.crash-card { border-color: rgba(217, 120, 141, 0.25); }
+.crash-card { border-color: color-mix(in srgb, var(--rose) 25%, transparent); }
 .crash-icon {
-  background: rgba(217, 120, 141, 0.14);
+  background: color-mix(in srgb, var(--rose) 14%, transparent);
   color: var(--rose);
-  border: 1px solid rgba(217, 120, 141, 0.3);
+  border: 1px solid color-mix(in srgb, var(--rose) 30%, transparent);
 }
 
 /* --------------------------------------------------------------- motion */
@@ -492,4 +650,44 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--amber); }
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ===========================================================================
+   Light-theme corrections
+   ---------------------------------------------------------------------------
+   Two rules that cannot be expressed as a token, because they are about which
+   direction "emphasis" points. On a dark ground a primary action is a glow —
+   a tint of the accent, lit from inside. On a light ground the same treatment
+   reads as disabled, because on white, less ink means less important. There a
+   primary action is a solid fill.
+   ======================================================================== */
+
+[data-theme="light"] .primary-btn,
+[data-theme="light"] .publish-btn,
+[data-theme="light"] .approve-btn,
+[data-theme="light"] .send-button {
+  background: var(--accent);
+  color: #FFFFFF;
+  border-color: var(--accent);
+}
+
+[data-theme="light"] .primary-btn:hover,
+[data-theme="light"] .publish-btn:hover,
+[data-theme="light"] .approve-btn:hover,
+[data-theme="light"] .send-button:hover {
+  background: var(--accent-hot);
+  border-color: var(--accent-hot);
+  box-shadow: 0 10px 24px -12px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+/* Cards are white on warm white, which is a 1.02:1 difference — real, but not
+   enough on its own. The shadow is what separates them from the page. */
+[data-theme="light"] .os-card,
+[data-theme="light"] .today-card,
+[data-theme="light"] .panel,
+[data-theme="light"] .operations-card,
+[data-theme="light"] .fin-stat-card,
+[data-theme="light"] .os-metrics article {
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--ink) 5%, transparent),
+              0 8px 24px -16px color-mix(in srgb, var(--ink) 22%, transparent);
 }

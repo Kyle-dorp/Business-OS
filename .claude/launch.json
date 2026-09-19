@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "haircut-scheduler",
-      "runtimeExecutable": "node",
-      "runtimeArgs": ["server.js"],
-      "autoPort": true
+      "name": "business-eos-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "frontend"],
+      "port": 5173
     }
   ]
 }

@@ -89,7 +89,7 @@
   gap: 0.15rem;
   padding: 0.5rem 0.7rem;
   border-radius: 10px;
-  background: rgba(21, 16, 15, 0.97);
+  background: color-mix(in srgb, var(--void-lift) 97%, transparent);
   border: 1px solid var(--line);
   box-shadow: 0 18px 40px -22px rgba(0, 0, 0, 0.9);
   font-size: 0.8rem;
@@ -105,22 +105,22 @@
 /* ------------------------------------------------------------- thresholds */
 
 .chart-threshold { stroke-width: 1; stroke-dasharray: 4 4; }
-.chart-threshold.is-healthy { stroke: rgba(119, 216, 194, 0.5); }
-.chart-threshold.is-ceiling { stroke: rgba(217, 120, 141, 0.55); }
+.chart-threshold.is-healthy { stroke: color-mix(in srgb, var(--mint) 50%, transparent); }
+.chart-threshold.is-ceiling { stroke: color-mix(in srgb, var(--rose) 55%, transparent); }
 
 .chart-threshold-label { font-size: 9px; letter-spacing: 0.04em; }
-.chart-threshold-label.is-healthy { fill: rgba(119, 216, 194, 0.8); }
-.chart-threshold-label.is-ceiling { fill: rgba(217, 120, 141, 0.85); }
+.chart-threshold-label.is-healthy { fill: color-mix(in srgb, var(--mint) 80%, transparent); }
+.chart-threshold-label.is-ceiling { fill: color-mix(in srgb, var(--rose) 85%, transparent); }
 
 /* One hue for magnitude. Status colour only where it means a state, and the
    threshold line and its label carry the same meaning in text. */
 .chart-bar {
-  fill: var(--amber-deep);
+  fill: var(--accent-deep);
   transition: fill 0.2s var(--ease);
 }
-.chart-bar.is-tight { fill: var(--amber); }
+.chart-bar.is-tight { fill: var(--accent); }
 .chart-bar.is-over  { fill: var(--rose); }
-.chart-bar:hover    { fill: var(--amber-hot); }
+.chart-bar:hover    { fill: var(--accent-hot); }
 
 /* ------------------------------------------------------------ ranked bars */
 
@@ -147,14 +147,14 @@
   position: relative;
   height: 0.55rem;
   border-radius: 999px;
-  background: rgba(246, 240, 234, 0.05);
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
   overflow: visible;
 }
 .chart-bars-fill {
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: var(--amber-deep);
+  background: var(--accent-deep);
   transition: width 0.5s var(--ease), background-color 0.25s var(--ease);
 }
 .chart-bars-row.is-over .chart-bars-fill { background: var(--rose); }
@@ -164,7 +164,7 @@
   position: absolute;
   top: -3px; bottom: -3px;
   width: 1px;
-  background: rgba(246, 240, 234, 0.4);
+  background: color-mix(in srgb, var(--ink) 40%, transparent);
 }
 
 .chart-bars-value {
@@ -184,7 +184,7 @@
 }
 .chart-foot-mark {
   width: 1px; height: 0.8rem;
-  background: rgba(246, 240, 234, 0.4);
+  background: color-mix(in srgb, var(--ink) 40%, transparent);
 }
 
 /* -------------------------------------------------------------- the table */

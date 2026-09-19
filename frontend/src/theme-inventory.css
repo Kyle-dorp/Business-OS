@@ -18,11 +18,11 @@
   cursor: pointer;
   transition: all 0.25s var(--ease);
 }
-.inv-tab:hover { color: var(--ink); background: rgba(245, 166, 91, 0.06); }
+.inv-tab:hover { color: var(--ink); background: color-mix(in srgb, var(--accent) 6%, transparent); }
 .inv-tab.is-active {
   color: var(--ink); font-weight: 600;
-  background: rgba(245, 166, 91, 0.1);
-  border-color: rgba(245, 166, 91, 0.24);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 24%, transparent);
 }
 
 .inv-page .card { padding: 1.5rem 1.7rem; margin-bottom: 1rem; }
@@ -55,9 +55,9 @@
 }
 .inv-headline small { display: block; margin-top: 0.6rem; color: var(--muted); font-size: 0.86rem; }
 
-.inv-headline.is-leak { border-color: rgba(217, 120, 141, 0.3); }
+.inv-headline.is-leak { border-color: color-mix(in srgb, var(--rose) 30%, transparent); }
 .inv-headline.is-leak .inv-headline-label { color: var(--rose); }
-.inv-headline.is-leak strong { color: var(--rose); text-shadow: 0 0 30px rgba(217, 120, 141, 0.25); }
+.inv-headline.is-leak strong { color: var(--rose); text-shadow: 0 0 30px color-mix(in srgb, var(--rose) 25%, transparent); }
 .inv-headline.is-fine .inv-headline-label { color: var(--mint); }
 .inv-headline.is-fine strong { color: var(--mint); }
 
@@ -76,7 +76,7 @@
   border-left: 2px solid var(--line);
 }
 .inv-offenders li.sev-high { border-left-color: var(--rose); }
-.inv-offenders li.sev-medium { border-left-color: var(--amber); }
+.inv-offenders li.sev-medium { border-left-color: var(--accent); }
 .inv-offenders strong { display: block; color: var(--ink); font-size: 0.95rem; }
 .inv-offenders small { color: var(--faint); font-size: 0.78rem; }
 .inv-offender-value { color: var(--rose); font-variant-numeric: tabular-nums; font-size: 1.05rem; }
@@ -117,7 +117,7 @@
   font: inherit; text-align: left;
   transition: background-color 0.25s var(--ease);
 }
-.inv-recipe-head:hover { background: rgba(245, 166, 91, 0.04); }
+.inv-recipe-head:hover { background: color-mix(in srgb, var(--accent) 4%, transparent); }
 .inv-recipe.is-open .inv-recipe-head { border-bottom: 1px solid var(--line-soft); }
 
 .inv-recipe-name strong { display: block; color: var(--ink); font-size: 1rem; }
@@ -160,10 +160,10 @@
   border-radius: 999px; font-size: 0.76rem; font-weight: 600;
   cursor: help;
 }
-.q-star { color: var(--mint); background: rgba(119, 216, 194, 0.12); }
-.q-workhorse { color: var(--amber); background: rgba(245, 166, 91, 0.12); }
-.q-puzzle { color: var(--ink-2); background: rgba(246, 240, 234, 0.07); }
-.q-drop_or_rework { color: var(--rose); background: rgba(217, 120, 141, 0.12); }
+.q-star { color: var(--mint); background: color-mix(in srgb, var(--mint) 12%, transparent); }
+.q-workhorse { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.q-puzzle { color: var(--ink-2); background: color-mix(in srgb, var(--ink) 7%, transparent); }
+.q-drop_or_rework { color: var(--rose); background: color-mix(in srgb, var(--rose) 12%, transparent); }
 
 .inv-page .os-table td strong { display: block; color: var(--ink); }
 .inv-page .os-table td small { display: block; color: var(--faint); font-size: 0.76rem; }

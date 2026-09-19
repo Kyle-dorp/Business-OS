@@ -23,8 +23,8 @@
   place-items: center;
   padding: clamp(2rem, 6vw, 5rem);
   background:
-    radial-gradient(60vw 52vw at 18% 8%, rgba(245, 166, 91, 0.14), transparent 62%),
-    radial-gradient(52vw 46vw at 82% 88%, rgba(217, 120, 141, 0.10), transparent 64%),
+    radial-gradient(60vw 52vw at 18% 8%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 62%),
+    radial-gradient(52vw 46vw at 82% 88%, color-mix(in srgb, var(--rose) 10%, transparent), transparent 64%),
     var(--void);
   border-right: 1px solid var(--line-soft);
 }
@@ -39,12 +39,12 @@
 }
 .brand-orb-one {
   width: 30rem; height: 30rem; top: -8rem; left: -6rem;
-  background: rgba(245, 166, 91, 0.18);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
   animation: eos-drift-a 22s ease-in-out infinite alternate;
 }
 .brand-orb-two {
   width: 26rem; height: 26rem; bottom: -7rem; right: -5rem;
-  background: rgba(217, 120, 141, 0.14);
+  background: color-mix(in srgb, var(--rose) 14%, transparent);
   animation: eos-drift-b 26s ease-in-out infinite alternate;
 }
 @keyframes eos-drift-a { to { transform: translate3d(3rem, 2.5rem, 0) scale(1.1); } }
@@ -59,12 +59,12 @@
   font-family: "Fraunces", serif;
   font-size: 1.5rem;
   color: var(--void);
-  background: var(--amber);
-  box-shadow: 0 0 40px -6px rgba(245, 166, 91, 0.55);
+  background: var(--accent);
+  box-shadow: 0 0 40px -6px color-mix(in srgb, var(--accent) 55%, transparent);
   margin-bottom: 2rem;
 }
 
-.eyebrow.light { color: var(--amber); }
+.eyebrow.light { color: var(--accent); }
 
 .auth-brand-content h1 {
   font-size: clamp(2rem, 3.6vw, 3rem);
@@ -98,7 +98,7 @@
   display: flex; flex-direction: column; gap: 1.1rem;
   padding: clamp(1.8rem, 4vw, 2.6rem);
   border-radius: 20px;
-  background: linear-gradient(160deg, rgba(246, 240, 234, 0.06), rgba(246, 240, 234, 0.025));
+  background: linear-gradient(160deg, color-mix(in srgb, var(--ink) 6%, transparent), color-mix(in srgb, var(--ink) 2.5%, transparent));
   border: 1px solid var(--line);
   backdrop-filter: blur(14px);
   box-shadow: 0 30px 76px -34px rgba(0, 0, 0, 0.85);
@@ -120,8 +120,8 @@
   padding: 0.75rem 0.95rem; border-radius: 10px;
   font-size: 0.9rem; line-height: 1.5;
 }
-.alert.error { background: rgba(217, 120, 141, 0.1); border: 1px solid rgba(217, 120, 141, 0.28); color: var(--rose); }
-.alert.notice { background: rgba(119, 216, 194, 0.08); border: 1px solid rgba(119, 216, 194, 0.26); color: var(--mint); }
+.alert.error { background: color-mix(in srgb, var(--rose) 10%, transparent); border: 1px solid color-mix(in srgb, var(--rose) 28%, transparent); color: var(--rose); }
+.alert.notice { background: color-mix(in srgb, var(--mint) 8%, transparent); border: 1px solid color-mix(in srgb, var(--mint) 26%, transparent); color: var(--mint); }
 
 .auth-link {
   background: none; border: 0;
@@ -129,7 +129,7 @@
   cursor: pointer; padding: 0.3rem;
   transition: color 0.25s var(--ease);
 }
-.auth-link:hover { color: var(--amber); }
+.auth-link:hover { color: var(--accent); }
 
 .auth-google { display: flex; flex-direction: column; align-items: center; gap: 0.8rem; }
 .auth-google small { color: var(--faint); font-size: 0.76rem; text-align: center; line-height: 1.5; }
@@ -150,7 +150,7 @@
 .sec-card { padding: 1.5rem 1.7rem; }
 .sec-card h3 { margin: 0 0 0.6rem; }
 .sec-blurb { color: var(--muted); font-size: 0.9rem; line-height: 1.65; margin: 0 0 1.2rem; }
-.sec-blurb code { color: var(--amber); font-size: 0.86rem; }
+.sec-blurb code { color: var(--accent); font-size: 0.86rem; }
 
 .sec-inline-form { display: flex; gap: 0.5rem; }
 .sec-inline-form input { flex: 1; padding: 0.65rem 0.85rem !important; }
@@ -164,12 +164,12 @@
 .sec-code-panel {
   margin-top: 1.2rem; padding: 1.1rem 1.2rem;
   border-radius: 14px;
-  background: rgba(245, 166, 91, 0.07);
-  border: 1px solid rgba(245, 166, 91, 0.28);
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
 }
 .sec-code-label {
   display: block; font-size: 0.74rem; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--amber); font-weight: 600;
+  text-transform: uppercase; color: var(--accent); font-weight: 600;
   margin-bottom: 0.6rem;
 }
 .sec-code-row { display: flex; align-items: center; gap: 0.8rem; }

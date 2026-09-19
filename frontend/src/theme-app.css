@@ -89,8 +89,8 @@
 }
 .small-btn:hover {
   color: var(--ink);
-  border-color: rgba(245, 166, 91, 0.28);
-  background: rgba(245, 166, 91, 0.06);
+  border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
 }
 
 .secondary-btn, .secondary {
@@ -104,8 +104,8 @@
 }
 .secondary-btn:hover, .secondary:hover {
   color: var(--ink);
-  border-color: rgba(245, 166, 91, 0.26);
-  background: rgba(245, 166, 91, 0.05);
+  border-color: color-mix(in srgb, var(--accent) 26%, transparent);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
 }
 
 /* Destructive actions get colour but no fill. A red block invites the
@@ -121,7 +121,7 @@
   border-radius: 8px;
   transition: background-color 0.2s var(--ease);
 }
-.danger-text-btn:hover { background: rgba(217, 120, 141, 0.1); }
+.danger-text-btn:hover { background: color-mix(in srgb, var(--rose) 10%, transparent); }
 
 /* ----------------------------------------------------------------- chips */
 
@@ -135,8 +135,8 @@
   font-size: 0.78rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-  color: var(--amber);
-  background: rgba(245, 166, 91, 0.12);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .check-chip {
@@ -152,12 +152,12 @@
   cursor: pointer;
   transition: all 0.22s var(--ease);
 }
-.check-chip:hover { border-color: rgba(245, 166, 91, 0.26); color: var(--ink); }
-.check-chip input { accent-color: var(--amber); }
+.check-chip:hover { border-color: color-mix(in srgb, var(--accent) 26%, transparent); color: var(--ink); }
+.check-chip input { accent-color: var(--accent); }
 .check-chip:has(input:checked) {
   color: var(--ink);
-  background: rgba(245, 166, 91, 0.1);
-  border-color: rgba(245, 166, 91, 0.3);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 .checkbox-label, .switch-line {
@@ -169,7 +169,7 @@
   cursor: pointer;
 }
 .switch-line { justify-content: space-between; padding: 0.6rem 0; }
-.checkbox-label input, .switch-line input { accent-color: var(--amber); }
+.checkbox-label input, .switch-line input { accent-color: var(--accent); }
 
 .single-value-field {
   display: flex;
@@ -188,19 +188,19 @@
   margin-bottom: 1rem;
 }
 .alert.error, .error {
-  background: rgba(217, 120, 141, 0.09);
-  border: 1px solid rgba(217, 120, 141, 0.26);
+  background: color-mix(in srgb, var(--rose) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--rose) 26%, transparent);
   color: var(--rose);
 }
 .alert.success, .alert.notice {
-  background: rgba(119, 216, 194, 0.08);
-  border: 1px solid rgba(119, 216, 194, 0.24);
+  background: color-mix(in srgb, var(--mint) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mint) 24%, transparent);
   color: var(--mint);
 }
 .alert.warning {
-  background: rgba(245, 166, 91, 0.08);
-  border: 1px solid rgba(245, 166, 91, 0.24);
-  color: var(--amber);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  color: var(--accent);
 }
 
 /* Confirmation that something saved. Fixed so it survives a scroll, and short
@@ -213,8 +213,8 @@
   z-index: 200;
   padding: 0.7rem 1.2rem;
   border-radius: 999px;
-  background: rgba(20, 16, 15, 0.94);
-  border: 1px solid rgba(119, 216, 194, 0.3);
+  background: color-mix(in srgb, var(--void-lift) 94%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mint) 30%, transparent);
   color: var(--mint);
   font-size: 0.88rem;
   backdrop-filter: blur(10px);
@@ -263,8 +263,8 @@
   transition: border-color 0.25s var(--ease), background-color 0.25s var(--ease);
 }
 .request-summary:hover {
-  border-color: rgba(245, 166, 91, 0.2);
-  background: rgba(245, 166, 91, 0.04);
+  border-color: color-mix(in srgb, var(--accent) 20%, transparent);
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
 }
 .request-summary strong { color: var(--ink); }
 .request-summary span { color: var(--muted); font-size: 0.9rem; }
@@ -286,9 +286,9 @@
   display: grid;
   place-items: center;
   font-size: 0.85rem;
-  color: var(--amber-hot);
-  background: rgba(245, 166, 91, 0.12);
-  border: 1px solid rgba(245, 166, 91, 0.22);
+  color: var(--accent-hot);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
 }
 
 /* ---------------------------------------------------------------- compact */
@@ -316,8 +316,8 @@
   border-radius: 50%;
   font-size: 1.1rem;
 }
-.state-icon.is-empty { background: rgba(246, 240, 234, 0.05); color: var(--faint); border: 1px solid var(--line); }
-.state-icon.is-error { background: rgba(217, 120, 141, 0.1); color: var(--rose); border: 1px solid rgba(217, 120, 141, 0.28); }
+.state-icon.is-empty { background: color-mix(in srgb, var(--ink) 5%, transparent); color: var(--faint); border: 1px solid var(--line); }
+.state-icon.is-error { background: color-mix(in srgb, var(--rose) 10%, transparent); color: var(--rose); border: 1px solid color-mix(in srgb, var(--rose) 28%, transparent); }
 
 /* Skeleton rows, not a spinner. A spinner says "wait"; a skeleton says what is
    about to appear, and the page does not jump when it does. */
@@ -327,9 +327,9 @@
   border-radius: 6px;
   background: linear-gradient(
     90deg,
-    rgba(246, 240, 234, 0.045) 25%,
-    rgba(246, 240, 234, 0.09) 37%,
-    rgba(246, 240, 234, 0.045) 63%
+    color-mix(in srgb, var(--ink) 4.5%, transparent) 25%,
+    color-mix(in srgb, var(--ink) 9%, transparent) 37%,
+    color-mix(in srgb, var(--ink) 4.5%, transparent) 63%
   );
   background-size: 400% 100%;
   animation: eos-shimmer 1.4s ease-in-out infinite;
@@ -346,7 +346,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .skeleton { animation: none; background: rgba(246, 240, 234, 0.06); }
+  .skeleton { animation: none; background: color-mix(in srgb, var(--ink) 6%, transparent); }
   .save-toast { animation: none; }
 }
 
@@ -404,7 +404,7 @@
   height: 2.6rem;
   margin: 0 auto 0.9rem;
   border-radius: 50%;
-  background: rgba(246, 240, 234, 0.05);
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
   border: 1px solid var(--line);
   color: var(--faint);
   font-size: 1.1rem;
@@ -419,9 +419,9 @@
   height: 1.5rem;
   flex: none;
   border-radius: 50%;
-  background: rgba(245, 166, 91, 0.12);
-  border: 1px solid rgba(245, 166, 91, 0.24);
-  color: var(--amber);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  color: var(--accent);
   font-size: 0.76rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -435,8 +435,8 @@
   transition: border-color 0.25s var(--ease), background-color 0.25s var(--ease);
 }
 .team-access-card:hover {
-  border-color: rgba(245, 166, 91, 0.2);
-  background: rgba(245, 166, 91, 0.04);
+  border-color: color-mix(in srgb, var(--accent) 20%, transparent);
+  background: color-mix(in srgb, var(--accent) 4%, transparent);
 }
 .team-access-card strong { display: block; color: var(--ink); margin-bottom: 0.2rem; }
 .team-access-card span { color: var(--muted); font-size: 0.88rem; }

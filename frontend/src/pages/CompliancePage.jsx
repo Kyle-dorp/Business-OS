@@ -280,7 +280,7 @@ export default function CompliancePage() {
             <div className="cmp-readiness-bar">
               <span style={{
                 width: `${readiness}%`,
-                background: readiness === 100 ? "var(--mint)" : "var(--amber)",
+                background: readiness === 100 ? "var(--mint)" : "var(--accent)",
               }} />
             </div>
             <small>{staff.complete} of {staff.total} employees ready to check</small>

@@ -14,7 +14,7 @@
 .cmp-readiness { min-width: 15rem; text-align: right; }
 .cmp-readiness-bar {
   height: 3px; border-radius: 3px; overflow: hidden;
-  background: rgba(246, 240, 234, 0.08); margin-bottom: 0.5rem;
+  background: color-mix(in srgb, var(--ink) 8%, transparent); margin-bottom: 0.5rem;
 }
 .cmp-readiness-bar span { display: block; height: 100%; border-radius: 3px; transition: width 0.5s var(--ease); }
 .cmp-readiness small { color: var(--faint); font-size: 0.78rem; }
@@ -39,7 +39,7 @@
   cursor: pointer;
   transition: all 0.25s var(--ease);
 }
-.cmp-toggle:hover { border-color: rgba(245, 166, 91, 0.2); background: rgba(245, 166, 91, 0.05); }
+.cmp-toggle:hover { border-color: color-mix(in srgb, var(--accent) 20%, transparent); background: color-mix(in srgb, var(--accent) 5%, transparent); }
 .cmp-toggle input { margin-top: 0.2rem; flex: none; }
 .cmp-toggle strong { display: block; color: var(--ink); font-size: 0.94rem; font-weight: 600; }
 .cmp-toggle small { display: block; margin-top: 0.2rem; color: var(--muted); font-size: 0.84rem; line-height: 1.55; }
@@ -51,8 +51,8 @@
 .cmp-effective {
   margin-top: 1.3rem; padding: 1.2rem 1.3rem;
   border-radius: 14px;
-  background: rgba(119, 216, 194, 0.05);
-  border: 1px solid rgba(119, 216, 194, 0.2);
+  background: color-mix(in srgb, var(--mint) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mint) 20%, transparent);
 }
 .cmp-effective-label {
   display: block; font-size: 0.72rem; letter-spacing: 0.14em;
@@ -102,9 +102,9 @@
 .cmp-row-error { display: block; color: var(--rose); font-size: 0.78rem; margin-bottom: 0.35rem; }
 
 /* A row missing data is not an error — it is an invitation. Amber, not rose. */
-.cmp-missing { color: var(--amber); font-size: 0.82rem; }
+.cmp-missing { color: var(--accent); font-size: 0.82rem; }
 .cmp-done { color: var(--mint); font-size: 0.82rem; }
-.cmp-incomplete td:first-child { box-shadow: inset 2px 0 0 var(--amber); }
+.cmp-incomplete td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 
 @media (max-width: 720px) {
   .cmp-readiness { min-width: 0; text-align: left; margin-top: 1rem; }

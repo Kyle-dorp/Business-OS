@@ -40,11 +40,11 @@
 button.today-tile { cursor: pointer; }
 button.today-tile:hover {
   transform: translateY(-2px);
-  border-color: rgba(245, 166, 91, 0.26);
+  border-color: color-mix(in srgb, var(--accent) 26%, transparent);
   box-shadow: 0 26px 54px -32px rgba(0, 0, 0, 0.9),
-              0 0 40px -22px rgba(245, 166, 91, 0.4);
+              0 0 40px -22px color-mix(in srgb, var(--accent) 40%, transparent);
 }
-button.today-tile:hover .today-tile-go { color: var(--amber-hot); transform: translateX(3px); }
+button.today-tile:hover .today-tile-go { color: var(--accent-hot); transform: translateX(3px); }
 
 .today-tile-label {
   color: var(--faint);
@@ -68,7 +68,7 @@ button.today-tile:hover .today-tile-go { color: var(--amber-hot); transform: tra
 .today-tile-go {
   margin-top: auto;
   padding-top: 0.9rem;
-  color: var(--amber);
+  color: var(--accent);
   font-size: 0.84rem;
   transition: color 0.25s var(--ease), transform 0.25s var(--ease);
 }
@@ -99,9 +99,9 @@ button.today-tile:hover .today-tile-go { color: var(--amber-hot); transform: tra
   opacity: 0.5;
   background: radial-gradient(70% 55% at 12% 0%, var(--tone, transparent), transparent 70%);
 }
-.today-tile.tone-good { --tone: rgba(119, 216, 194, 0.12); }
-.today-tile.tone-warn { --tone: rgba(245, 166, 91, 0.14); }
-.today-tile.tone-bad  { --tone: rgba(217, 120, 141, 0.16); }
+.today-tile.tone-good { --tone: color-mix(in srgb, var(--mint) 12%, transparent); }
+.today-tile.tone-warn { --tone: color-mix(in srgb, var(--accent) 14%, transparent); }
+.today-tile.tone-bad  { --tone: color-mix(in srgb, var(--rose) 16%, transparent); }
 
 .today-verdict {
   align-self: flex-start;
@@ -112,9 +112,9 @@ button.today-tile:hover .today-tile-go { color: var(--amber-hot); transform: tra
   text-transform: uppercase;
   font-weight: 600;
 }
-.today-verdict.tone-good { color: var(--mint); background: rgba(119, 216, 194, 0.12); }
-.today-verdict.tone-warn { color: var(--amber); background: rgba(245, 166, 91, 0.12); }
-.today-verdict.tone-bad  { color: var(--rose);  background: rgba(217, 120, 141, 0.14); }
+.today-verdict.tone-good { color: var(--mint); background: color-mix(in srgb, var(--mint) 12%, transparent); }
+.today-verdict.tone-warn { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.today-verdict.tone-bad  { color: var(--rose);  background: color-mix(in srgb, var(--rose) 14%, transparent); }
 
 /* ------------------------------------------------------------ 2. the money */
 
@@ -189,8 +189,8 @@ button.today-tile:hover .today-tile-go { color: var(--amber-hot); transform: tra
   border-radius: 50%;
   background: var(--faint);
 }
-.urgency-high .today-attention-dot   { background: var(--rose);  box-shadow: 0 0 10px rgba(217, 120, 141, 0.7); }
-.urgency-medium .today-attention-dot { background: var(--amber); box-shadow: 0 0 10px rgba(245, 166, 91, 0.6); }
+.urgency-high .today-attention-dot   { background: var(--rose);  box-shadow: 0 0 10px color-mix(in srgb, var(--rose) 70%, transparent); }
+.urgency-medium .today-attention-dot { background: var(--accent); box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 60%, transparent); }
 
 .today-attention-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.1rem; }
 .today-attention-body strong { color: var(--ink); font-size: 0.93rem; font-weight: 500; }
@@ -200,7 +200,7 @@ button.today-tile:hover .today-tile-go { color: var(--amber-hot); transform: tra
 }
 
 .today-attention-go { flex: none; color: var(--faint); transition: color 0.22s var(--ease); }
-.today-attention-row:hover .today-attention-go { color: var(--amber); }
+.today-attention-row:hover .today-attention-go { color: var(--accent); }
 
 /* --------------------------------------------------------- 4. what runs out */
 
@@ -227,7 +227,7 @@ button.today-tile:hover .today-tile-go { color: var(--amber-hot); transform: tra
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: var(--amber);
+  background: var(--accent);
   transition: width 0.5s var(--ease);
 }
 .today-stock .sev-high .today-stock-bar > span { background: var(--rose); }
@@ -252,8 +252,8 @@ button.today-tile:hover .today-tile-go { color: var(--amber-hot); transform: tra
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
-  border-color: rgba(245, 166, 91, 0.22);
-  background: linear-gradient(150deg, rgba(245, 166, 91, 0.07), transparent 60%);
+  border-color: color-mix(in srgb, var(--accent) 22%, transparent);
+  background: linear-gradient(150deg, color-mix(in srgb, var(--accent) 7%, transparent), transparent 60%);
 }
 
 .today-setup-head {
@@ -297,7 +297,7 @@ button.today-tile:hover .today-tile-go { color: var(--amber-hot); transform: tra
 .today-setup-track > span {
   display: block; height: 100%;
   border-radius: 999px;
-  background: var(--amber);
+  background: var(--accent);
   transition: width 0.55s var(--ease);
 }
 
@@ -323,7 +323,7 @@ button.today-tile:hover .today-tile-go { color: var(--amber-hot); transform: tra
   cursor: pointer;
   transition: color 0.2s var(--ease);
 }
-.today-setup-list button:hover { color: var(--amber); }
+.today-setup-list button:hover { color: var(--accent); }
 .today-setup-list .is-done button { color: var(--faint); cursor: default; }
 .today-setup-list .is-done span:last-child { text-decoration: line-through; }
 

@@ -18,16 +18,16 @@
   display: grid;
   place-items: center;
 
-  border: 1px solid rgba(245, 166, 91, 0.35);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
   border-radius: 50%;
-  background: radial-gradient(circle at 34% 28%, var(--amber-hot), var(--amber-deep));
+  background: radial-gradient(circle at 34% 28%, var(--accent-hot), var(--accent-deep));
   color: var(--void);
   cursor: pointer;
   font: inherit;
 
   box-shadow:
     0 14px 38px -12px rgba(0, 0, 0, 0.85),
-    0 0 40px -10px rgba(245, 166, 91, 0.55);
+    0 0 40px -10px color-mix(in srgb, var(--accent) 55%, transparent);
   transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease),
               right 0.42s var(--ease);
 }
@@ -36,7 +36,7 @@
   transform: translateY(-3px) scale(1.04);
   box-shadow:
     0 20px 46px -12px rgba(0, 0, 0, 0.9),
-    0 0 58px -8px rgba(245, 166, 91, 0.75);
+    0 0 58px -8px color-mix(in srgb, var(--accent) 75%, transparent);
 }
 
 .eos-bubble:active { transform: translateY(-1px) scale(0.98); }
@@ -59,7 +59,7 @@
   position: absolute;
   inset: -5px;
   border-radius: 50%;
-  border: 1.5px solid var(--amber-hot);
+  border: 1.5px solid var(--accent-hot);
   animation: eos-bubble-pulse 2.6s var(--ease) infinite;
   pointer-events: none;
 }
@@ -83,7 +83,7 @@
   display: flex;
   flex-direction: column;
 
-  background: linear-gradient(200deg, rgba(21, 16, 15, 0.97), rgba(14, 11, 12, 0.98));
+  background: linear-gradient(200deg, color-mix(in srgb, var(--void-lift) 97%, transparent), color-mix(in srgb, var(--void) 98%, transparent));
   border-left: 1px solid var(--line);
   backdrop-filter: blur(20px);
   box-shadow: -40px 0 90px -50px rgba(0, 0, 0, 0.95);
@@ -156,8 +156,8 @@
               transform 0.2s var(--ease), color 0.25s var(--ease);
 }
 .eos-starter:hover {
-  background: rgba(245, 166, 91, 0.07);
-  border-color: rgba(245, 166, 91, 0.26);
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 26%, transparent);
   color: var(--ink);
   transform: translateX(2px);
 }
@@ -176,8 +176,8 @@
 
 .eos-turn.is-user {
   align-self: flex-end;
-  background: rgba(245, 166, 91, 0.13);
-  border: 1px solid rgba(245, 166, 91, 0.22);
+  background: color-mix(in srgb, var(--accent) 13%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
   color: var(--ink);
   border-bottom-right-radius: 5px;
 }
@@ -209,7 +209,7 @@
 .eos-turn.is-thinking span {
   width: 0.4rem; height: 0.4rem;
   border-radius: 50%;
-  background: var(--amber);
+  background: var(--accent);
   opacity: 0.4;
   animation: eos-think 1.25s var(--ease) infinite;
 }
@@ -250,7 +250,7 @@
 }
 .eos-panel-foot textarea:focus {
   outline: none;
-  border-color: rgba(245, 166, 91, 0.4);
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
   background: var(--glass-2);
 }
 .eos-panel-foot .primary-btn { flex: none; padding: 0.7rem 1.1rem; }

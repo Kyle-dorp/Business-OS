@@ -11,8 +11,8 @@
   padding: clamp(1.5rem, 5vw, 3.5rem) 1rem 3rem;
   display: flex; flex-direction: column; align-items: center; gap: 1rem;
   background:
-    radial-gradient(60vw 50vw at 15% -5%, rgba(245, 166, 91, 0.1), transparent 62%),
-    radial-gradient(55vw 46vw at 92% 10%, rgba(217, 120, 141, 0.08), transparent 64%),
+    radial-gradient(60vw 50vw at 15% -5%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 62%),
+    radial-gradient(55vw 46vw at 92% 10%, color-mix(in srgb, var(--rose) 8%, transparent), transparent 64%),
     var(--void);
   color: var(--ink);
 }
@@ -37,15 +37,15 @@
   background: var(--line); transition: background-color 0.3s var(--ease);
 }
 .pb-steps li.is-current::before,
-.pb-steps li.is-done::before { background: var(--amber); }
-.pb-steps li.is-current { color: var(--amber); }
+.pb-steps li.is-done::before { background: var(--accent); }
+.pb-steps li.is-current { color: var(--accent); }
 .pb-steps li.is-done { color: var(--muted); }
 
 .pb-card {
   width: min(34rem, 100%);
   padding: clamp(1.4rem, 4vw, 2rem);
   border-radius: 20px;
-  background: linear-gradient(160deg, rgba(246, 240, 234, 0.06), rgba(246, 240, 234, 0.025));
+  background: linear-gradient(160deg, color-mix(in srgb, var(--ink) 6%, transparent), color-mix(in srgb, var(--ink) 2.5%, transparent));
   border: 1px solid var(--line);
   backdrop-filter: blur(14px);
   box-shadow: 0 28px 70px -34px rgba(0, 0, 0, 0.85);
@@ -58,7 +58,7 @@
   color: var(--muted); font: inherit; font-size: 0.9rem; cursor: pointer;
   transition: color 0.2s var(--ease);
 }
-.pb-back:hover { color: var(--amber); }
+.pb-back:hover { color: var(--accent); }
 
 /* ------------------------------------------------------------- services */
 
@@ -75,16 +75,16 @@
   transition: all 0.25s var(--ease);
 }
 .pb-service:hover {
-  background: rgba(245, 166, 91, 0.07);
-  border-color: rgba(245, 166, 91, 0.24);
-  box-shadow: 0 0 30px -14px rgba(245, 166, 91, 0.35);
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 24%, transparent);
+  box-shadow: 0 0 30px -14px color-mix(in srgb, var(--accent) 35%, transparent);
   transform: translateY(-1px);
 }
 .pb-service-main strong { display: block; color: var(--ink); font-size: 1rem; }
 .pb-service-main small { display: block; margin-top: 0.2rem; color: var(--muted); font-size: 0.85rem; line-height: 1.5; }
 .pb-service-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 0.2rem; white-space: nowrap; }
 .pb-duration { color: var(--faint); font-size: 0.82rem; }
-.pb-price { color: var(--amber); font-size: 1rem; font-variant-numeric: tabular-nums; }
+.pb-price { color: var(--accent); font-size: 1rem; font-variant-numeric: tabular-nums; }
 .pb-deposit-tag { color: var(--rose); font-size: 0.76rem; }
 
 /* ----------------------------------------------------------------- time */
@@ -105,13 +105,13 @@
 }
 .pb-day small { display: block; font-size: 0.7rem; color: var(--faint); }
 .pb-day strong { display: block; font-size: 1.1rem; margin-top: 0.15rem; }
-.pb-day:hover { border-color: rgba(245, 166, 91, 0.3); }
+.pb-day:hover { border-color: color-mix(in srgb, var(--accent) 30%, transparent); }
 .pb-day.is-active {
-  background: rgba(245, 166, 91, 0.14);
-  border-color: var(--amber);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: var(--accent);
   color: var(--ink);
 }
-.pb-day.is-active small { color: var(--amber); }
+.pb-day.is-active small { color: var(--accent); }
 
 .pb-slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(5.2rem, 1fr)); gap: 0.5rem; }
 .pb-slot {
@@ -121,9 +121,9 @@
   cursor: pointer; transition: all 0.2s var(--ease);
 }
 .pb-slot:hover {
-  background: rgba(245, 166, 91, 0.1);
-  border-color: var(--amber); color: var(--ink);
-  box-shadow: 0 0 24px -12px rgba(245, 166, 91, 0.45);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-color: var(--accent); color: var(--ink);
+  box-shadow: 0 0 24px -12px color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
 /* -------------------------------------------------------------- details */
@@ -136,8 +136,8 @@
 
 .pb-deposit-warn {
   padding: 0.9rem 1.05rem; border-radius: 12px;
-  background: rgba(217, 120, 141, 0.08);
-  border: 1px solid rgba(217, 120, 141, 0.24);
+  background: color-mix(in srgb, var(--rose) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--rose) 24%, transparent);
   color: var(--ink-2); font-size: 0.88rem; line-height: 1.6;
 }
 
@@ -149,8 +149,8 @@
 .pb-tick {
   width: 3.2rem; height: 3.2rem; margin: 0 auto 1.2rem;
   display: grid; place-items: center; border-radius: 50%;
-  background: rgba(119, 216, 194, 0.14);
-  border: 1px solid rgba(119, 216, 194, 0.4);
+  background: color-mix(in srgb, var(--mint) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mint) 40%, transparent);
   color: var(--mint); font-size: 1.5rem;
 }
 .pb-confirmed h1 { font-family: "Fraunces", serif; font-weight: 400; font-size: 1.9rem; margin: 0 0 0.7rem; }
@@ -158,9 +158,9 @@
 .pb-confirm-when {
   margin: 1rem 0 1.4rem; padding: 0.85rem;
   border-radius: 12px;
-  background: rgba(245, 166, 91, 0.09);
-  border: 1px solid rgba(245, 166, 91, 0.24);
-  color: var(--amber-hot); font-size: 1.05rem;
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
+  color: var(--accent-hot); font-size: 1.05rem;
 }
 
 .pb-summary { display: flex; flex-direction: column; gap: 0.5rem; margin: 0 0 1.2rem; text-align: left; }
@@ -199,7 +199,7 @@
 .bk-link-row code {
   flex: 1; min-width: 14rem; padding: 0.65rem 0.85rem;
   border-radius: 10px; background: var(--glass); border: 1px solid var(--line-soft);
-  color: var(--amber); font-size: 0.88rem; overflow-x: auto; white-space: nowrap;
+  color: var(--accent); font-size: 0.88rem; overflow-x: auto; white-space: nowrap;
 }
 .bk-link-row .ghost-btn { padding: 0.6rem 1rem; text-decoration: none; }
 
@@ -228,11 +228,11 @@
   background: var(--glass); border: 1px solid var(--line-soft);
   transition: border-color 0.25s var(--ease);
 }
-.bk-booking:hover { border-color: rgba(245, 166, 91, 0.2); }
+.bk-booking:hover { border-color: color-mix(in srgb, var(--accent) 20%, transparent); }
 .bk-booking.status-cancelled, .bk-booking.status-no_show { opacity: 0.55; }
 
 .bk-when strong { display: block; color: var(--ink); font-size: 0.94rem; }
-.bk-when span { display: block; color: var(--amber); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.bk-when span { display: block; color: var(--accent); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
 .bk-when small { color: var(--faint); font-size: 0.76rem; }
 
 .bk-who strong { display: block; color: var(--ink); }
@@ -242,14 +242,14 @@
 
 .bk-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 0.3rem; white-space: nowrap; }
 .bk-rating { font-size: 0.78rem; padding: 0.2rem 0.55rem; border-radius: 999px; cursor: help; }
-.r-risky { color: var(--rose); background: rgba(217, 120, 141, 0.14); }
-.r-watch { color: var(--amber); background: rgba(245, 166, 91, 0.12); }
-.r-reliable { color: var(--mint); background: rgba(119, 216, 194, 0.1); }
-.r-new { color: var(--faint); background: rgba(246, 240, 234, 0.05); }
+.r-risky { color: var(--rose); background: color-mix(in srgb, var(--rose) 14%, transparent); }
+.r-watch { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.r-reliable { color: var(--mint); background: color-mix(in srgb, var(--mint) 10%, transparent); }
+.r-new { color: var(--faint); background: color-mix(in srgb, var(--ink) 5%, transparent); }
 .bk-price { color: var(--ink-2); font-variant-numeric: tabular-nums; }
 .bk-deposit { font-size: 0.76rem; }
 .d-held { color: var(--mint); }
-.d-required { color: var(--amber); }
+.d-required { color: var(--accent); }
 .d-forfeited { color: var(--rose); }
 .d-applied { color: var(--faint); }
 
@@ -300,8 +300,8 @@
   display: inline-flex; align-items: center; gap: 0.5rem;
   padding: 0.3rem 0.5rem 0.3rem 0.7rem;
   border-radius: 999px; font-size: 0.84rem;
-  background: rgba(245, 166, 91, 0.1);
-  border: 1px solid rgba(245, 166, 91, 0.22);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
   color: var(--ink-2); font-variant-numeric: tabular-nums;
 }
 .bk-window button {

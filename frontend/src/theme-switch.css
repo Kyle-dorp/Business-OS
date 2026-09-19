@@ -1,0 +1,176 @@
+/* ============================================================================
+   The appearance control.
+
+   Everything here is mixed from tokens, so the control repaints along with
+   the thing it controls. The one exception is the three theme swatches, which
+   are literal colours on purpose: a swatch has to show you the theme you are
+   not currently in.
+   ========================================================================= */
+
+.theme-switch { position: relative; display: inline-flex; }
+
+.theme-switch-trigger {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  border: 1px solid var(--line-soft);
+  background: var(--glass);
+  cursor: pointer;
+  transition: border-color 200ms var(--ease), background 200ms var(--ease),
+              transform 200ms var(--ease);
+}
+
+.theme-switch-trigger:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--accent) 34%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+/* A small sun/moon that needs no icon font: a disc lit from one side, with a
+   bite taken out of it by an inset shadow that follows the accent. */
+.theme-switch-orb {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: linear-gradient(140deg, var(--accent-hot), var(--accent-deep));
+  box-shadow: inset -3.5px -2px 0 -1px color-mix(in srgb, var(--void) 88%, transparent);
+  transition: box-shadow 300ms var(--ease), background 300ms var(--ease);
+}
+
+[data-theme="light"] .theme-switch-orb {
+  /* Full disc in daylight — nothing is taking a bite out of the sun. */
+  box-shadow: inset 0 0 0 0 transparent, 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+/* ------------------------------------------------------------------ panel */
+
+.theme-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 60;
+  width: 268px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--void-lift) 94%, transparent);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--shadow);
+  animation: theme-panel-in 200ms var(--ease);
+}
+
+@keyframes theme-panel-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-panel { animation: none; }
+}
+
+.theme-panel-title {
+  margin: 2px 0 9px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.theme-row { display: grid; gap: 6px; }
+
+.theme-chip {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 1px 11px;
+  padding: 9px 11px;
+  border-radius: 13px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background 180ms var(--ease), border-color 180ms var(--ease);
+}
+
+.theme-chip:hover { background: var(--glass-2); }
+
+.theme-chip.is-on {
+  border-color: color-mix(in srgb, var(--accent) 42%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.theme-chip-swatch {
+  grid-row: 1 / 3;
+  width: 26px;
+  height: 26px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+}
+
+/* Literal, because a swatch has to show the theme you are not in. */
+.swatch-light { background: linear-gradient(145deg, #FFFFFF, #F1ECE6); }
+.swatch-dark { background: linear-gradient(145deg, #1C1517, #0E0B0C); }
+.swatch-neutral { background: linear-gradient(145deg, #1B1E24, #0D0E11); }
+
+.theme-chip-label { font-size: 13px; font-weight: 500; color: var(--ink); }
+.theme-chip-hint { font-size: 11px; color: var(--faint); }
+
+/* ----------------------------------------------------------------- accent */
+
+.accent-row { display: flex; gap: 9px; padding: 1px 2px 3px; }
+
+.accent-dot {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: border-color 180ms var(--ease), transform 180ms var(--ease);
+}
+
+.accent-dot:hover { transform: translateY(-1px); }
+
+.accent-dot > span {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  /* Reads its own [data-accent], so each dot shows its own ramp rather than
+     the one currently active. */
+  background: linear-gradient(140deg, var(--a-300), var(--a-600));
+}
+
+.accent-dot.is-on {
+  border-color: color-mix(in srgb, var(--ink) 40%, transparent);
+}
+
+.theme-panel-foot {
+  margin: 10px 2px 1px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--faint);
+}
+
+@media (max-width: 720px) {
+  .theme-panel { width: min(268px, calc(100vw - 32px)); }
+}
+
+/* Before sign-in there is no topbar to sit in. Floating top-right keeps it
+   out of the way of a form that is the whole point of the screen. */
+.auth-theme-switch {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 70;
+}
+
+@media (max-width: 720px) {
+  .auth-theme-switch { top: 12px; right: 12px; }
+}

@@ -342,6 +342,7 @@ export default function App() {
       pageLabel={currentLabel}
       weekStart={toIsoDate(mondayOf())}
       attention={attention}
+      isEmployee={user.role !== "manager"}
     />
   </div>;
 }

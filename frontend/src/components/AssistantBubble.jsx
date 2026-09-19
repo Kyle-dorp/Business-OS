@@ -54,7 +54,7 @@ const DEFAULT_STARTERS = [
   "Is anything running low?",
 ];
 
-export default function AssistantBubble({ page, pageLabel, weekStart, scheduleId, attention = 0 }) {
+export default function AssistantBubble({ page, pageLabel, weekStart, scheduleId, attention = 0, isEmployee = false }) {
   const [open, setOpen] = useState(false);
   const [turns, setTurns] = useState([]);
   const [draft, setDraft] = useState("");
@@ -65,7 +65,9 @@ export default function AssistantBubble({ page, pageLabel, weekStart, scheduleId
   const inputRef = useRef(null);
   const bodyRef = useRef(null);
 
-  const scheduling = SCHEDULING_PAGES.has(page);
+  // An employee's assistant answers from their own record and nothing else, so
+  // the scheduling/business split does not apply to them at all.
+  const scheduling = !isEmployee && SCHEDULING_PAGES.has(page);
   const starters = useMemo(() => STARTERS[page] || DEFAULT_STARTERS, [page]);
 
   // A different brain is a different conversation. Carrying the rota thread
@@ -120,7 +122,21 @@ export default function AssistantBubble({ page, pageLabel, weekStart, scheduleId
     setTurns((prev) => [...prev, { role: "user", content: message }]);
 
     try {
-      const reply = scheduling
+      // Three assistants, and which one answers depends on who is asking as
+      // well as where they are.
+      //
+      // Staff go to their own. The other two are handed the whole business —
+      // every invoice, every bill, and every colleague's pay band — and refuse
+      // an employee outright, which they have always done. The bubble is shown
+      // to employees on purpose ("am I on this weekend" is the question they
+      // actually have) and until this it sent them at an endpoint that answered
+      // 403 every time.
+      const reply = isEmployee
+        ? await api("/my/assistant/chat", {
+            method: "POST",
+            body: JSON.stringify({ message, thread_id: threadId }),
+          })
+        : scheduling
         ? await api("/assistant/chat", {
             method: "POST",
             // The week and the schedule travel with the question, so "make
@@ -134,13 +150,7 @@ export default function AssistantBubble({ page, pageLabel, weekStart, scheduleId
           })
         : await api("/agent/chat", {
             method: "POST",
-            body: JSON.stringify({
-              message,
-              thread_id: threadId,
-              history: turns
-                .filter((t) => t.role === "user" || t.role === "assistant")
-                .map((t) => ({ role: t.role, content: t.content })),
-            }),
+            body: JSON.stringify({ message, thread_id: threadId }),
           });
 
       setThreadId(reply.thread_id ?? threadId);

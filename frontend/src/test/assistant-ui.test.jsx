@@ -190,3 +190,26 @@ describe("Ask sits on its own at the end of the navigation", () => {
     expect(ids[ids.length - 1]).toBe("ask");
   });
 });
+
+describe("the bubble sends staff to the assistant built for them", () => {
+  const bubble = read("components/AssistantBubble.jsx");
+  const app = read("App.jsx");
+
+  it("routes an employee to their own endpoint", () => {
+    // The other two are handed the whole business — every invoice, every bill
+    // and every colleague's pay band — and refuse an employee outright, which
+    // they have always done. The bubble is shown to employees deliberately,
+    // and until this it sent them at an endpoint that answered 403 every time.
+    expect(bubble).toMatch(/isEmployee[\s\S]{0,80}\/my\/assistant\/chat/);
+  });
+
+  it("is told who is asking", () => {
+    expect(app).toMatch(/isEmployee=\{user\.role !== "manager"\}/);
+  });
+
+  it("does not apply the scheduling split to staff", () => {
+    // An employee's assistant answers from their own record either way, so
+    // routing them to the scheduling one would just be a 403 with extra steps.
+    expect(bubble).toMatch(/!isEmployee && SCHEDULING_PAGES\.has\(page\)/);
+  });
+});

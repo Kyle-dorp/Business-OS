@@ -42,6 +42,7 @@ import PlatformPage from "./pages/PlatformPage";
 import RequestsPage from "./pages/RequestsPage";
 import SettingsPage from "./pages/SettingsPage";
 import FinancePage from "./pages/FinancePage";
+import { Icon } from "./icons";
 
 class PageErrorBoundary extends Component {
   constructor(props) { super(props); this.state = { error: null }; }
@@ -66,45 +67,45 @@ class PageErrorBoundary extends Component {
  * change to how the list is drawn and to nothing else.
  */
 const MANAGER_TABS = [
-  { id: "home", label: "Today", icon: "⌂" },
+  { id: "home", label: "Today", icon: "today" },
 
   { group: "Money", items: [
-    { id: "sales", label: "Sales & invoices", icon: "$", module: "sales" },
-    { id: "purchasing", label: "Bills & purchasing", icon: "↓", module: "purchasing" },
-    { id: "accounting", label: "Bookkeeping", icon: "≡", module: "accounting" },
-    { id: "finance", label: "Finance", icon: "$", module: "accounting" },
-    { id: "reports", label: "Reports", icon: "↗", module: "reports" },
+    { id: "sales", label: "Sales & invoices", icon: "sales", module: "sales" },
+    { id: "purchasing", label: "Bills & purchasing", icon: "purchasing", module: "purchasing" },
+    { id: "accounting", label: "Bookkeeping", icon: "bookkeeping", module: "accounting" },
+    { id: "finance", label: "Finance", icon: "finance", module: "accounting" },
+    { id: "reports", label: "Reports", icon: "reports", module: "reports" },
   ]},
 
   { group: "People", items: [
-    { id: "manager", label: "Scheduling", icon: "▦", module: "scheduling" },
-    { id: "availability", label: "Availability", icon: "◷", module: "scheduling" },
-    { id: "preflight", label: "Preflight", icon: "◈", module: "scheduling" },
-    { id: "compliance", label: "Labor rules", icon: "⚖", module: "scheduling" },
-    { id: "assistant", label: "Scheduling AI", icon: "◇", module: "assistant" },
+    { id: "manager", label: "Scheduling", icon: "scheduling", module: "scheduling" },
+    { id: "availability", label: "Availability", icon: "availability", module: "scheduling" },
+    { id: "preflight", label: "Preflight", icon: "preflight", module: "scheduling" },
+    { id: "compliance", label: "Labor rules", icon: "compliance", module: "scheduling" },
+    { id: "assistant", label: "Scheduling AI", icon: "assistant", module: "assistant" },
   ]},
 
   { group: "Stock", items: [
-    { id: "inventory", label: "Inventory & assets", icon: "□", module: "inventory" },
-    { id: "inventory-intel", label: "Stock intelligence", icon: "◉", module: "inventory" },
+    { id: "inventory", label: "Inventory & assets", icon: "inventory", module: "inventory" },
+    { id: "inventory-intel", label: "Stock intelligence", icon: "inventory-intel", module: "inventory" },
   ]},
 
   { group: "Guests", items: [
-    { id: "bookings", label: "Bookings", icon: "◑", module: "booking" },
-    { id: "contacts", label: "Customers & vendors", icon: "◎", module: "team" },
+    { id: "bookings", label: "Bookings", icon: "bookings", module: "booking" },
+    { id: "contacts", label: "Customers & vendors", icon: "contacts", module: "team" },
   ]},
 
   { group: "Work", items: [
-    { id: "tasks", label: "Tasks", icon: "✓", module: "tasks" },
-    { id: "notifications", label: "Notifications", icon: "●", module: "notifications" },
+    { id: "tasks", label: "Tasks", icon: "tasks", module: "tasks" },
+    { id: "notifications", label: "Notifications", icon: "notifications", module: "notifications" },
   ]},
 
-  { id: "ask", label: "Ask", icon: "✦" },
+  { id: "ask", label: "Ask", icon: "ask" },
 
   { group: "Settings", items: [
-    { id: "settings", label: "Workspace", icon: "⚙" },
-    { id: "billing", label: "Plan & billing", icon: "◉" },
-    { id: "security", label: "Security", icon: "⛨" },
+    { id: "settings", label: "Workspace", icon: "settings" },
+    { id: "billing", label: "Plan & billing", icon: "billing" },
+    { id: "security", label: "Security", icon: "security" },
   ]},
 ];
 
@@ -113,10 +114,10 @@ function flatten(entries) {
   return entries.flatMap((entry) => (entry.group ? entry.items : [entry]));
 }
 const EMPLOYEE_TABS = [
-  { id: "home", label: "Home", icon: "⌂" },
-  { id: "my-availability", label: "My availability", icon: "◷" },
-  { id: "requests", label: "Requests", icon: "+" },
-  { id: "settings", label: "Settings", icon: "⚙" },
+  { id: "home", label: "Home", icon: "today" },
+  { id: "my-availability", label: "My availability", icon: "availability" },
+  { id: "requests", label: "Requests", icon: "requests" },
+  { id: "settings", label: "Settings", icon: "settings" },
 ];
 
 /**
@@ -253,7 +254,7 @@ export default function App() {
               onClick={() => changeTab(tab.id)}
               aria-current={activeTab === tab.id ? "page" : undefined}
             >
-              <span className="nav-icon" aria-hidden="true">{tab.icon}</span>
+              <Icon name={tab.icon} className="nav-icon" />
               <span>{tab.label}</span>
               {tab.id === "notifications" && notificationCount > 0 && (
                 <span className="notification-badge" aria-label={`${notificationCount} unread`}>

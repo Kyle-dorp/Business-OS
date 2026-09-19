@@ -607,7 +607,8 @@ body {
 .drawer-close { border: 0; color: var(--ink-2); background: transparent; font-size: 1.5rem; cursor: pointer; }
 .drawer-section-label { margin: var(--space-2) var(--space-3) var(--space-1); color: var(--accent); font-size: .64rem; font-weight: 900; letter-spacing: .16em; }
 .commercial-shell .nav-btn { display: flex; align-items: center; gap: var(--space-3); }
-.nav-icon { width: 24px; text-align: center; color: var(--accent-hot); font-size: 1.02rem; }
+.nav-icon { width: 18px; height: 18px; flex: 0 0 auto; }  /* Was sizing a text glyph in a 24px column with a font-size and a
+     text-align. It is an SVG now; theme.css owns its colour. */
 /* .nav-btn.active .nav-icon: see above — theme-app.css owns the active nav. */
 .notification-badge { margin-left: auto; min-width: 23px; height: 23px; display: grid; place-items: center; border-radius: 999px; color: var(--void); background: var(--rose); font-size: .68rem; }
 .account-footer { display: grid; grid-template-columns: 38px 1fr auto; align-items: center; gap: var(--space-3); }
@@ -856,7 +857,7 @@ body {
 .fin-subnav-btn { display:flex; align-items:center; gap:var(--space-2); padding:var(--space-2) var(--space-4); border:1px solid transparent; border-radius:var(--radius-2); font-size:.82rem; font-weight:700; color: var(--accent); background:transparent; cursor:pointer; transition:all .15s ease; }
 .fin-subnav-btn:hover { background: transparent; color: var(--accent); }
 .fin-subnav-btn.active { background:color-mix(in srgb, var(--accent) 16%, transparent); color:var(--accent-hot); border-color: color-mix(in srgb, var(--accent) 30%, transparent); box-shadow:0 4px 14px color-mix(in srgb, var(--accent) 25%, transparent); }
-.fin-subnav-icon { font-size:1rem; }
+.fin-subnav-icon { width:16px; height:16px; flex:0 0 auto; }
 .fin-stat-row { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:var(--space-4); margin-bottom:var(--space-5); }
 .fin-stat-card { padding:var(--space-5); border-radius:var(--radius-3); border: 1px solid var(--line-soft); background: linear-gradient(145deg,transparent,transparent); box-shadow:0 6px 18px rgba(0, 0, 0, .05); display:flex; flex-direction:column; min-height:118px; }
 .fin-stat-card > span { font-size:.72rem; font-weight:800; color: var(--accent); letter-spacing:.04em; text-transform:uppercase; }

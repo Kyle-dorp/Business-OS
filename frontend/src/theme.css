@@ -438,8 +438,12 @@ p, span, div, td, th, label, small { color: inherit; }
   box-shadow: 0 0 10px 1px color-mix(in srgb, var(--accent) 60%, transparent);
 }
 
-.nav-btn .nav-icon { color: var(--accent); opacity: 0.75; }
-.nav-btn.active .nav-icon { opacity: 1; }
+/* Quiet until it is where you are. An icon set that is all accent all the
+   time is twenty-two things competing, which is the same as none of them
+   standing out. */
+.nav-btn .nav-icon { color: var(--muted); transition: color 180ms var(--ease); }
+.nav-btn:hover .nav-icon { color: var(--ink-2); }
+.nav-btn.active .nav-icon { color: var(--accent); }
 
 .notification-badge {
   background: var(--rose);

@@ -87,11 +87,13 @@ describe("grouping changed the drawing and nothing else", () => {
 });
 
 describe("the drawer is readable without the icons", () => {
-  it("hides the glyphs from screen readers", () => {
-    // The icon language is ⌂ ◎ $ ↓ ≡ ↗ ✓ □ ◉ ◷ ▦ ◈ ⚖ ◑ ✦ ◇ ● ⛨ ⚙ — several of
-    // those are announced as punctuation, and one is announced as a currency.
-    // The label carries the meaning.
-    expect(app).toMatch(/className="nav-icon" aria-hidden="true"/);
+  it("does not announce the icon as well as the label", () => {
+    // The set used to be a typographic alphabet — several of those characters
+    // were announced as punctuation and one as a currency. They are lucide
+    // SVGs now, and the reasoning is unchanged: the label carries the meaning,
+    // so the icon beside it is decorative. Icon() marks itself aria-hidden
+    // unless it is given a label, which is checked in icons.test.js.
+    expect(app).toMatch(/<Icon name=\{tab\.icon\} className="nav-icon" \/>/);
   });
 
   it("marks which page you are on for assistive tech, not just visually", () => {

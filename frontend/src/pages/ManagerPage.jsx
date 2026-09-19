@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 
 import { api } from "../api";
 import {
-import { Loading } from "../components/States";
   DAYS,
   DAY_NAMES,
   formatDate,
@@ -14,6 +13,7 @@ import { Loading } from "../components/States";
   weekDates,
   confirmOncePerSession,
 } from "../utils";
+import { Loading } from "../components/States";
 
 function currentMonday() {
   const today = new Date();

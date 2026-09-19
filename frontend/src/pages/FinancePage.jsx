@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api";
 import { Loading } from "../components/States";
+import { Icon } from "../icons";
 
 const money = (cents = 0, compact = false) => {
   if (compact && Math.abs(cents) >= 100000) {
@@ -14,11 +15,11 @@ const monthStart = () => new Date().toISOString().slice(0, 8) + "01";
 const yearStart = () => `${new Date().getFullYear()}-01-01`;
 
 const TABS = [
-  { id: "dashboard", label: "Dashboard", icon: "◈" },
-  { id: "budget",    label: "Budget",    icon: "⊟" },
-  { id: "cashflow",  label: "Cash Flow", icon: "⇌" },
-  { id: "accounts",  label: "Accounts",  icon: "≡" },
-  { id: "payroll",   label: "Payroll",   icon: "◎" },
+  { id: "dashboard", label: "Dashboard", icon: "fin-dashboard" },
+  { id: "budget",    label: "Budget",    icon: "fin-budget" },
+  { id: "cashflow",  label: "Cash Flow", icon: "fin-cashflow" },
+  { id: "accounts",  label: "Accounts",  icon: "fin-accounts" },
+  { id: "payroll",   label: "Payroll",   icon: "fin-payroll" },
 ];
 
 function Field({ label, children }) {
@@ -555,7 +556,7 @@ export default function FinancePage() {
       <nav className="fin-subnav">
         {TABS.map((t) => (
           <button key={t.id} className={`fin-subnav-btn${tab === t.id ? " active" : ""}`} onClick={() => setTab(t.id)}>
-            <span className="fin-subnav-icon">{t.icon}</span>{t.label}
+            <Icon name={t.icon} size={16} className="fin-subnav-icon" />{t.label}
           </button>
         ))}
       </nav>

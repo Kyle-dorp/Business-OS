@@ -80,17 +80,17 @@ function DashboardTab() {
     <div>
       <Notice text={msg} />
       <div className="fin-stat-row">
-        <StatCard label="Revenue (MTD)" value={money(pl.total_income_cents, true)} color="#2f6fed"
+        <StatCard label="Revenue (MTD)" value={money(pl.total_income_cents, true)} color="var(--accent)"
           sub={`${pl.income?.length || 0} income accounts`} />
-        <StatCard label="Expenses (MTD)" value={money(pl.total_expenses_cents, true)} color="#c73535"
+        <StatCard label="Expenses (MTD)" value={money(pl.total_expenses_cents, true)} color="var(--rose)"
           sub={`${pl.expenses?.length || 0} expense categories`} />
         <StatCard label="Net Income" value={money(pl.net_income_cents, true)}
-          color={pl.net_income_cents >= 0 ? "#14835f" : "#c73535"}
+          color={pl.net_income_cents >= 0 ? "var(--mint)" : "var(--rose)"}
           sub={`${netMargin}% net margin`} />
-        <StatCard label="Total Assets" value={money(bs.totals?.asset || 0, true)} color="#7259e9" sub="balance sheet" />
-        <StatCard label="Liabilities" value={money(bs.totals?.liability || 0, true)} color="#e07a00" sub="owed to others" />
+        <StatCard label="Total Assets" value={money(bs.totals?.asset || 0, true)} color="var(--ink)" sub="balance sheet" />
+        <StatCard label="Liabilities" value={money(bs.totals?.liability || 0, true)} color="var(--rose)" sub="owed to others" />
         <StatCard label="Net Worth" value={money((bs.totals?.asset || 0) - (bs.totals?.liability || 0), true)}
-          color="#2e756b" sub="assets minus liabilities" />
+          color="var(--ink)" sub="assets minus liabilities" />
       </div>
 
       <div className="fin-two-col">
@@ -125,7 +125,7 @@ function DashboardTab() {
             ))}
             <div className="fin-mini-row highlight">
               <span>Net income</span>
-              <span style={{ color: pl.net_income_cents >= 0 ? "#14835f" : "#c73535" }}>
+              <span style={{ color: pl.net_income_cents >= 0 ? "var(--mint)" : "var(--rose)" }}>
                 {money(pl.net_income_cents)}
               </span>
             </div>
@@ -229,8 +229,8 @@ function BudgetTab() {
               </h2>
               <span style={{
                 fontSize: ".78rem", fontWeight: 750, padding: "4px 10px", borderRadius: 9,
-                background: variance >= 0 ? "#edf9f3" : "#fef2f2",
-                color: variance >= 0 ? "#14835f" : "#c73535",
+                background: variance >= 0 ? "color-mix(in srgb, var(--mint) 12%, transparent)" : "color-mix(in srgb, var(--rose) 12%, transparent)",
+                color: variance >= 0 ? "var(--mint)" : "var(--rose)",
               }}>
                 {variance >= 0 ? "▲" : "▼"} {money(Math.abs(variance))} {variance >= 0 ? "over" : "under"} budget
               </span>
@@ -246,22 +246,30 @@ function BudgetTab() {
                     const over = actual > row.budget_cents;
                     return (
                       <tr key={row.id}>
-                        <td><strong>{row.account_name}</strong><br /><small style={{ color: "#8a98aa" }}>{row.account_type}</small></td>
+                        <td><strong>{row.account_name}</strong><br /><small style={{ color: "var(--muted)" }}>{row.account_type}</small></td>
                         <td>{money(row.budget_cents)}</td>
                         <td>{money(actual)}</td>
-                        <td style={{ color: diff > 0 ? "#14835f" : diff < 0 ? "#c73535" : "inherit", fontWeight: 650 }}>
+                        <td style={{ color: diff > 0 ? "var(--mint)" : diff < 0 ? "var(--rose)" : "inherit", fontWeight: 650 }}>
                           {diff >= 0 ? "+" : ""}{money(diff)}
                         </td>
                         <td style={{ minWidth: 120 }}>
-                          <div style={{ height: 8, borderRadius: 4, background: "#e5e9f0", overflow: "hidden" }}>
+                          <div style={{ height: 8, borderRadius: 4, background: "var(--line)", overflow: "hidden" }}>
                             <div style={{
                               height: "100%", borderRadius: 4, transition: "width .4s", width: `${pctUsed}%`,
-                              background: over ? "#c73535" : pctUsed > 80 ? "#e07a00" : "#2f6fed",
+                              // Neutral until it is worth noticing, then a blend
+                              // travelling toward rose, then rose. The bar
+                              // changes colour because the situation changed,
+                              // not to be decorative.
+                              background: over
+                                ? "var(--rose)"
+                                : pctUsed > 80
+                                  ? "color-mix(in srgb, var(--rose) 60%, var(--accent))"
+                                  : "var(--accent)",
                             }} />
                           </div>
-                          <small style={{ color: "#66748d", fontSize: ".72rem" }}>{pctUsed.toFixed(0)}% used</small>
+                          <small style={{ color: "var(--faint)", fontSize: ".72rem" }}>{pctUsed.toFixed(0)}% used</small>
                         </td>
-                        <td style={{ color: "#8a98aa", fontSize: ".83rem" }}>{row.notes || "—"}</td>
+                        <td style={{ color: "var(--muted)", fontSize: ".83rem" }}>{row.notes || "—"}</td>
                       </tr>
                     );
                   })}
@@ -271,7 +279,7 @@ function BudgetTab() {
                     <td><strong>Total</strong></td>
                     <td><strong>{money(totalBudget)}</strong></td>
                     <td><strong>{money(totalActual)}</strong></td>
-                    <td style={{ fontWeight: 750, color: variance >= 0 ? "#14835f" : "#c73535" }}>{variance >= 0 ? "+" : ""}{money(variance)}</td>
+                    <td style={{ fontWeight: 750, color: variance >= 0 ? "var(--mint)" : "var(--rose)" }}>{variance >= 0 ? "+" : ""}{money(variance)}</td>
                     <td colSpan={2} />
                   </tr>
                 </tfoot>
@@ -282,7 +290,7 @@ function BudgetTab() {
       })}
 
       {budgets.length === 0 && (
-        <section className="card fin-section" style={{ textAlign: "center", padding: 48, color: "#8a98aa" }}>
+        <section className="card fin-section" style={{ textAlign: "center", padding: 48, color: "var(--muted)" }}>
           No budget lines yet. Add your first one above to start tracking.
         </section>
       )}
@@ -319,9 +327,9 @@ function CashFlowTab() {
       {data && (
         <>
           <div className="fin-stat-row" style={{ gridTemplateColumns: "repeat(3,1fr)", marginBottom: 20 }}>
-            <StatCard label="Cash inflows" value={money(data.inflows_cents)} color="#14835f" />
-            <StatCard label="Cash outflows" value={money(data.outflows_cents)} color="#c73535" />
-            <StatCard label="Net cash flow" value={money(data.net_cents)} color={data.net_cents >= 0 ? "#2f6fed" : "#c73535"} />
+            <StatCard label="Cash inflows" value={money(data.inflows_cents)} color="var(--mint)" />
+            <StatCard label="Cash outflows" value={money(data.outflows_cents)} color="var(--rose)" />
+            <StatCard label="Net cash flow" value={money(data.net_cents)} color={data.net_cents >= 0 ? "var(--accent)" : "var(--rose)"} />
           </div>
           <section className="card fin-section" style={{ marginBottom: 18 }}>
             <h2 className="fin-section-title">Cash received</h2>
@@ -421,16 +429,16 @@ function AccountsTab() {
             <Table
               headers={["Code", "Account name", "Sub-type", "Balance", "Status"]}
               rows={rows.map((a) => [
-                <code style={{ background: "#f0f4fa", padding: "2px 7px", borderRadius: 5, fontSize: ".8rem" }}>{a.code}</code>,
+                <code style={{ background: "var(--glass)", padding: "2px 7px", borderRadius: 5, fontSize: ".8rem" }}>{a.code}</code>,
                 <strong>{a.name}</strong>,
-                <span style={{ color: "#8a98aa", fontSize: ".83rem" }}>{a.subtype || "—"}</span>,
-                <span style={{ fontWeight: 650, color: (balances[a.id] || 0) < 0 ? "#c73535" : "#14835f" }}>
+                <span style={{ color: "var(--muted)", fontSize: ".83rem" }}>{a.subtype || "—"}</span>,
+                <span style={{ fontWeight: 650, color: (balances[a.id] || 0) < 0 ? "var(--rose)" : "var(--mint)" }}>
                   {money(Math.abs(balances[a.id] || 0))}
                 </span>,
                 <span style={{
                   fontSize: ".72rem", fontWeight: 750, padding: "3px 8px", borderRadius: 7,
-                  background: a.active ? "#edf9f3" : "#fef2f2",
-                  color: a.active ? "#14835f" : "#c73535",
+                  background: a.active ? "color-mix(in srgb, var(--mint) 12%, transparent)" : "color-mix(in srgb, var(--rose) 12%, transparent)",
+                  color: a.active ? "var(--mint)" : "var(--rose)",
                 }}>{a.active ? "Active" : "Inactive"}</span>,
               ])}
             />
@@ -488,9 +496,9 @@ function PayrollTab() {
     <div>
       <Notice text={msg} ok={ok} />
       <div className="fin-stat-row" style={{ gridTemplateColumns: "repeat(3,1fr)", marginBottom: 20 }}>
-        <StatCard label="Total gross wages" value={money(totalGross)} color="#2f6fed" />
-        <StatCard label="Employer taxes" value={money(totalTax)} color="#e07a00" />
-        <StatCard label="Total net pay" value={money(totalNet)} color="#14835f" />
+        <StatCard label="Total gross wages" value={money(totalGross)} color="var(--accent)" />
+        <StatCard label="Employer taxes" value={money(totalTax)} color="var(--rose)" />
+        <StatCard label="Total net pay" value={money(totalNet)} color="var(--mint)" />
       </div>
       <section className="card fin-section" style={{ marginBottom: 20 }}>
         <h2 className="fin-section-title">Record a payroll run</h2>

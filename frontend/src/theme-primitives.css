@@ -1,0 +1,184 @@
+/* ============================================================================
+   Primitives — the only sanctioned way to draw a button, a surface or a field.
+
+   These live in CSS rather than in inline styles on purpose. The versions
+   these replace styled themselves from JavaScript, which put them outside
+   every check the design system has: theme.test.js reads stylesheets, so a
+   component painting `#e5e7eb` and `cubic-bezier(0.4, 0, 0.2, 1)` from a style
+   object was invisible to it, and stayed invisible while four of the custom
+   properties it named did not exist at all.
+
+   A rule that can only be followed by hand is a rule that will be broken. A
+   class name is cheaper to reach for than a style object, and it is checkable.
+   ========================================================================= */
+
+/* ---------------------------------------------------------------- button */
+
+.eos-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-2);
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 200ms var(--ease), border-color 200ms var(--ease),
+              color 200ms var(--ease), transform 200ms var(--ease),
+              box-shadow 200ms var(--ease);
+}
+
+.eos-btn:active:not(:disabled) { transform: translateY(1px); }
+
+.eos-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Size is padding and type size together — a large button with small text is
+   a small button with a lot of air around it. */
+.eos-btn-sm { padding: var(--space-2) var(--space-3); font-size: 0.8125rem; }
+.eos-btn-md { padding: var(--space-3) var(--space-4); font-size: 0.9375rem; }
+.eos-btn-lg { padding: var(--space-3) var(--space-5); font-size: 1rem; }
+
+/* On a dark ground a primary action is lit from inside; the light theme
+   overrides this to a solid fill, because on white less ink reads as less
+   important rather than more. That override lives in theme.css beside the
+   other light corrections. */
+.eos-btn-primary {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  color: var(--accent-hot);
+}
+
+.eos-btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 46%, transparent);
+  box-shadow: 0 0 30px -12px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+.eos-btn-quiet {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--ink-2);
+}
+
+.eos-btn-quiet:hover:not(:disabled) {
+  background: var(--glass-2);
+  border-color: color-mix(in srgb, var(--ink) 20%, transparent);
+  color: var(--ink);
+}
+
+/* Rose, because it is the colour of something leaving. */
+.eos-btn-danger {
+  background: color-mix(in srgb, var(--rose) 12%, transparent);
+  border-color: color-mix(in srgb, var(--rose) 32%, transparent);
+  color: var(--rose);
+}
+
+.eos-btn-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--rose) 20%, transparent);
+  border-color: color-mix(in srgb, var(--rose) 48%, transparent);
+}
+
+.eos-btn-icon { display: inline-flex; flex: none; }
+
+.eos-spin { animation: eos-spin 700ms linear infinite; flex: none; }
+
+@keyframes eos-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .eos-spin { animation-duration: 2.4s; }
+  .eos-btn { transition: none; }
+  .eos-btn:active:not(:disabled) { transform: none; }
+}
+
+/* ------------------------------------------------------------------ card */
+
+.eos-card {
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-3);
+  background: var(--glass);
+  padding: var(--space-5);
+  transition: border-color 220ms var(--ease), background 220ms var(--ease),
+              transform 220ms var(--ease), box-shadow 220ms var(--ease);
+}
+
+/* Only a card that does something lifts. A surface that rises under the
+   cursor and then does nothing when clicked is a lie about affordance. */
+.eos-card-interactive { cursor: pointer; }
+
+.eos-card-interactive:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent) 34%, transparent);
+  background: var(--glass-2);
+  box-shadow: 0 18px 40px -26px color-mix(in srgb, var(--void) 90%, transparent);
+}
+
+.eos-card-interactive:focus-visible {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eos-card, .eos-card-interactive:hover { transition: none; transform: none; }
+}
+
+/* ----------------------------------------------------------------- input */
+
+.eos-field { display: grid; gap: var(--space-2); }
+
+.eos-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.eos-required {
+  margin-left: var(--space-1);
+  color: var(--rose);
+}
+
+.eos-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-2);
+  background: var(--glass);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 0.9375rem;
+  transition: border-color 200ms var(--ease), background 200ms var(--ease),
+              box-shadow 200ms var(--ease);
+}
+
+.eos-input::placeholder { color: var(--faint); }
+
+.eos-input:hover:not(:disabled) { border-color: color-mix(in srgb, var(--ink) 18%, transparent); }
+
+.eos-input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background: var(--glass-2);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.eos-input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.eos-input-invalid { border-color: color-mix(in srgb, var(--rose) 55%, transparent); }
+
+.eos-input-invalid:focus {
+  border-color: var(--rose);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rose) 18%, transparent);
+}
+
+/* Hint and error occupy the same slot: a field shows one or the other, never
+   both, so the layout does not jump when validation fails. */
+.eos-hint { font-size: 0.78rem; color: var(--faint); }
+.eos-error { font-size: 0.78rem; color: var(--rose); }

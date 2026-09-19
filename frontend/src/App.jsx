@@ -16,6 +16,7 @@ import "./theme-bubble.css";
 import "./theme-today.css";
 import "./theme-charts.css";
 import "./theme-switch.css";
+import "./theme-primitives.css";
 import { api, getBusinessId, getToken, setBusinessId, setToken } from "./api";
 import AssistantBubble from "./components/AssistantBubble";
 import ThemeSwitch from "./components/ThemeSwitch";

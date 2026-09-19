@@ -723,12 +723,35 @@ def agent_chat(
 
     business = session.get(Business, bid)
     modules = _enabled_modules(session, bid)
-    thread_id = body.thread_id or uuid.uuid4().hex
+    # The conversation comes from the database, not from the request.
+    #
+    # It used to come from `body.history`, which meant the server trusted the
+    # client's account of what had been said — and that the transcript lived
+    # only in the browser tab it happened in. Closing the tab lost the thread.
+    # Turns were written to AgentThread at the same time, but nothing ever read
+    # them back, so the record existed and was useless.
+    #
+    # Storing it here is what makes a chat library, compaction and "new chat"
+    # possible at all: all three need a server-side transcript.
+    from backend.app import threads as thread_store
 
-    messages: List[Dict[str, Any]] = [
-        {"role": t.role, "content": t.content}
-        for t in body.history[-MAX_HISTORY_TURNS:]
-        if t.role in ("user", "assistant")
+    existing = None
+    if body.thread_id:
+        try:
+            existing = int(body.thread_id)
+        except (TypeError, ValueError):
+            # Threads were keyed by a client-generated hex string before this.
+            # An old id is not an error, it just is not one of ours.
+            existing = None
+
+    thread = thread_store.get_or_create(
+        session, user, surface="business",
+        thread_id=existing, first_message=body.message,
+    )
+    thread_id = str(thread.id)
+
+    messages: List[Dict[str, Any]] = thread_store.history_for(session, thread)[
+        -MAX_HISTORY_TURNS:
     ]
     messages.append({"role": "user", "content": body.message})
 
@@ -804,11 +827,8 @@ def agent_chat(
         cache_write_tokens=total_cache_write,
     )
 
-    session.add(AgentThread(business_id=bid, user_id=user.id, thread_id=thread_id,
-                            role="user", content=body.message))
-    session.add(AgentThread(business_id=bid, user_id=user.id, thread_id=thread_id,
-                            role="assistant", content=reply))
-    session.commit()
+    thread_store.add_message(session, thread, "user", body.message)
+    thread_store.add_message(session, thread, "assistant", reply)
 
     return AgentOut(
         reply=reply,

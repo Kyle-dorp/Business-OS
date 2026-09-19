@@ -97,6 +97,12 @@ def apply_lightweight_migrations() -> None:
     # The assistant wallet. ApiUsage gained the true vendor cost of a call and
     # the user who made it, so the meter can answer "what has this cost" and
     # "who spent it" rather than only "how many tokens".
+    # Chat threads gained a surface and an archive flag when the library
+    # became one list across all three assistants. Existing rows are all
+    # scheduling threads, which is what the default says.
+    _add_column_if_missing("assistantthread", "surface", "VARCHAR", "'scheduling'")
+    _add_column_if_missing("assistantthread", "archived", "BOOLEAN", "0")
+
     _add_column_if_missing("apiusage", "vendor_cost_milli", "INTEGER", "0")
     _add_column_if_missing("apiusage", "user_id", "INTEGER", "NULL", nullable=True)
 

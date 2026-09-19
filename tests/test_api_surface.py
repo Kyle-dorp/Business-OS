@@ -49,6 +49,7 @@ KNOWN_PREFIXES = {
     "/debug",
     "/departments",
     "/ai",                      # the assistant wallet: usage, spend settings
+    "/threads",                 # the chat library, across all three assistants
     "/docs", "/redoc", "/openapi.json",
     # The single-page app's catch-all, which serves index.html for any path the
     # API does not claim. It is registered only when static/ exists — so it is

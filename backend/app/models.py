@@ -231,6 +231,14 @@ class AssistantThread(SQLModel, table=True):
     business_id: int = Field(default_factory=current_business_id, index=True)
     user_id: int = Field(index=True)
     title: str = "Scheduling setup"
+    # Which assistant this conversation belongs to. One table rather than
+    # three, because the chat library is one list to the person reading it and
+    # splitting the storage would mean merging it back on every read.
+    #
+    # Defaults to "scheduling" so every thread written before this field
+    # existed lands where it actually came from.
+    surface: str = Field(default="scheduling", index=True)
+    archived: bool = False
     created_at: str = Field(default_factory=utc_now_iso)
     updated_at: str = Field(default_factory=utc_now_iso)
 

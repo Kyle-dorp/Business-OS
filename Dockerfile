@@ -23,6 +23,8 @@ COPY --from=frontend-builder /app/frontend/dist ./static
 # because Railway builds from this file and ignores the startCommand in
 # railway.json. The result was a production database several migrations behind,
 # with sign-in returning 500 while /health stayed green.
+# The landing page. It was in the repository and in no image.
+COPY landing ./landing
 COPY alembic.ini .
 COPY migrations ./migrations
 

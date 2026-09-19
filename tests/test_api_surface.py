@@ -49,6 +49,12 @@ KNOWN_PREFIXES = {
     "/debug",
     "/departments",
     "/docs", "/redoc", "/openapi.json",
+    # The single-page app's catch-all, which serves index.html for any path the
+    # API does not claim. It is registered only when static/ exists — so it is
+    # present in the image and absent on a bare checkout, and this test used to
+    # pass or fail depending on whether somebody had built the frontend. Listed
+    # here so the answer is the same in both places.
+    "/{full_path}",
     "/email",
     "/employee-positions",
     "/employees",

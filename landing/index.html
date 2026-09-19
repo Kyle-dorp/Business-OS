@@ -336,6 +336,19 @@
     .reveal{opacity:1;transform:none}
     .spot{display:none}
   }
+
+  /* Added when the page was first served at the root. Until then every call
+     to action was an anchor or a mailto, so the front door had no handle. */
+  .navcta{
+    padding:.42rem .95rem; border-radius:999px;
+    border:1px solid color-mix(in srgb, var(--amber) 42%, transparent);
+    color:var(--amber);
+  }
+  .navcta:hover{ background:color-mix(in srgb, var(--amber) 12%, transparent); }
+  .ghost.solid{
+    background:color-mix(in srgb, var(--amber) 14%, transparent);
+    border-color:color-mix(in srgb, var(--amber) 46%, transparent);
+  }
 </style>
 
 <div class="atmos" aria-hidden="true"></div>
@@ -350,6 +363,7 @@
       <a href="#build">Modules</a>
       <a href="#ask">Ask it anything</a>
       <a href="#start">Get started</a>
+      <a class="navcta" href="/app">Sign in</a>
     </nav>
   </div>
 </header>
@@ -375,23 +389,21 @@
             <div class="stage" id="stage">
               <div class="chip" style="--x:-168px;--y:-116px;--r:-7deg"><span class="cn">Scheduling app</span><span class="cp">$40/mo</span></div>
               <div class="chip" style="--x:26px;--y:-144px;--r:4deg"><span class="cn">Inventory tool</span><span class="cp">$79/mo</span></div>
-              <div class="chip" style="--x:182px;--y:-90px;--r:8deg"><span class="cn">Payroll service</span><span class="cp">$85/mo</span></div>
+              <div class="chip" style="--x:182px;--y:-90px;--r:8deg"><span class="cn">Bookkeeping</span><span class="cp">$70/mo</span></div>
               <div class="chip" style="--x:-186px;--y:76px;--r:6deg"><span class="cn">Booking page</span><span class="cp">$49/mo</span></div>
-              <div class="chip" style="--x:-6px;--y:136px;--r:-5deg"><span class="cn">POS software</span><span class="cp">$69/mo</span></div>
-              <div class="chip" style="--x:176px;--y:94px;--r:-9deg"><span class="cn">Bookkeeping</span><span class="cp">$70/mo</span></div>
+              <div class="chip" style="--x:-6px;--y:136px;--r:-5deg"><span class="cn">CRM</span><span class="cp">$35/mo</span></div>
+              <div class="chip" style="--x:176px;--y:94px;--r:-9deg"><span class="cn">Invoicing</span><span class="cp">$30/mo</span></div>
 
               <div class="unified" id="unified">
                 <div class="u-top">
                   <span class="u-name"><i></i>Business-EOS</span>
                   <span>
                     <span class="u-price">$79/mo</span>
-                    <span class="u-was">$392/mo</span>
+                    <span class="u-was">$303/mo</span>
                   </span>
                 </div>
                 <div class="u-rows">
-                  <div>Scheduling</div><div>Inventory</div>
-                  <div>Payroll prep</div><div>Bookings</div>
-                  <div>Sales</div><div>Books</div>
+                  <div>Scheduling</div><div>Inventory</div><div>Bookkeeping</div><div>Bookings</div><div>Customers & vendors</div><div>Sales & invoices</div>
                 </div>
                 <p class="u-hint">Hover to see what it replaces</p>
               </div>
@@ -517,7 +529,7 @@
           <h2>One system. One number that's actually right.</h2>
           <p class="prose">Bring one location on first. Keep whatever still works, replace what doesn't, and watch a real week run through it before you move anything else.</p>
           <div class="actions">
-            <a class="ghost" href="mailto:hello@business-eos.com?subject=Starting%20with%20one%20location">Start with one location <span class="arw">→</span></a>
+            <a class="ghost solid" href="/app">Start a workspace <span class="arw">→</span></a>
             <a class="ghost quiet" href="mailto:hello@business-eos.com?subject=A%20few%20questions%20first">Talk to us first</a>
           </div>
           <div class="contact">
@@ -574,17 +586,24 @@
     var FIRST = 29, EACH = 10;
     function priceFor(n){ return n === 0 ? 0 : FIRST + (n - 1) * EACH; }
 
+    /* Generated from backend/app/modules_registry.py. This list used to
+       be maintained by hand and had drifted: it sold Payroll prep, Menus
+       & QR ordering, Sales tracking and Team communication, none of which
+       exist, and omitted Bills & purchasing, Tasks, Reports and the
+       assistant, which do. Its own totals reached $550 while the headline
+       above it said $392 — the headline was right.
+       tests/test_landing.py fails if this drifts again. */
     var MODULES = [
-      { name:'Scheduling & shifts',     market:40, on:true  },
-      { name:'Inventory & stock',       market:79, on:true  },
-      { name:'Invoicing & payments',    market:30, on:true  },
-      { name:'Customers & CRM',         market:35, on:true  },
-      { name:'Books & accounting',      market:70, on:false },
-      { name:'Payroll prep',            market:85, on:false },
-      { name:'Bookings & appointments', market:49, on:false },
-      { name:'Menus & QR ordering',     market:68, on:false },
-      { name:'Sales tracking',          market:69, on:false },
-      { name:'Team communication',      market:25, on:false }
+      { name:'Scheduling'              , market:40 , on:true  },
+      { name:'Inventory'               , market:79 , on:true  },
+      { name:'Bookkeeping'             , market:70 , on:false },
+      { name:'Sales & invoices'        , market:30 , on:true  },
+      { name:'Bills & purchasing'      , market:25 , on:false },
+      { name:'Customers & vendors'     , market:35 , on:true  },
+      { name:'Bookings'                , market:49 , on:false },
+      { name:'Tasks'                   , market:15 , on:false },
+      { name:'Reports'                 , market:49 , on:false },
+      { name:'Assistant'               , market:0  , on:false },
     ];
 
     var list = document.getElementById('modlist');
@@ -601,7 +620,7 @@
       b.setAttribute('aria-pressed', String(m.on));
       b.innerHTML = '<span class="tick" aria-hidden="true">&#10003;</span>' +
                     '<span class="mn">' + m.name + '</span>' +
-                    '<span class="mp">$' + m.market + '/mo</span>';
+                    '<span class="mp">' + (m.market ? '$' + m.market + '/mo' : 'no equivalent') + '</span>';
       b.addEventListener('click', function(){
         m.on = !m.on;
         b.setAttribute('aria-pressed', String(m.on));

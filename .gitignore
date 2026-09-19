@@ -6,3 +6,6 @@ node_modules/
 __pycache__/
 *.pyc
 frontend/dist/
+# The built SPA, copied in by the Dockerfile at image build time. Present
+# locally only when reproducing the production layout to test routing.
+static/

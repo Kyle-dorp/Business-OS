@@ -339,6 +339,11 @@ def _user_dict(user: UserAccount) -> dict:
 
 PUBLIC_PATHS = {
     "/",
+    # The app's own entry point, now that / is the landing page. It serves the
+    # sign-in screen, so requiring a token to reach it would mean nobody could
+    # ever sign in — the first version of this change shipped without it and
+    # /app answered "Sign in required" to the only link into the product.
+    "/app",
     "/health",
     "/debug/status",  # Development debugging
     "/openapi.json",
@@ -390,6 +395,10 @@ PUBLIC_PREFIXES = (
     "/docs/",
     "/static/",
     "/assets/",
+    # Anything below /app is the same single-page application, reached by
+    # client-side routing. Slash-terminated like the rest, so a later route
+    # named /apply does not quietly become public.
+    "/app/",
 )
 
 
@@ -1269,13 +1278,29 @@ def _boot() -> None:
 
 @app.get("/")
 def home():
-    """Serve frontend index.html or API message"""
+    """
+    The front door is the pitch; the product lives at /app.
+
+    Until this existed the root served the sign-in screen, and landing/index.html
+    — the best-executed surface in the project — was referenced by nothing: not
+    the Dockerfile, not a route, not the build. Nobody could reach it, which is
+    why it had drifted into selling four modules that do not exist.
+
+    It falls back to the app when the landing page is absent, so a deployment
+    that has not copied it still works rather than showing a 404 where the
+    product used to be.
+    """
     import pathlib
-    static_dir = pathlib.Path(__file__).parent.parent.parent / "static"
-    index_file = static_dir / "index.html"
+
+    root = pathlib.Path(__file__).parent.parent.parent
+    landing = root / "landing" / "index.html"
+    if landing.exists():
+        return FileResponse(landing)
+
+    index_file = root / "static" / "index.html"
     if index_file.exists():
         return FileResponse(index_file)
-    return {"message": "Scheduling Assistant backend is running"}
+    return {"message": "Business-EOS backend is running"}
 
 
 @app.get("/health")

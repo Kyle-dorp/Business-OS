@@ -48,7 +48,7 @@ button.today-tile:hover .today-tile-go { color: var(--accent-hot); transform: tr
 
 .today-tile-label {
   color: var(--faint);
-  font-size: 0.7rem;
+  font-size: var(--text-xs);
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -56,20 +56,20 @@ button.today-tile:hover .today-tile-go { color: var(--accent-hot); transform: tr
 .today-tile-lead {
   font-family: "Fraunces", serif;
   font-weight: 400;
-  font-size: 1.55rem;
+  font-size: var(--text-2xl);
   line-height: 1.2;
   letter-spacing: -0.02em;
   color: var(--ink);
 }
 
-.today-tile-sub { color: var(--muted); font-size: 0.86rem; margin-top: -0.3rem; }
-.today-tile-note { margin: 0; color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+.today-tile-sub { color: var(--muted); font-size: var(--text-sm); margin-top: -0.3rem; }
+.today-tile-note { margin: 0; color: var(--muted); font-size: var(--text-base); line-height: 1.6; }
 
 .today-tile-go {
   margin-top: auto;
   padding-top: var(--space-4);
   color: var(--accent);
-  font-size: 0.84rem;
+  font-size: var(--text-sm);
   transition: color 0.25s var(--ease), transform 0.25s var(--ease);
 }
 
@@ -77,7 +77,7 @@ button.today-tile:hover .today-tile-go { color: var(--accent-hot); transform: tr
   margin: var(--space-1) 0 0;
   padding-left: var(--space-4);
   color: var(--ink-2);
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   line-height: 1.7;
 }
 .today-tile-list.is-quiet { color: var(--muted); }
@@ -107,7 +107,7 @@ button.today-tile:hover .today-tile-go { color: var(--accent-hot); transform: tr
   align-self: flex-start;
   padding: var(--space-1) var(--space-3);
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   font-weight: 600;
@@ -118,7 +118,7 @@ button.today-tile:hover .today-tile-go { color: var(--accent-hot); transform: tr
 
 /* ------------------------------------------------------------ 2. the money */
 
-.today-tile.is-money .today-tile-lead { font-size: 2.3rem; font-variant-numeric: tabular-nums; }
+.today-tile.is-money .today-tile-lead { font-size: var(--text-4xl); font-variant-numeric: tabular-nums; }
 .today-tile.is-money .today-tile-lead.is-up   { color: var(--mint); }
 .today-tile.is-money .today-tile-lead.is-down { color: var(--rose); }
 
@@ -139,7 +139,7 @@ button.today-tile:hover .today-tile-go { color: var(--accent-hot); transform: tr
   display: flex;
   justify-content: space-between;
   gap: var(--space-4);
-  font-size: 0.86rem;
+  font-size: var(--text-sm);
   color: var(--muted);
 }
 .today-money-split strong,
@@ -193,9 +193,9 @@ button.today-tile:hover .today-tile-go { color: var(--accent-hot); transform: tr
 .urgency-medium .today-attention-dot { background: var(--accent); box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 60%, transparent); }
 
 .today-attention-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-1); }
-.today-attention-body strong { color: var(--ink); font-size: 0.93rem; font-weight: 500; }
+.today-attention-body strong { color: var(--ink); font-size: var(--text-base); font-weight: 500; }
 .today-attention-body span {
-  color: var(--muted); font-size: 0.82rem;
+  color: var(--muted); font-size: var(--text-sm);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
@@ -209,10 +209,10 @@ button.today-tile:hover .today-tile-go { color: var(--accent-hot); transform: tr
   display: grid;
   grid-template-columns: 1fr auto;
   gap: var(--space-1) var(--space-3);
-  font-size: 0.9rem;
+  font-size: var(--text-base);
 }
 .today-stock-name { color: var(--ink); }
-.today-stock-cover { color: var(--muted); font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+.today-stock-cover { color: var(--muted); font-size: var(--text-sm); font-variant-numeric: tabular-nums; }
 
 /* How long it lasts, as a length. A number says four days; a bar that is
    nearly empty says it before it is read. */
@@ -285,7 +285,7 @@ button.today-tile:hover .today-tile-go { color: var(--accent-hot); transform: tr
 }
 .today-setup-progress > span:first-child {
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
 }
 .today-setup-track {
@@ -319,7 +319,7 @@ button.today-tile:hover .today-tile-go { color: var(--accent-hot); transform: tr
   background: none;
   color: var(--ink-2);
   font: inherit;
-  font-size: 0.86rem;
+  font-size: var(--text-sm);
   cursor: pointer;
   transition: color 0.2s var(--ease);
 }
@@ -333,7 +333,7 @@ button.today-tile:hover .today-tile-go { color: var(--accent-hot); transform: tr
   display: grid; place-items: center;
   border-radius: 50%;
   border: 1px solid var(--line);
-  font-size: 0.66rem;
+  font-size: var(--text-xs);
   color: var(--void);
 }
 .today-setup-list .is-done .today-setup-tick {

@@ -42,9 +42,9 @@
 
 /* Size is padding and type size together — a large button with small text is
    a small button with a lot of air around it. */
-.eos-btn-sm { padding: var(--space-2) var(--space-3); font-size: 0.8125rem; }
-.eos-btn-md { padding: var(--space-3) var(--space-4); font-size: 0.9375rem; }
-.eos-btn-lg { padding: var(--space-3) var(--space-5); font-size: 1rem; }
+.eos-btn-sm { padding: var(--space-2) var(--space-3); font-size: var(--text-sm); }
+.eos-btn-md { padding: var(--space-3) var(--space-4); font-size: var(--text-base); }
+.eos-btn-lg { padding: var(--space-3) var(--space-5); font-size: var(--text-body); }
 
 /* On a dark ground a primary action is lit from inside; the light theme
    overrides this to a solid fill, because on white less ink reads as less
@@ -134,7 +134,7 @@
 .eos-field { display: grid; gap: var(--space-2); }
 
 .eos-label {
-  font-size: 0.8125rem;
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--ink-2);
 }
@@ -153,7 +153,7 @@
   background: var(--glass);
   color: var(--ink);
   font-family: inherit;
-  font-size: 0.9375rem;
+  font-size: var(--text-base);
   transition: border-color 200ms var(--ease), background 200ms var(--ease),
               box-shadow 200ms var(--ease);
 }
@@ -180,5 +180,5 @@
 
 /* Hint and error occupy the same slot: a field shows one or the other, never
    both, so the layout does not jump when validation fails. */
-.eos-hint { font-size: 0.78rem; color: var(--faint); }
-.eos-error { font-size: 0.78rem; color: var(--rose); }
+.eos-hint { font-size: var(--text-sm); color: var(--faint); }
+.eos-error { font-size: var(--text-sm); color: var(--rose); }

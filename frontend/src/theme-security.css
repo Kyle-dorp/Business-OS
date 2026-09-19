@@ -57,7 +57,7 @@
   display: grid; place-items: center;
   border-radius: var(--radius-3);
   font-family: "Fraunces", serif;
-  font-size: 1.5rem;
+  font-size: var(--text-2xl);
   color: var(--void);
   background: var(--accent);
   box-shadow: 0 0 40px -6px color-mix(in srgb, var(--accent) 55%, transparent);
@@ -82,7 +82,7 @@
   padding: var(--space-2) var(--space-4);
   border: 1px solid var(--line);
   border-radius: 999px;
-  font-size: 0.86rem;
+  font-size: var(--text-sm);
   color: var(--ink-2);
   background: var(--glass);
 }
@@ -106,38 +106,38 @@
 
 .auth-card-heading { margin-bottom: var(--space-1); }
 .auth-card-heading h2 { margin: var(--space-2) 0 var(--space-2); }
-.auth-card-heading p { color: var(--muted); line-height: 1.6; margin: 0; font-size: 0.94rem; }
+.auth-card-heading p { color: var(--muted); line-height: 1.6; margin: 0; font-size: var(--text-base); }
 
 .field-label {
   display: flex; flex-direction: column; gap: var(--space-2);
-  font-size: 0.82rem; font-weight: 500; color: var(--muted);
+  font-size: var(--text-sm); font-weight: 500; color: var(--muted);
 }
-.field-label input { padding: var(--space-3) var(--space-4) !important; font-size: 0.97rem; }
+.field-label input { padding: var(--space-3) var(--space-4) !important; font-size: var(--text-body); }
 
-.auth-submit { width: 100%; padding: var(--space-3) var(--space-4); font-size: 1rem; margin-top: var(--space-1); }
+.auth-submit { width: 100%; padding: var(--space-3) var(--space-4); font-size: var(--text-body); margin-top: var(--space-1); }
 
 .alert {
   padding: var(--space-3) var(--space-4); border-radius: var(--radius-2);
-  font-size: 0.9rem; line-height: 1.5;
+  font-size: var(--text-base); line-height: 1.5;
 }
 .alert.error { background: color-mix(in srgb, var(--rose) 10%, transparent); border: 1px solid color-mix(in srgb, var(--rose) 28%, transparent); color: var(--rose); }
 .alert.notice { background: color-mix(in srgb, var(--mint) 8%, transparent); border: 1px solid color-mix(in srgb, var(--mint) 26%, transparent); color: var(--mint); }
 
 .auth-link {
   background: none; border: 0;
-  color: var(--muted); font-size: 0.88rem;
+  color: var(--muted); font-size: var(--text-base);
   cursor: pointer; padding: var(--space-1);
   transition: color 0.25s var(--ease);
 }
 .auth-link:hover { color: var(--accent); }
 
 .auth-google { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); }
-.auth-google small { color: var(--faint); font-size: 0.76rem; text-align: center; line-height: 1.5; }
+.auth-google small { color: var(--faint); font-size: var(--text-sm); text-align: center; line-height: 1.5; }
 .auth-google-button { min-height: 40px; display: flex; justify-content: center; }
 
 .auth-divider {
   width: 100%; display: flex; align-items: center; gap: var(--space-3);
-  color: var(--faint); font-size: 0.8rem;
+  color: var(--faint); font-size: var(--text-sm);
 }
 .auth-divider::before, .auth-divider::after {
   content: ""; flex: 1; height: 1px; background: var(--line);
@@ -149,14 +149,14 @@
 .sec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: var(--space-4); }
 .sec-card { padding: var(--space-5) var(--space-5); }
 .sec-card h3 { margin: 0 0 var(--space-2); }
-.sec-blurb { color: var(--muted); font-size: 0.9rem; line-height: 1.65; margin: 0 0 var(--space-4); }
-.sec-blurb code { color: var(--accent); font-size: 0.86rem; }
+.sec-blurb { color: var(--muted); font-size: var(--text-base); line-height: 1.65; margin: 0 0 var(--space-4); }
+.sec-blurb code { color: var(--accent); font-size: var(--text-sm); }
 
 .sec-inline-form { display: flex; gap: var(--space-2); }
 .sec-inline-form input { flex: 1; padding: var(--space-3) var(--space-3) !important; }
 .sec-inline-form .primary-btn { white-space: nowrap; padding: var(--space-3) var(--space-4); }
 
-.sec-error { color: var(--rose); font-size: 0.88rem; margin: var(--space-4) 0 0; }
+.sec-error { color: var(--rose); font-size: var(--text-base); margin: var(--space-4) 0 0; }
 .sec-clear { color: var(--mint); margin: 0; }
 
 /* A code shown once gets its own weight on the page — it is the only thing
@@ -168,18 +168,18 @@
   border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
 }
 .sec-code-label {
-  display: block; font-size: 0.74rem; letter-spacing: 0.12em;
+  display: block; font-size: var(--text-xs); letter-spacing: 0.12em;
   text-transform: uppercase; color: var(--accent); font-weight: 600;
   margin-bottom: var(--space-2);
 }
 .sec-code-row { display: flex; align-items: center; gap: var(--space-3); }
 .sec-code-row code {
   font-family: "SF Mono", Menlo, monospace;
-  font-size: 1.4rem; letter-spacing: 0.1em;
+  font-size: var(--text-2xl); letter-spacing: 0.1em;
   color: var(--ink); flex: 1;
 }
-.sec-code-row .ghost-btn { padding: var(--space-2) var(--space-4); font-size: 0.86rem; }
-.sec-code-panel small { display: block; margin-top: var(--space-3); color: var(--muted); font-size: 0.8rem; line-height: 1.6; }
+.sec-code-row .ghost-btn { padding: var(--space-2) var(--space-4); font-size: var(--text-sm); }
+.sec-code-panel small { display: block; margin-top: var(--space-3); color: var(--muted); font-size: var(--text-sm); line-height: 1.6; }
 
 .sec-locked { color: var(--rose); font-weight: 600; }
 .sec-ok { color: var(--muted); }
@@ -188,7 +188,7 @@
   .brand-orb { animation: none !important; }
 }
 
-.sec-email-stats { display: flex; gap: var(--space-4); margin-bottom: var(--space-4); font-size: 0.88rem; color: var(--muted); }
+.sec-email-stats { display: flex; gap: var(--space-4); margin-bottom: var(--space-4); font-size: var(--text-base); color: var(--muted); }
 .sec-email-log { margin-top: var(--space-2); }
-.sec-email-log td { font-size: 0.85rem; }
-.sec-email-log small { color: var(--faint); font-size: 0.76rem; }
+.sec-email-log td { font-size: var(--text-sm); }
+.sec-email-log small { color: var(--faint); font-size: var(--text-sm); }

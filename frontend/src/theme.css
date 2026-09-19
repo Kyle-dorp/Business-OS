@@ -211,6 +211,27 @@
   --space-8: 4rem;      /* 64px */
   --space-9: 5rem;      /* 80px */
 
+  /* --------------------------------------------------------------- type */
+  /* Sixty-two distinct font sizes became ten rungs. The dense end is spaced
+     finely because that is where most of an interface actually lives; the
+     display end is spaced widely because a heading two pixels bigger is not a
+     different heading.
+
+     --text-body is the floor for anything a person reads as prose. Below it
+     are labels, metadata and numbers in tables — things that are scanned
+     rather than read. One of them was 9px, which is not a size, it is a
+     rumour. */
+  --text-xs: 0.6875rem;   /* 11px  uppercase labels, chart ticks */
+  --text-sm: 0.8125rem;   /* 13px  metadata, captions, table cells */
+  --text-base: 0.9375rem; /* 15px  controls — buttons, inputs, nav */
+  --text-body: 1rem;      /* 16px  prose floor */
+  --text-lg: 1.125rem;    /* 18px */
+  --text-xl: 1.25rem;     /* 20px */
+  --text-2xl: 1.5rem;     /* 24px */
+  --text-3xl: 1.875rem;   /* 30px */
+  --text-4xl: 2.375rem;   /* 38px */
+  --text-5xl: 3rem;       /* 48px */
+
   /* ------------------------------------------------------------- radius */
   /* Radius reads as a family. Eleven consecutive integers from 10px to 20px
      do not read as anything — they read as eleven people guessing. */
@@ -253,7 +274,7 @@ html, body, #root { min-height: 100%; }
 body {
   margin: 0;
   color: var(--ink);
-  font-weight: 300;
+  font-weight: 400;
   background: var(--void);
   -webkit-font-smoothing: antialiased;
 }
@@ -320,14 +341,14 @@ h1, h2, h3 {
 
 h1 { font-size: clamp(1.9rem, 3.4vw, 2.7rem); line-height: 1.08; }
 h2 { font-size: clamp(1.35rem, 2.2vw, 1.8rem); line-height: 1.15; }
-h3 { font-family: "Figtree", sans-serif; font-weight: 600; font-size: 1.02rem; letter-spacing: -0.008em; }
+h3 { font-family: "Figtree", sans-serif; font-weight: 600; font-size: var(--text-body); letter-spacing: -0.008em; }
 
 p, span, div, td, th, label, small { color: inherit; }
 
 .eyebrow {
   color: var(--accent);
   font-weight: 600;
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
   letter-spacing: 0.14em;
 }
 
@@ -352,7 +373,7 @@ p, span, div, td, th, label, small { color: inherit; }
   place-items: center;
   border-radius: 50%;
   font-family: "Fraunces", serif;
-  font-size: 1.5rem;
+  font-size: var(--text-2xl);
   color: var(--void);
   background: var(--accent);
   box-shadow: 0 0 44px -6px color-mix(in srgb, var(--accent) 55%, transparent);

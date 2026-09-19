@@ -24,17 +24,17 @@
 }
 .chart-head h3 {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: var(--text-body);
   font-weight: 500;
   color: var(--ink);
 }
-.chart-head p { margin: var(--space-1) 0 0; color: var(--muted); font-size: 0.85rem; }
+.chart-head p { margin: var(--space-1) 0 0; color: var(--muted); font-size: var(--text-sm); }
 .chart-head-right { display: flex; align-items: center; gap: var(--space-4); }
 
 /* A legend is present whenever more than one series is drawn. */
 .chart-legend { display: flex; gap: var(--space-3); }
 .chart-key { display: inline-flex; align-items: center; gap: var(--space-1);
-             color: var(--muted); font-size: 0.8rem; }
+             color: var(--muted); font-size: var(--text-sm); }
 .chart-key::before {
   content: "";
   width: 0.7rem; height: 2px; border-radius: 999px;
@@ -49,7 +49,7 @@
   background: transparent;
   color: var(--muted);
   font: inherit;
-  font-size: 0.76rem;
+  font-size: var(--text-sm);
   cursor: pointer;
   transition: color 0.22s var(--ease), border-color 0.22s var(--ease);
 }
@@ -61,7 +61,7 @@
 .chart-plot svg { width: 100%; height: auto; display: block; overflow: visible; }
 
 .chart-grid { stroke: var(--line-soft); stroke-width: 1; }
-.chart-tick { fill: var(--faint); font-size: 10px; }
+.chart-tick { fill: var(--faint); font-size: var(--text-xs); }
 
 .chart-line {
   fill: none;
@@ -92,7 +92,7 @@
   background: color-mix(in srgb, var(--void-lift) 97%, transparent);
   border: 1px solid var(--line);
   box-shadow: 0 18px 40px -22px rgba(0, 0, 0, 0.9);
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   white-space: nowrap;
   pointer-events: none;
   z-index: 2;
@@ -108,7 +108,7 @@
 .chart-threshold.is-healthy { stroke: color-mix(in srgb, var(--mint) 50%, transparent); }
 .chart-threshold.is-ceiling { stroke: color-mix(in srgb, var(--rose) 55%, transparent); }
 
-.chart-threshold-label { font-size: 9px; letter-spacing: 0.04em; }
+.chart-threshold-label { font-size: var(--text-xs); letter-spacing: 0.04em; }
 .chart-threshold-label.is-healthy { fill: color-mix(in srgb, var(--mint) 80%, transparent); }
 .chart-threshold-label.is-ceiling { fill: color-mix(in srgb, var(--rose) 85%, transparent); }
 
@@ -139,7 +139,7 @@
 
 .chart-bars-label {
   color: var(--ink-2);
-  font-size: 0.88rem;
+  font-size: var(--text-base);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
@@ -169,7 +169,7 @@
 
 .chart-bars-value {
   color: var(--ink);
-  font-size: 0.86rem;
+  font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
   min-width: 3rem;
   text-align: right;
@@ -179,7 +179,7 @@
 .chart-foot {
   margin: var(--space-4) 0 0;
   color: var(--faint);
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   display: flex; align-items: center; gap: var(--space-2);
 }
 .chart-foot-mark {
@@ -190,7 +190,7 @@
 /* -------------------------------------------------------------- the table */
 
 .chart-table-wrap { margin-top: var(--space-4); max-height: 16rem; overflow: auto; }
-.chart-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+.chart-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
 .chart-table th, .chart-table td {
   padding: var(--space-2) var(--space-2);
   text-align: left;
@@ -203,7 +203,7 @@
   font-weight: 500;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
 }
 .chart-table td { color: var(--ink-2); font-variant-numeric: tabular-nums; }
 

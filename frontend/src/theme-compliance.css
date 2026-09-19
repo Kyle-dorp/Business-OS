@@ -6,7 +6,7 @@
 
 .cmp-card { padding: var(--space-5) var(--space-6); margin-bottom: var(--space-4); }
 .cmp-card h3 { margin: 0 0 var(--space-2); }
-.cmp-blurb { color: var(--muted); font-size: 0.92rem; line-height: 1.65; margin: 0 0 var(--space-5); max-width: 62ch; }
+.cmp-blurb { color: var(--muted); font-size: var(--text-base); line-height: 1.65; margin: 0 0 var(--space-5); max-width: 62ch; }
 .cmp-empty { color: var(--muted); margin: 0; }
 
 /* ----------------------------------------------------------- readiness */
@@ -17,7 +17,7 @@
   background: color-mix(in srgb, var(--ink) 8%, transparent); margin-bottom: var(--space-2);
 }
 .cmp-readiness-bar span { display: block; height: 100%; border-radius: 3px; transition: width 0.5s var(--ease); }
-.cmp-readiness small { color: var(--faint); font-size: 0.78rem; }
+.cmp-readiness small { color: var(--faint); font-size: var(--text-sm); }
 
 /* --------------------------------------------------------- jurisdiction */
 
@@ -27,7 +27,7 @@
   gap: var(--space-4);
   margin-bottom: var(--space-4);
 }
-.cmp-fields .os-field span { color: var(--muted); font-size: 0.82rem; font-weight: 500; }
+.cmp-fields .os-field span { color: var(--muted); font-size: var(--text-sm); font-weight: 500; }
 .cmp-fields select { width: 100%; padding: var(--space-3) var(--space-3) !important; }
 
 .cmp-toggle {
@@ -41,8 +41,8 @@
 }
 .cmp-toggle:hover { border-color: color-mix(in srgb, var(--accent) 20%, transparent); background: color-mix(in srgb, var(--accent) 5%, transparent); }
 .cmp-toggle input { margin-top: var(--space-1); flex: none; }
-.cmp-toggle strong { display: block; color: var(--ink); font-size: 0.94rem; font-weight: 600; }
-.cmp-toggle small { display: block; margin-top: var(--space-1); color: var(--muted); font-size: 0.84rem; line-height: 1.55; }
+.cmp-toggle strong { display: block; color: var(--ink); font-size: var(--text-base); font-weight: 600; }
+.cmp-toggle small { display: block; margin-top: var(--space-1); color: var(--muted); font-size: var(--text-sm); line-height: 1.55; }
 
 .cmp-fallback { margin-top: var(--space-4); }
 .cmp-fallback strong { display: block; margin-bottom: var(--space-1); }
@@ -55,20 +55,20 @@
   border: 1px solid color-mix(in srgb, var(--mint) 20%, transparent);
 }
 .cmp-effective-label {
-  display: block; font-size: 0.72rem; letter-spacing: 0.14em;
+  display: block; font-size: var(--text-xs); letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--mint); font-weight: 600;
   margin-bottom: var(--space-2);
 }
-.cmp-effective > strong { color: var(--ink); font-size: 1.05rem; }
-.cmp-effective small { display: block; margin-top: var(--space-4); color: var(--faint); font-size: 0.76rem; line-height: 1.55; }
+.cmp-effective > strong { color: var(--ink); font-size: var(--text-body); }
+.cmp-effective small { display: block; margin-top: var(--space-4); color: var(--faint); font-size: var(--text-sm); line-height: 1.55; }
 
 .cmp-rules {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: var(--space-3) var(--space-5); margin-top: var(--space-4);
 }
 .cmp-rule { display: flex; flex-direction: column; gap: var(--space-1); }
-.cmp-rule span { color: var(--faint); font-size: 0.76rem; }
-.cmp-rule strong { color: var(--ink-2); font-size: 0.94rem; font-variant-numeric: tabular-nums; }
+.cmp-rule span { color: var(--faint); font-size: var(--text-sm); }
+.cmp-rule strong { color: var(--ink-2); font-size: var(--text-base); font-variant-numeric: tabular-nums; }
 
 .cmp-actions { margin-top: var(--space-5); }
 .cmp-actions .primary-btn { padding: var(--space-3) var(--space-5); }
@@ -78,13 +78,13 @@
 .cmp-table-wrap { background: transparent; border: 0; box-shadow: none; padding: 0; }
 .cmp-table { min-width: 760px; }
 .cmp-table td { vertical-align: middle; padding: var(--space-3) var(--space-4); }
-.cmp-table td strong { display: block; color: var(--ink); font-size: 0.94rem; }
-.cmp-table td small { color: var(--faint); font-size: 0.78rem; }
+.cmp-table td strong { display: block; color: var(--ink); font-size: var(--text-base); }
+.cmp-table td small { color: var(--faint); font-size: var(--text-sm); }
 
 .cmp-table input[type="date"],
 .cmp-table input[type="number"] {
   padding: var(--space-2) var(--space-3) !important;
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   width: 100%;
   min-width: 8rem;
 }
@@ -95,15 +95,15 @@
 
 .cmp-flags { display: flex; flex-direction: column; gap: var(--space-1); }
 .cmp-flags label { display: flex; align-items: center; gap: var(--space-2); cursor: pointer; }
-.cmp-flags span { color: var(--muted); font-size: 0.84rem; }
+.cmp-flags span { color: var(--muted); font-size: var(--text-sm); }
 
 .cmp-row-action { text-align: right; white-space: nowrap; }
-.cmp-row-action .primary-btn { padding: var(--space-2) var(--space-4); font-size: 0.86rem; }
-.cmp-row-error { display: block; color: var(--rose); font-size: 0.78rem; margin-bottom: var(--space-1); }
+.cmp-row-action .primary-btn { padding: var(--space-2) var(--space-4); font-size: var(--text-sm); }
+.cmp-row-error { display: block; color: var(--rose); font-size: var(--text-sm); margin-bottom: var(--space-1); }
 
 /* A row missing data is not an error — it is an invitation. Amber, not rose. */
-.cmp-missing { color: var(--accent); font-size: 0.82rem; }
-.cmp-done { color: var(--mint); font-size: 0.82rem; }
+.cmp-missing { color: var(--accent); font-size: var(--text-sm); }
+.cmp-done { color: var(--mint); font-size: var(--text-sm); }
 .cmp-incomplete td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 
 @media (max-width: 720px) {

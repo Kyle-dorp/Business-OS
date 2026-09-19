@@ -36,7 +36,7 @@
   grid-column: 1 / -1;
   margin: var(--space-2) 0 0;
   color: var(--faint);
-  font-size: 0.82rem;
+  font-size: var(--text-sm);
 }
 
 .billing-module {
@@ -107,7 +107,7 @@
   border-radius: 50%;
   border: 1px solid var(--line);
   display: grid; place-items: center;
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   color: var(--void);
   transition: all 0.25s var(--ease);
 }
@@ -121,24 +121,24 @@
 .bm-body { display: flex; flex-direction: column; gap: var(--space-1); flex: 1; min-width: 0; }
 
 .bm-top { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-4); }
-.bm-top strong { color: var(--ink); font-size: 1rem; font-weight: 600; }
+.bm-top strong { color: var(--ink); font-size: var(--text-body); font-weight: 600; }
 
 .bm-price { display: inline-flex; align-items: baseline; gap: var(--space-2); white-space: nowrap; }
-.bm-price s { color: var(--rose); opacity: 0.7; font-size: 0.85rem; }
+.bm-price s { color: var(--rose); opacity: 0.7; font-size: var(--text-sm); }
 .bm-price em {
-  font-style: normal; font-size: 0.76rem;
+  font-style: normal; font-size: var(--text-sm);
   letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--faint);
 }
 .is-on .bm-price em { color: var(--accent); }
 
 .bm-always {
-  font-size: 0.74rem; letter-spacing: 0.1em;
+  font-size: var(--text-xs); letter-spacing: 0.1em;
   text-transform: uppercase; color: var(--faint);
 }
 
-.bm-tagline { color: var(--accent); font-size: 0.88rem; opacity: 0.85; }
-.bm-desc { color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+.bm-tagline { color: var(--accent); font-size: var(--text-base); opacity: 0.85; }
+.bm-desc { color: var(--muted); font-size: var(--text-base); line-height: 1.6; }
 
 /* The reason to buy it, at the moment of deciding. Held back at rest so the
    grid stays scannable, and given its own row on hover so the comparison —
@@ -163,9 +163,9 @@
   display: block;
 }
 
-.bm-elsewhere { display: block; color: var(--faint); font-size: 0.8rem; }
+.bm-elsewhere { display: block; color: var(--faint); font-size: var(--text-sm); }
 .bm-elsewhere s { color: var(--rose); opacity: 0.8; }
-.bm-replaces { display: block; color: var(--faint); font-size: 0.78rem; margin-top: var(--space-1); }
+.bm-replaces { display: block; color: var(--faint); font-size: var(--text-sm); margin-top: var(--space-1); }
 
 @media (prefers-reduced-motion: reduce) {
   .bm-argument { grid-template-rows: 1fr; opacity: 1; margin-top: var(--space-2); }
@@ -183,7 +183,7 @@
   display: inline-block;
   padding: var(--space-1) var(--space-3);
   border-radius: 999px;
-  font-size: 0.72rem; letter-spacing: 0.12em;
+  font-size: var(--text-xs); letter-spacing: 0.12em;
   text-transform: uppercase; font-weight: 600;
   margin-bottom: var(--space-5);
 }
@@ -202,9 +202,9 @@
   text-shadow: 0 0 30px color-mix(in srgb, var(--accent) 25%, transparent);
   line-height: 1;
 }
-.bs-per { color: var(--muted); font-size: 0.95rem; }
+.bs-per { color: var(--muted); font-size: var(--text-base); }
 
-.bs-breakdown { margin: var(--space-3) 0 0; color: var(--muted); font-size: 0.88rem; line-height: 1.6; }
+.bs-breakdown { margin: var(--space-3) 0 0; color: var(--muted); font-size: var(--text-base); line-height: 1.6; }
 
 .bs-compare {
   margin-top: var(--space-5); padding-top: var(--space-4);
@@ -212,12 +212,12 @@
   display: flex; flex-direction: column; gap: var(--space-2);
 }
 .bs-compare > div { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-4); }
-.bs-compare span { color: var(--muted); font-size: 0.88rem; }
+.bs-compare span { color: var(--muted); font-size: var(--text-base); }
 .bs-compare s { color: var(--rose); opacity: 0.75; font-variant-numeric: tabular-nums; }
 .bs-saving strong {
   color: var(--mint);
   font-variant-numeric: tabular-nums;
-  font-size: 1.35rem;
+  font-size: var(--text-xl);
   font-weight: 500;
   text-shadow: 0 0 26px color-mix(in srgb, var(--mint) 30%, transparent);
 }
@@ -227,9 +227,9 @@
 .bs-actions .primary-btn { flex: 1; padding: var(--space-3) var(--space-4); }
 .bs-actions .ghost-btn { padding: var(--space-3) var(--space-4); }
 
-.bs-renews { margin: var(--space-4) 0 0; color: var(--faint); font-size: 0.82rem; }
+.bs-renews { margin: var(--space-4) 0 0; color: var(--faint); font-size: var(--text-sm); }
 .bs-fine {
   margin: var(--space-4) 0 0; padding-top: var(--space-4);
   border-top: 1px solid var(--line-soft);
-  color: var(--faint); font-size: 0.8rem; line-height: 1.65;
+  color: var(--faint); font-size: var(--text-sm); line-height: 1.65;
 }

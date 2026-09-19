@@ -2456,9 +2456,14 @@ def assistant_chat(
 
     thread = _get_or_create_assistant_thread(session, user.id, payload.thread_id)
     context = _assistant_context(session, payload, user.id, thread.id)
-    decision, used_openai, (in_tokens, out_tokens) = decide_with_ai(message, context)
-    if in_tokens or out_tokens:
-        _record_usage(session, business_id, in_tokens, out_tokens, feature="assistant")
+    decision, used_openai, usage = decide_with_ai(message, context)
+    in_tokens, out_tokens, cache_read, cache_write = usage
+    if any(usage):
+        _record_usage(
+            session, business_id, in_tokens, out_tokens, feature="assistant",
+            user_id=user.id,
+            cache_read_tokens=cache_read, cache_write_tokens=cache_write,
+        )
     decision = _normalize_ai_actions(decision, context)
     user_message = AssistantMessage(
         user_id=user.id,

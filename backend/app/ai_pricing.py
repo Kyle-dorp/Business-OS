@@ -118,3 +118,53 @@ def format_milli(milli: int) -> str:
 
 def dollars(milli: int) -> float:
     return round(milli / MILLI_PER_DOLLAR, 5)
+
+
+# ===========================================================================
+# Caching
+# ===========================================================================
+
+def cached_system(text: str) -> list[dict]:
+    """
+    A system prompt shaped so Anthropic will cache it.
+
+    Every assistant here re-sends the same thing on every turn: the
+    instructions, the workspace's saved memory, and a JSON dump of the business.
+    On a forty-person restaurant that dump alone is 46,110 tokens, paid for in
+    full on every question, to ask something the model was told a minute ago.
+
+    Cached input is a tenth of the price, which on that workspace is the
+    difference between $0.2049 and $0.0273 a question — 87%. It is the single
+    largest lever in this product's unit economics and it costs one field.
+
+    The breakpoint goes at the end of the system prompt because everything
+    before it is stable within a conversation and everything after it — the
+    messages — is not. Caching is a prefix match: one byte different anywhere
+    before the breakpoint and none of it hits.
+
+    A prefix shorter than the model's minimum (1,024 to 4,096 tokens depending
+    on the model) silently will not cache. That is fine and expected here: a
+    brand-new workspace's context is 334 tokens and costs a fraction of a cent
+    either way. The workspaces where it matters are the ones large enough to
+    qualify.
+    """
+    return [{"type": "text", "text": text, "cache_control": {"type": "ephemeral"}}]
+
+
+def usage_from(response) -> tuple[int, int, int, int]:
+    """
+    (input, output, cache_read, cache_write) from a response.
+
+    Read defensively: the cache fields are absent on responses from a call that
+    did not ask for caching, and `getattr` with a default is the difference
+    between a usage row and a 500.
+    """
+    usage = getattr(response, "usage", None)
+    if usage is None:
+        return 0, 0, 0, 0
+    return (
+        int(getattr(usage, "input_tokens", 0) or 0),
+        int(getattr(usage, "output_tokens", 0) or 0),
+        int(getattr(usage, "cache_read_input_tokens", 0) or 0),
+        int(getattr(usage, "cache_creation_input_tokens", 0) or 0),
+    )

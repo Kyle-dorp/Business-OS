@@ -7,6 +7,7 @@ from typing import Literal, Optional
 
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
+from backend.app.ai_pricing import cached_system, usage_from
 
 load_dotenv()
 
@@ -270,7 +271,7 @@ def decide_with_ai(
     A fallback answer costs nothing, and reports (0, 0).
     """
     if not ai_is_configured():
-        return _fallback_decision(message, context), False, (0, 0)
+        return _fallback_decision(message, context), False, (0, 0, 0, 0)
 
     try:
         from anthropic import Anthropic
@@ -305,18 +306,21 @@ def decide_with_ai(
             used_characters += item_size
         input_messages = list(reversed(selected_history))
         input_messages.append({"role": "user", "content": message})
-        response = client.messages.create(model=model, max_tokens=4096, system=system, messages=input_messages)
+        # Cached: on a forty-person restaurant the database dump alone is
+        # 46,110 tokens, re-sent on every question. See ai_pricing.cached_system.
+        response = client.messages.create(
+            model=model, max_tokens=4096,
+            system=cached_system(system), messages=input_messages,
+        )
         text = "".join(block.text for block in response.content if getattr(block, "type", "") == "text")
         if text.startswith("```"):
             text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text, flags=re.DOTALL)
         parsed = AssistantDecision.model_validate_json(text)
-        usage = getattr(response, "usage", None)
-        tokens = (
-            int(getattr(usage, "input_tokens", 0) or 0),
-            int(getattr(usage, "output_tokens", 0) or 0),
-        )
+        # Four numbers now, not two: cache reads are billed at a tenth and the
+        # meter has to know the difference or it overcharges by ten times.
+        tokens = usage_from(response)
         return parsed, True, tokens
     except Exception as error:
         fallback = _fallback_decision(message, context)
         fallback.reply += f" (AI fallback active: {type(error).__name__}.)"
-        return fallback, False, (0, 0)
+        return fallback, False, (0, 0, 0, 0)

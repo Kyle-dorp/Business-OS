@@ -740,7 +740,7 @@ def agent_chat(
     )
 
     client = _api()
-    total_in = total_out = 0
+    total_in = total_out = total_cache_read = total_cache_write = 0
     proposals: List[AgentProposal] = []
     escalated = False
 
@@ -749,7 +749,11 @@ def agent_chat(
             resp = client.messages.create(
                 model=MODEL,
                 max_tokens=MAX_TOKENS_PER_REPLY,
-                system=SYSTEM_PROMPT + context,
+                # Cached. This loop runs up to MAX_TOOL_ROUNDS times for one
+                # question, re-sending the same system prompt and tool
+                # definitions every round — so the saving here is per round,
+                # not per question.
+                system=cached_system(SYSTEM_PROMPT + context),
                 tools=TOOLS,
                 messages=messages,
             )
@@ -759,8 +763,11 @@ def agent_chat(
             log.exception("Anthropic call failed for business %s", bid)
             raise HTTPException(502, "The assistant couldn't be reached just now.")
 
-        total_in += resp.usage.input_tokens
-        total_out += resp.usage.output_tokens
+        turn_in, turn_out, turn_cache_read, turn_cache_write = usage_from(resp)
+        total_in += turn_in
+        total_out += turn_out
+        total_cache_read += turn_cache_read
+        total_cache_write += turn_cache_write
 
         if resp.stop_reason != "tool_use":
             reply = "".join(b.text for b in resp.content if b.type == "text")
@@ -791,7 +798,11 @@ def agent_chat(
     else:
         reply = "That turned into more lookups than I can do in one go. Try narrowing the question."
 
-    usage = _record_usage(session, bid, total_in, total_out, user_id=user.id)
+    usage = _record_usage(
+        session, bid, total_in, total_out, user_id=user.id,
+        cache_read_tokens=total_cache_read,
+        cache_write_tokens=total_cache_write,
+    )
 
     session.add(AgentThread(business_id=bid, user_id=user.id, thread_id=thread_id,
                             role="user", content=body.message))

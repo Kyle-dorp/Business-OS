@@ -239,10 +239,14 @@ def test_the_assistant_reports_what_it_spent():
     """
     decide_with_ai returns its token cost as a third value. Without it the
     endpoint has nothing to record, which is how this went uncounted.
+
+    Four numbers rather than two since caching: cache reads are billed at a
+    tenth of the input rate, so a meter that cannot tell them apart overcharges
+    by ten times on exactly the workspaces where it matters most.
     """
     decision, used_ai, tokens = ai_service.decide_with_ai("add an employee", {})
     assert isinstance(tokens, tuple)
-    assert len(tokens) == 2
+    assert len(tokens) == 4, "(input, output, cache_read, cache_write)"
 
 
 def test_an_unconfigured_assistant_costs_nothing():
@@ -253,7 +257,7 @@ def test_an_unconfigured_assistant_costs_nothing():
     """
     decision, used_ai, tokens = ai_service.decide_with_ai("add an employee", {})
     assert used_ai is False
-    assert tokens == (0, 0)
+    assert tokens == (0, 0, 0, 0)
     assert decision.reply, "the fallback still has to answer"
 
 

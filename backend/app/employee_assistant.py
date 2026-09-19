@@ -320,6 +320,7 @@ def my_assistant_chat(
     import anthropic
 
     from backend.app.ai_agent import MODEL, _api, _check_budget, _record_usage
+    from backend.app.ai_pricing import cached_system, usage_from
     from backend.app.tenancy import current_business_id
 
     bid = current_business_id()
@@ -345,7 +346,10 @@ def my_assistant_chat(
         response = _api().messages.create(
             model=MODEL,
             max_tokens=MAX_TOKENS_PER_REPLY,
-            system=(
+            # Cached like the others, though this context is small enough that
+            # it may fall under the model's minimum cacheable prefix and simply
+            # not hit. That is fine: an employee question costs $0.0038 either way.
+            system=cached_system(
                 SYSTEM_PROMPT
                 + f"\n\nToday is {date.today().isoformat()}."
                 + "\n\nTheir record:\n"
@@ -360,14 +364,16 @@ def my_assistant_chat(
         raise HTTPException(502, "The assistant couldn't be reached just now.")
 
     reply = "".join(block.text for block in response.content if block.type == "text")
+    in_tok, out_tok, cache_read, cache_write = usage_from(response)
     _record_usage(
-        session, bid, response.usage.input_tokens, response.usage.output_tokens,
+        session, bid, in_tok, out_tok,
         feature="my-assistant", user_id=user.id,
+        cache_read_tokens=cache_read, cache_write_tokens=cache_write,
     )
 
     return MyAssistantOut(
         reply=reply,
         thread_id=body.thread_id or uuid.uuid4().hex,
-        tokens_in=response.usage.input_tokens,
-        tokens_out=response.usage.output_tokens,
+        tokens_in=in_tok,
+        tokens_out=out_tok,
     )

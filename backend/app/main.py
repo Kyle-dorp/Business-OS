@@ -33,6 +33,7 @@ from backend.app.auth import (
     verify_password,
 )
 from backend.app.database import create_db_and_tables, engine, get_session
+from backend.app.database import startup_lock
 from backend.app.models import (
     AssistantMemory,
     AssistantMessage,
@@ -1238,6 +1239,13 @@ def seed_defaults() -> None:
 
 @app.on_event("startup")
 def on_startup() -> None:
+    # Held across both steps, because more than one worker boots at once and
+    # seed_defaults() is a series of check-then-inserts. See startup_lock().
+    with startup_lock():
+        _boot()
+
+
+def _boot() -> None:
     try:
         create_db_and_tables()
         print("[ok] Database tables created")

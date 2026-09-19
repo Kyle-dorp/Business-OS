@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 import os
 
 from sqlalchemy import event, inspect, text
@@ -160,3 +161,50 @@ def create_db_and_tables() -> None:
 def get_session():
     with Session(engine) as session:
         yield session
+
+
+# ---------------------------------------------------------------------------
+# Starting more than one worker
+# ---------------------------------------------------------------------------
+
+@contextmanager
+def startup_lock():
+    """
+    Hold a lock while a worker does its boot-time database work.
+
+    uvicorn runs the startup hook once per worker, and `seed_defaults()` is a
+    series of check-then-inserts: it reads whether a ManagerSettings row or a
+    Department exists and creates one if not. Four workers booting together all
+    read "no" and all create one, so a fresh deployment comes up with four
+    copies of every default.
+
+    Serialising rather than skipping is deliberate. The later workers still run
+    the same code, they just run it after the first one has committed — so they
+    find the rows and create nothing, and the same function is correct whether
+    it runs once or four times. Skipping would need a second code path that
+    only ever executes in production, which is the kind of thing that is broken
+    for months before anybody notices.
+
+    Postgres only. SQLite is the single-process development database, and
+    advisory locks do not exist there.
+    """
+    if engine.dialect.name != "postgresql":
+        yield
+        return
+
+    # Any stable 64-bit integer. Derived from the name so it cannot collide
+    # with a lock some other part of the system takes.
+    key = 0x4255534F53  # "BUSOS"
+    connection = engine.connect()
+    try:
+        connection.execute(text("SELECT pg_advisory_lock(:key)"), {"key": key})
+        connection.commit()
+        yield
+    finally:
+        try:
+            connection.execute(text("SELECT pg_advisory_unlock(:key)"), {"key": key})
+            connection.commit()
+        except Exception:
+            # The lock is released when the connection closes regardless.
+            pass
+        connection.close()

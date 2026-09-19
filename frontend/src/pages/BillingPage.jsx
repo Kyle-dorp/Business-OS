@@ -37,7 +37,7 @@ function CountingMoney({ cents, className }) {
   return <span className={className}>{money(shown)}</span>;
 }
 
-export default function BillingPage({ onModulesChanged }) {
+export default function BillingPage({ onModulesChanged, pages = {} }) {
   const [catalogue, setCatalogue] = useState(null);
   const [quote, setQuote] = useState(null);
   const [draft, setDraft] = useState(null);      // key -> enabled, pre-save
@@ -222,6 +222,17 @@ export default function BillingPage({ onModulesChanged }) {
                   </span>
                   <span className="bm-tagline">{m.tagline}</span>
                   <span className="bm-desc">{m.description}</span>
+
+                  {/* What this actually puts on screen. A price with no
+                      answer to "which part of the app is that" is the
+                      reason ten modules read as one product. */}
+                  {pages[m.key]?.length > 0 && (
+                    <span className="bm-pages">
+                      {pages[m.key].map((label) => (
+                        <span className="bm-page" key={label}>{label}</span>
+                      ))}
+                    </span>
+                  )}
 
                   {/* The argument for this module, revealed on hover — what it
                       replaces and what that costs elsewhere. Kept out of the

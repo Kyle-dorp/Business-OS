@@ -20,6 +20,7 @@ import "./theme-primitives.css";
 import { api, getBusinessId, getToken, setBusinessId, setToken } from "./api";
 import AssistantBubble from "./components/AssistantBubble";
 import ThemeSwitch from "./components/ThemeSwitch";
+import ModuleTag from "./components/ModuleTag";
 import { useTheme } from "./hooks/useTheme";
 import { mondayOf, toIsoDate } from "./utils";
 import TodayPage from "./pages/TodayPage";
@@ -128,6 +129,41 @@ const EMPLOYEE_TABS = [
 function publicBookingBusinessId() {
   const match = window.location.pathname.match(/^\/book\/(\d+)/);
   return match ? match[1] : null;
+}
+
+
+/**
+ * Which module the open tab belongs to.
+ *
+ * MANAGER_TABS already carries it — the nav has always known, it just never
+ * said. Reading it from there rather than keeping a second mapping is what
+ * stops the topbar disagreeing with the drawer.
+ */
+function moduleOfTab(tabId) {
+  const entry = flatten(MANAGER_TABS).find((tab) => tab.id === tabId)
+    || flatten(EMPLOYEE_TABS).find((tab) => tab.id === tabId);
+  return entry?.module || null;
+}
+
+
+/**
+ * Module key to the pages it unlocks.
+ *
+ * Billing lists ten things somebody is being charged for and, until this, said
+ * nothing about what any of them put on screen. "Inventory — $10/mo" is a
+ * line item; "Inventory — Inventory & assets, Stock intelligence" is an answer
+ * to what am I paying for.
+ */
+function pagesByModule() {
+  const map = {};
+  for (const tab of [...flatten(MANAGER_TABS), ...flatten(EMPLOYEE_TABS)]) {
+    if (!tab.module) continue;
+    (map[tab.module] ||= []).push(tab.label);
+  }
+  // Employee and manager menus both contain Home and Settings; a module should
+  // not claim the same page twice.
+  for (const key of Object.keys(map)) map[key] = [...new Set(map[key])];
+  return map;
 }
 
 export default function App() {
@@ -276,7 +312,7 @@ export default function App() {
       <div className="drawer-footer account-footer"><div className="account-avatar">{user.username[0].toUpperCase()}</div><div><strong>{user.username}</strong><span>{workspace?.role || user.role}</span></div><button title="Log out" onClick={logout}>↪</button></div>
     </aside>
     <main className="main">
-      <header className="topbar"><button className="hamburger" aria-label="Open navigation" onClick={() => setDrawerOpen(true)}><span /><span /><span /></button><div className="topbar-copy"><span>{workspace?.business?.name || "Business workspace"}</span><strong>{currentLabel}</strong></div><div className="topbar-actions"><ThemeSwitch theme={theme} setTheme={setTheme} accent={accent} setAccent={setAccent} />{user.role === "manager" && <button className="topbar-notification" onClick={() => changeTab("notifications")}>●{notificationCount > 0 && <b>{notificationCount}</b>}</button>}<button className="topbar-profile" onClick={() => changeTab("settings")}><span>{user.username[0].toUpperCase()}</span><div><strong>{user.username}</strong><small>{workspace?.role || user.role}</small></div></button></div></header>
+      <header className="topbar"><button className="hamburger" aria-label="Open navigation" onClick={() => setDrawerOpen(true)}><span /><span /><span /></button><div className="topbar-copy"><span>{workspace?.business?.name || "Business workspace"}</span><strong>{currentLabel}</strong></div><ModuleTag moduleKey={moduleOfTab(activeTab)} catalogue={workspace?.catalogue || []} modules={workspace?.modules || []} /><div className="topbar-actions"><ThemeSwitch theme={theme} setTheme={setTheme} accent={accent} setAccent={setAccent} />{user.role === "manager" && <button className="topbar-notification" onClick={() => changeTab("notifications")}>●{notificationCount > 0 && <b>{notificationCount}</b>}</button>}<button className="topbar-profile" onClick={() => changeTab("settings")}><span>{user.username[0].toUpperCase()}</span><div><strong>{user.username}</strong><small>{workspace?.role || user.role}</small></div></button></div></header>
       <PageErrorBoundary pageKey={activeTab}>
         {user.role === "manager" ? <>
           {activeTab === "home" && <TodayPage onNavigate={changeTab} />}
@@ -286,7 +322,7 @@ export default function App() {
           {activeTab === "preflight" && <PreflightPage />}
           {activeTab === "ask" && <AgentPage />}
           {activeTab === "security" && <SecurityPage />}
-          {activeTab === "billing" && <BillingPage onModulesChanged={refreshWorkspace} />}
+          {activeTab === "billing" && <BillingPage onModulesChanged={refreshWorkspace} pages={pagesByModule()} />}
           {activeTab === "compliance" && <CompliancePage />}
           {activeTab === "inventory-intel" && <InventoryIntelPage />}
           {activeTab === "bookings" && <BookingAdminPage />}

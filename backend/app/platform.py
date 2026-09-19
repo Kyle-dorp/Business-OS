@@ -10,6 +10,7 @@ from sqlmodel import Session, select
 
 from backend.app.auth import user_from_request
 from backend.app.database import get_session
+from backend.app.modules_registry import catalogue_payload
 from backend.app.models import (
     AuditEvent, Bill, BillLine, Business, BusinessModule, Contact, Department, Expense,
     InventoryItem, InventoryMovement, Invoice, InvoiceLine, JournalEntry,
@@ -313,6 +314,12 @@ def workspace(context=Depends(business_context), session: Session = Depends(get_
         "business": session.get(Business, business_id), "role": membership.role,
         "locations": session.exec(select(Location).where(Location.business_id == business_id)).all(),
         "modules": session.exec(select(BusinessModule).where(BusinessModule.business_id == business_id)).all(),
+        # The registry alongside the rows, because the rows are keys and keys
+        # are not a thing anybody can read. Without this the app knows a page
+        # belongs to "inventory" and cannot say "Inventory" — which is most of
+        # why twenty-one pages read as one undifferentiated product rather than
+        # ten modules somebody is paying for separately.
+        "catalogue": catalogue_payload(),
         "user": {"id": user.id, "username": user.username},
     }
 

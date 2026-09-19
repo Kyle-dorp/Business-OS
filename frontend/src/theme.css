@@ -747,3 +747,8 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
   box-shadow: 0 1px 2px color-mix(in srgb, var(--ink) 5%, transparent),
               0 8px 24px -16px color-mix(in srgb, var(--ink) 22%, transparent);
 }
+
+/* The optional-but-important email at signup, and the forgot-password copy. */
+.field-optional { color: var(--faint); font-weight: 400; font-size: var(--text-xs); }
+.field-hint { display: block; margin-top: var(--space-1); color: var(--faint); font-size: var(--text-xs); line-height: 1.45; }
+.auth-explainer { margin: 0; color: var(--muted); font-size: var(--text-sm); line-height: 1.55; }

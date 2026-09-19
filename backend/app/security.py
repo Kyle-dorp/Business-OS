@@ -35,6 +35,7 @@ from sqlmodel import Field, Session, SQLModel, select
 from backend.app.auth import hash_password, user_from_request
 from backend.app.database import get_session
 from backend.app.models import AuditEvent, Membership, UserAccount, utc_now_iso
+from backend.app.email_service import configured as email_configured
 from backend.app.tenancy import current_business_id
 
 log = logging.getLogger(__name__)
@@ -278,6 +279,132 @@ class RedeemIn(BaseModel):
     username: str
     code: str
     new_password: str = PField(min_length=8, max_length=200)
+
+
+class RequestResetIn(BaseModel):
+    username: str
+
+
+class RequestResetOut(BaseModel):
+    # Deliberately says the same thing every time. See below.
+    message: str
+    recovery_possible: bool
+
+
+@router.post("/reset/request", response_model=RequestResetOut)
+def request_reset(
+    body: RequestResetIn,
+    request: Request,
+    session: Session = Depends(get_session),
+):
+    """
+    Ask for a reset code yourself.
+
+    Until this existed, a code could only be issued by somebody who was already
+    signed in and could manage the account. That works for staff — a manager
+    unlocks them — and leaves the owner of a one-person workspace with nobody
+    to ask. No self-service path, no support desk, and the only way back into a
+    business's own books was somebody opening the production database.
+
+    It is the most common support request any product of this kind gets, and it
+    had no answer.
+
+    Three things this deliberately does not do:
+
+    It does not say whether the account exists. The same sentence comes back
+    either way, because an endpoint that answers "no such user" is a way to
+    find out which usernames are real, and usernames here are how people sign
+    in.
+
+    It does not say where the code went. "Sent to k***@gmail.com" tells
+    somebody who guessed a username which provider to go after.
+
+    It does not unlock the account. issue_reset clears the failure count
+    because a manager has identified the person standing in front of them.
+    Nobody has identified anybody here, so clearing it would turn this into a
+    way to reset the lockout on an account you are trying to break into.
+    """
+    generic = RequestResetOut(
+        message=(
+            "If that account exists and has a recovery email, a code is on its "
+            "way. It is good for "
+            f"{RESET_CODE_TTL_MINUTES} minutes."
+        ),
+        recovery_possible=bool(email_configured()),
+    )
+
+    username = body.username.strip().lower()
+    if not username:
+        return generic
+
+    # Throttled on the username, sharing the counter with signing in. Without
+    # this, the endpoint is a way to send somebody an unlimited number of
+    # emails, and a way to invalidate their real reset code repeatedly.
+    try:
+        check_not_locked(session, f"reset-request:{username}")
+    except HTTPException:
+        return generic
+
+    record_failure(session, f"reset-request:{username}", request)
+
+    user = session.exec(
+        select(UserAccount).where(UserAccount.username == username)
+    ).first()
+    if not user or not user.active or not user.email:
+        return generic
+
+    # Any previous unused code stops working the moment a new one is issued,
+    # exactly as when a manager issues one.
+    for old in session.exec(
+        select(PasswordReset).where(
+            PasswordReset.user_id == user.id,
+            PasswordReset.used == False,  # noqa: E712
+        )
+    ).all():
+        old.used = True
+        session.add(old)
+
+    code = _generate_code()
+    session.add(PasswordReset(
+        user_id=user.id,
+        code_hash=hash_password(code),
+        issued_by_user_id=user.id,      # they asked for it themselves
+        expires_at=(_now() + timedelta(minutes=RESET_CODE_TTL_MINUTES)).isoformat(),
+    ))
+    # Audited into the workspace they belong to. There is no business context
+    # on this request — they are not signed in, which is the point — and
+    # AuditEvent.business_id is not nullable, so it is taken from their first
+    # active membership. Somebody with no workspace at all leaves no audit row,
+    # because there is no log for it to belong to.
+    membership = session.exec(
+        select(Membership).where(
+            Membership.user_id == user.id,
+            Membership.active == True,  # noqa: E712
+        )
+    ).first()
+    if membership:
+        session.add(AuditEvent(
+            business_id=membership.business_id,
+            user_id=user.id,
+            action="password.reset.self_requested",
+            entity_type="user_account",
+            entity_id=user.id,
+            detail_json='{"channel": "email"}',
+        ))
+    session.commit()
+
+    try:
+        from backend.app import email_service
+
+        email_service.password_reset_code(session, user, code, RESET_CODE_TTL_MINUTES)
+    except Exception:
+        # The code is already issued and the audit row already written. A
+        # delivery failure is logged and chased through email_log; it is not
+        # reported back, because the response must not differ between "no such
+        # account" and "we could not send it".
+        log.exception("Self-service reset code for %r could not be emailed", username)
+
+    return generic
 
 
 @router.post("/reset/redeem")

@@ -370,6 +370,12 @@ PUBLIC_PATHS = {
     # they are here. The code itself is the credential, and this endpoint is
     # throttled exactly as hard as /auth/login.
     "/security/reset/redeem",
+    # And the same for asking for one. A locked-out owner cannot authenticate
+    # to request the thing that would let them authenticate, so requiring a
+    # token here makes the feature exactly as useful as not having it. It
+    # answers identically whatever it is given, issues nothing without a
+    # recovery email on the account, and is throttled on the username.
+    "/security/reset/request",
     # The sign-in page needs to know whether to render a Google button before
     # anyone has signed in. Returns only the public client id.
     "/auth/google/config",
@@ -1343,6 +1349,26 @@ def health_check(response: Response):
         checks["database"] = "ok"
     except Exception as exc:
         checks["database"] = f"{type(exc).__name__}: {exc}"[:200]
+
+    # Whether this deployment can send email at all.
+    #
+    # Worth a line on a health check because of what silently stops working
+    # without it: a locked-out owner asks for a reset code, is told one is on
+    # its way, and waits for something that was never sent. The endpoint itself
+    # cannot say so — it answers identically to everything, by design — so this
+    # is the only place the answer can live.
+    from backend.app.email_service import configured as email_configured
+
+    checks["email"] = {
+        "configured": bool(email_configured()),
+        "password_reset_by_email": bool(email_configured()),
+    }
+    if not email_configured():
+        checks["email"]["warning"] = (
+            "RESEND_API_KEY and EMAIL_FROM are not both set. Nothing can be "
+            "emailed, which means a locked-out owner cannot reset their own "
+            "password and has to be let back in by another owner."
+        )
         healthy = False
 
     if startup_errors:

@@ -73,6 +73,7 @@ export default function AuthPage({ needsSetup, onAuthenticated }) {
   const [confirm, setConfirm] = useState("");
   const [code, setCode] = useState("");
   const [businessName, setBusinessName] = useState("");
+  const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -87,6 +88,7 @@ export default function AuthPage({ needsSetup, onAuthenticated }) {
     setConfirm("");
     setCode("");
     setBusinessName("");
+    setEmail("");
   }
 
   async function submit(event) {
@@ -101,6 +103,25 @@ export default function AuthPage({ needsSetup, onAuthenticated }) {
 
     setBusy(true);
     try {
+      if (mode === "forgot") {
+        const answer = await api("/security/reset/request", {
+          method: "POST",
+          body: JSON.stringify({ username: username.trim() }),
+        });
+        reset("recover");
+        // The same sentence whether or not the account exists — the endpoint
+        // deliberately cannot tell us, so neither can this screen. Saying
+        // "check your email" to somebody who typed the wrong username is far
+        // better than confirming which usernames are real.
+        setNotice(
+          answer.recovery_possible
+            ? `${answer.message} Enter it below once it arrives.`
+            : "This workspace cannot send email yet, so a code could not be sent. "
+              + "Ask an owner to issue you one from Settings.",
+        );
+        return;
+      }
+
       if (mode === "recover") {
         await api("/security/reset/redeem", {
           method: "POST",
@@ -122,7 +143,12 @@ export default function AuthPage({ needsSetup, onAuthenticated }) {
       }[mode];
       const body =
         mode === "signup"
-          ? { username: username.trim(), password, business_name: businessName.trim() }
+          ? {
+              username: username.trim(),
+              password,
+              business_name: businessName.trim(),
+              email: email.trim(),
+            }
           : { username: username.trim(), password };
 
       const result = await api(endpoint, { method: "POST", body: JSON.stringify(body) });
@@ -157,17 +183,24 @@ export default function AuthPage({ needsSetup, onAuthenticated }) {
     signup: "Start your workspace",
     signin: "Welcome back",
     recover: "Reset your password",
+    forgot: "Get back into your account",
   }[mode];
 
   const blurb = {
     setup: "This first account controls employees, schedules, and permissions.",
     signup: "One account, one bill, everything in one place. Takes about a minute.",
     signin: "Sign in with the username and password your manager created.",
-    recover: "Enter the code your manager gave you, then choose a new password.",
+    recover: "Enter the code you were sent, then choose a new password.",
+    forgot: "We will email a code to the address on your account.",
   }[mode];
 
   const canSubmit =
-    mode === "recover"
+    mode === "forgot"
+      // Asking for a code needs nothing but a username. Requiring a password
+      // to prove you have forgotten your password is a shape this screen had
+      // for about ten minutes.
+      ? Boolean(username.trim())
+      : mode === "recover"
       ? username.trim() && code.trim() && password && confirm
       : username.trim() && password &&
         (mode === "signin" || confirm);
@@ -234,6 +267,30 @@ export default function AuthPage({ needsSetup, onAuthenticated }) {
             />
           </label>
 
+          {(mode === "signup" || mode === "setup") && (
+            <label className="field-label">
+              Email <span className="field-optional">for getting back in</span>
+              <input
+                type="email"
+                autoComplete="email"
+                placeholder="you@yourshop.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              <small className="field-hint">
+                The only way to reset your own password. Without it you would
+                need another owner to let you back in.
+              </small>
+            </label>
+          )}
+
+          {mode === "forgot" && (
+            <p className="auth-explainer">
+              Enter your username and we will email a reset code to the address
+              on the account. It is good for a few minutes.
+            </p>
+          )}
+
           {mode === "recover" && (
             <label className="field-label">
               Reset code
@@ -246,6 +303,7 @@ export default function AuthPage({ needsSetup, onAuthenticated }) {
             </label>
           )}
 
+          {mode !== "forgot" && (
           <label className="field-label">
             {mode === "signin" ? "Password" : "New password"}
             <input
@@ -256,6 +314,7 @@ export default function AuthPage({ needsSetup, onAuthenticated }) {
               onChange={(e) => setPassword(e.target.value)}
             />
           </label>
+          )}
 
           {(mode === "setup" || mode === "signup" || mode === "recover") && (
             <label className="field-label">
@@ -277,6 +336,8 @@ export default function AuthPage({ needsSetup, onAuthenticated }) {
               ? "Create workspace"
               : mode === "recover"
               ? "Set new password"
+              : mode === "forgot"
+              ? "Email me a code"
               : "Sign in"}
           </button>
 
@@ -285,8 +346,11 @@ export default function AuthPage({ needsSetup, onAuthenticated }) {
               <button type="button" className="auth-link" onClick={() => reset("signup")}>
                 New here? Start a workspace
               </button>
+              <button type="button" className="auth-link" onClick={() => reset("forgot")}>
+                Forgot your password?
+              </button>
               <button type="button" className="auth-link" onClick={() => reset("recover")}>
-                Locked out? Use a reset code
+                Already have a reset code?
               </button>
               <GoogleButton onCredential={googleSignIn} onError={setError} />
             </>

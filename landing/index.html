@@ -349,6 +349,25 @@
     background:color-mix(in srgb, var(--amber) 14%, transparent);
     border-color:color-mix(in srgb, var(--amber) 46%, transparent);
   }
+
+  /* ---- 04 Your size ---- */
+  .sizer{ display:grid; grid-template-columns:1fr minmax(260px,340px); gap:2.2rem; align-items:start; }
+  .sz-controls{ display:grid; gap:1.6rem; }
+  .sz-field label{ display:flex; justify-content:space-between; align-items:baseline;
+    font-size:.82rem; letter-spacing:.02em; color:var(--ink-2); margin-bottom:.6rem; }
+  .sz-field output{ font-variant-numeric:tabular-nums; color:var(--amber); font-weight:600; }
+  .sz-types{ display:flex; flex-wrap:wrap; gap:.5rem; }
+  .sz-type{ padding:.55rem 1rem; border-radius:999px; font:inherit; font-size:.86rem; cursor:pointer;
+    background:transparent; color:var(--ink-2);
+    border:1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+    transition:border-color .2s var(--ease), background .2s var(--ease), color .2s var(--ease); }
+  .sz-type:hover{ color:var(--ink); border-color:color-mix(in srgb, var(--ink) 28%, transparent); }
+  .sz-type[aria-pressed="true"]{ color:var(--amber);
+    border-color:color-mix(in srgb, var(--amber) 48%, transparent);
+    background:color-mix(in srgb, var(--amber) 10%, transparent); }
+  .sz-field input[type=range]{ width:100%; accent-color:var(--amber); }
+  .sz-src{ opacity:.72; }
+  @media (max-width:860px){ .sizer{ grid-template-columns:1fr; } }
 </style>
 
 <div class="atmos" aria-hidden="true"></div>
@@ -361,6 +380,7 @@
     <nav class="navlinks">
       <a href="#cost">The cost</a>
       <a href="#build">Modules</a>
+      <a href="#size">Your size</a>
       <a href="#ask">Ask it anything</a>
       <a href="#start">Get started</a>
       <a class="navcta" href="/app">Sign in</a>
@@ -485,10 +505,58 @@
     </div>
   </section>
 
+
+  <section class="band" id="size">
+    <div class="wrap">
+      <div class="track">
+        <div class="idx">04<span>Your size</span></div>
+        <div>
+          <div class="band-head">
+            <h2>The bill they send you grows. This one doesn't.</h2>
+            <p class="prose">Most of what you already pay for is priced per location &mdash; 7shifts at $39.99 a site, Square Appointments at $49, Homebase at $24.95. Open a second room and the invoice doubles. Here it does not move: every module covers every location and every person on it.</p>
+          </div>
+
+          <div class="sizer">
+            <div class="sz-controls">
+              <div class="sz-field">
+                <label id="szTypeLabel">What you run</label>
+                <div class="sz-types" role="group" aria-labelledby="szTypeLabel" id="szTypes"></div>
+              </div>
+
+              <div class="sz-field">
+                <label for="szSites">Locations <output id="szSitesOut">1</output></label>
+                <input id="szSites" type="range" min="1" max="8" step="1" value="1">
+              </div>
+
+              <div class="sz-field">
+                <label for="szPeople">People on the books <output id="szPeopleOut">12</output></label>
+                <input id="szPeople" type="range" min="1" max="120" step="1" value="12">
+              </div>
+            </div>
+
+            <aside class="tally">
+              <div class="t-row">
+                <span class="t-lab">Bought separately</span>
+                <span class="t-val bad" id="szThem">$0</span>
+              </div>
+              <div class="t-row">
+                <span class="t-lab">Business-EOS</span>
+                <span class="t-val good" id="szUs">$0</span>
+              </div>
+              <p class="saving" id="szSaving"></p>
+              <p class="t-note" id="szDetail"></p>
+              <p class="t-note sz-src">Per-location figures are published 2026 prices for 7shifts, Square Appointments and Homebase. Flat figures are the same ones used in the stack above.</p>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section class="band" id="ask">
     <div class="wrap">
       <div class="track">
-        <div class="idx">04<span>Ask it</span></div>
+        <div class="idx">05<span>Ask it</span></div>
         <div>
           <div class="band-head">
             <h2>Ask your business a question. Get an answer from the books.</h2>
@@ -524,7 +592,7 @@
   <section class="close-band" id="start">
     <div class="wrap">
       <div class="track">
-        <div class="idx">05<span>Start</span></div>
+        <div class="idx">06<span>Start</span></div>
         <div>
           <h2>One system. One number that's actually right.</h2>
           <p class="prose">Bring one location on first. Keep whatever still works, replace what doesn't, and watch a real week run through it before you move anything else.</p>
@@ -551,6 +619,12 @@
 </footer>
 
 <script>
+  /* Shared by every section on this page. One declaration, because the
+     module list on this page had already drifted from the product once and
+     a second copy of the price is the same mistake with bigger stakes. */
+  var FIRST = 29, EACH = 10;
+  function money(n){ return '$' + Math.round(n).toLocaleString('en-US'); }
+
   (function(){
     var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -583,7 +657,8 @@
     stage.addEventListener('touchstart', function(){ peek(!stage.classList.contains('peek')); }, {passive:true});
 
     /* pricing: $29 first module, $10 each after */
-    var FIRST = 29, EACH = 10;
+    /* FIRST, EACH and money() are declared above this IIFE so section 04
+       shares them rather than restating the price. */
     function priceFor(n){ return n === 0 ? 0 : FIRST + (n - 1) * EACH; }
 
     /* Generated from backend/app/modules_registry.py. This list used to
@@ -630,7 +705,6 @@
     });
 
     var shown = { stitched:184, eos:59 };
-    function money(n){ return '$' + Math.round(n).toLocaleString('en-US'); }
 
     function tween(key, el, target){
       var from = shown[key], start = null, dur = 440;
@@ -677,4 +751,110 @@
       document.querySelectorAll('.reveal').forEach(function(el){ el.classList.add('in'); });
     }
   })();
+
+    /* ---- 04 Your size -------------------------------------------------- */
+    /* Unit prices come from backend/app/modules_registry.py and
+       tests/test_landing.py fails if they stop matching.
+
+       `shape` is the only thing added to that data: whether a category is sold
+       flat or per location. Scheduling and bookings are the two that multiply,
+       which is the whole point of this section. */
+    var SIZE_MODULES = [
+      /* Scheduling is sold both ways: 7shifts at $39.99 a location, Deputy at
+         $5 a head. A real buyer takes whichever is cheaper at their size, so
+         this does too — `seat` is that alternative, not an extra charge. */
+      { key:'scheduling', name:'Scheduling', unit:40, shape:'location', seat:5 },
+      { key:'booking', name:'Bookings', unit:49, shape:'location' },
+      { key:'inventory', name:'Inventory', unit:79, shape:'flat' },
+      { key:'accounting', name:'Bookkeeping', unit:70, shape:'flat' },
+      { key:'sales', name:'Sales & invoices', unit:30, shape:'flat' },
+      { key:'purchasing', name:'Bills & purchasing', unit:25, shape:'flat' },
+      { key:'team', name:'Customers & vendors', unit:35, shape:'flat' },
+      { key:'tasks', name:'Tasks', unit:15, shape:'flat' },
+      { key:'reports', name:'Reports', unit:49, shape:'flat' },
+      { key:'assistant', name:'Assistant', unit:0, shape:'flat' }
+    ];
+
+    /* Deliberately not "everything". A calculator that recommends the whole
+       catalogue whatever you pick is a price list with a slider on it. */
+    var PROFILES = [
+      { name:'Restaurant or cafe', keys:['scheduling','inventory','accounting','sales','purchasing','reports'] },
+      { name:'Retail or warehouse', keys:['inventory','accounting','sales','purchasing','team','reports'] },
+      { name:'Salon or studio', keys:['booking','scheduling','team','sales','accounting'] },
+      { name:'Trades or services', keys:['scheduling','sales','purchasing','team','tasks','accounting'] }
+    ];
+
+    (function(){
+      var types = document.getElementById('szTypes');
+      if (!types) return;
+      var sites = document.getElementById('szSites');
+      var people = document.getElementById('szPeople');
+      var picked = 0;
+
+      PROFILES.forEach(function(p, i){
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'sz-type';
+        b.textContent = p.name;
+        b.setAttribute('aria-pressed', String(i === 0));
+        b.addEventListener('click', function(){
+          picked = i;
+          Array.prototype.forEach.call(types.children, function(el, j){
+            el.setAttribute('aria-pressed', String(j === i));
+          });
+          draw();
+        });
+        types.appendChild(b);
+      });
+
+      function draw(){
+        var profile = PROFILES[picked];
+        var n = Math.max(1, parseInt(sites.value, 10));
+        var heads = Math.max(1, parseInt(people.value, 10));
+        document.getElementById('szSitesOut').textContent = n;
+        document.getElementById('szPeopleOut').textContent = heads;
+
+        var them = 0, multiplied = [], perSeat = [];
+        profile.keys.forEach(function(k){
+          var m = SIZE_MODULES.filter(function(x){ return x.key === k; })[0];
+          if (!m) return;
+          if (m.shape === 'location') {
+            var perSite = m.unit * n;
+            var perHead = m.seat ? m.seat * heads : Infinity;
+            them += Math.min(perSite, perHead);
+            if (perHead < perSite) { perSeat.push(m.name); }
+            else if (n > 1) { multiplied.push(m.name); }
+          } else { them += m.unit; }
+        });
+
+        var count = profile.keys.length;
+        var us = FIRST + (count - 1) * EACH;
+
+        document.getElementById('szThem').textContent = money(them);
+        document.getElementById('szUs').textContent = money(us);
+
+        var keep = them - us;
+        document.getElementById('szSaving').innerHTML =
+          'You keep <strong>' + money(keep) + '</strong> a month &mdash; <strong>' +
+          money(keep * 12) + '</strong> a year.';
+
+        var detail = count + ' modules, ' + n + (n === 1 ? ' location' : ' locations') +
+          ', ' + heads + (heads === 1 ? ' person' : ' people') + '. ';
+        if (multiplied.length) {
+          detail += multiplied.join(' and ') + (multiplied.length > 1 ? ' are' : ' is') +
+            ' billed per location everywhere else, so ' + n + ' sites cost ' + n +
+            ' times as much. Here they cost once.';
+        } else if (perSeat.length) {
+          detail += 'At this size you would buy ' + perSeat.join(' and ').toLowerCase() +
+            ' per head rather than per site. That bill grows with every hire. This one does not.';
+        } else {
+          detail += 'Adding people or locations does not change this number.';
+        }
+        document.getElementById('szDetail').textContent = detail;
+      }
+
+      sites.addEventListener('input', draw);
+      people.addEventListener('input', draw);
+      draw();
+    })();
 </script>

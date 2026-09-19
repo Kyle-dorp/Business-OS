@@ -257,3 +257,91 @@ def test_signing_in_still_works():
     """A route being public must not mean it stopped being guarded elsewhere."""
     with TestClient(app) as client:
         assert client.get("/billing/catalogue").status_code == 401
+
+
+# ===========================================================================
+# Section 04 — what it costs at your size
+# ===========================================================================
+#
+# The calculator's whole claim is that the stitched stack grows with locations
+# and this one does not. That claim is only worth making if its numbers are the
+# product's numbers, so they are checked against the registry rather than
+# maintained beside it — the same fix the module list needed.
+#
+# `shape` and `seat` are the only things added to the registry's data: whether
+# a category is sold per location, and whether a per-head alternative exists.
+# Scheduling is sold both ways (7shifts $39.99 a site, Deputy $5 a head) and
+# the calculator takes whichever is cheaper, because a real buyer would.
+
+def _size_modules() -> list[tuple[str, int]]:
+    page = _page()
+    start = page.index("var SIZE_MODULES = [")
+    block = page[start : page.index("];", start)]
+    return [
+        (m.group(1), int(m.group(2)))
+        for m in re.finditer(r"key:'([\w-]+)'[^}]*?unit:(\d+)", block)
+    ]
+
+
+def _profiles() -> dict[str, list[str]]:
+    page = _page()
+    start = page.index("var PROFILES = [")
+    block = page[start : page.index("];", start)]
+    return {
+        m.group(1): re.findall(r"'([\w-]+)'", m.group(2))
+        for m in re.finditer(r"name:'([^']+)'\s*,\s*keys:\[([^\]]*)\]", block)
+    }
+
+
+def test_the_calculator_prices_every_module_the_registry_has():
+    assert sorted(k for k, _ in _size_modules()) == sorted(m.key for m in BILLABLE)
+
+
+def test_its_unit_prices_are_the_registry_prices():
+    """
+    Two copies of a price drift. This page has already done it once with the
+    module list, which is the reason this assertion exists rather than a
+    comment asking somebody to remember.
+    """
+    registry = {m.key: m.market_price for m in BILLABLE}
+    for key, unit in _size_modules():
+        assert unit == registry[key], f"{key} priced at ${unit}, registry says ${registry[key]}"
+
+
+def test_every_profile_recommends_only_real_modules():
+    real = {m.key for m in BILLABLE}
+    for name, keys in _profiles().items():
+        unknown = [k for k in keys if k not in real]
+        assert unknown == [], f"{name} recommends {unknown}, which do not exist"
+
+
+def test_no_profile_recommends_the_whole_catalogue():
+    """
+    A calculator that returns everything whatever you pick is a price list with
+    a slider on it. Each profile should be a considered subset.
+    """
+    profiles = _profiles()
+    assert profiles, "the profiles are gone"
+    for name, keys in profiles.items():
+        assert 3 <= len(keys) < len(BILLABLE), f"{name} recommends {len(keys)} of {len(BILLABLE)}"
+
+
+def test_the_price_is_declared_once_on_the_whole_page():
+    """
+    FIRST and EACH started inside one IIFE, so the second section could not see
+    them and the obvious fix was to declare them again. Two declarations of a
+    price on a page that sells things is how the module list rotted.
+    """
+    page = _page()
+    assert len(re.findall(r"\bvar FIRST\s*=", page)) == 1
+    assert len(re.findall(r"\bfunction money\s*\(", page)) == 1
+
+
+def test_the_per_location_claim_names_the_products_it_is_about():
+    """
+    "Most things are priced per location" is an assertion about other people's
+    businesses. It has to say whose.
+    """
+    page = _page()
+    for vendor in ("7shifts", "Square Appointments", "Homebase"):
+        assert vendor in page, f"{vendor} is priced per location but never named"

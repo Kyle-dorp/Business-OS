@@ -94,6 +94,25 @@ def _api() -> anthropic.Anthropic:
 WRITE_ROLES = {"owner", "admin", "manager"}
 FINANCE_ROLES = {"owner", "admin", "accountant"}
 
+# Who may ask the assistant about the whole business.
+#
+# The context this endpoint builds is the company: every invoice, bill, expense
+# and task, plus every colleague's hours and pay band. On a forty-person
+# restaurant that is forty-six thousand tokens of the owner's finances, handed
+# to a model that is extremely good at answering questions about things in its
+# context.
+#
+# Until now the only thing keeping an employee out was the allowlist in
+# main.authentication_middleware — this endpoint itself accepted anybody with a
+# membership, of any role. One line, in a different file, protecting the
+# company's books.
+#
+# That line has to be widened to give employees an assistant at all, which is a
+# planned feature. So the endpoint checks for itself, and an employee assistant
+# has to arrive with a context built for an employee rather than by deleting a
+# condition somewhere else.
+BUSINESS_CONTEXT_ROLES = {"owner", "admin", "manager", "accountant"}
+
 
 def _membership(session: Session, business_id: int, user_id: int) -> Optional[Membership]:
     return session.exec(
@@ -653,6 +672,12 @@ def agent_chat(
     membership = _membership(session, bid, user.id)
     if not membership:
         raise HTTPException(403, "You don't have access to this workspace.")
+    if membership.role not in BUSINESS_CONTEXT_ROLES:
+        raise HTTPException(
+            403,
+            "This assistant answers questions about the whole business, so it "
+            "is limited to owners, admins, managers and accountants.",
+        )
 
     _check_budget(session, bid)
 

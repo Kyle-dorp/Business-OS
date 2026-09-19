@@ -77,6 +77,23 @@ export default function AssistantBubble({ page, pageLabel, weekStart, scheduleId
     setError("");
   }, [scheduling]);
 
+  // Opening the bubble starts a new one.
+  //
+  // It is the quick-question surface: something occurs to somebody mid-task,
+  // they ask it, they carry on. Resuming whatever was said two days ago would
+  // mean every quick question arriving on top of a transcript nobody
+  // remembers — and paying to re-send it.
+  //
+  // The conversation is not lost. It is stored like any other and appears in
+  // the library on the Ask page, which is where somebody goes when they do
+  // want to pick a thread back up.
+  useEffect(() => {
+    if (!open) return;
+    setTurns([]);
+    setThreadId(null);
+    setError("");
+  }, [open]);
+
   useEffect(() => {
     if (open) inputRef.current?.focus();
   }, [open]);

@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { ErrorState } from "../components/States";
+import ChatLibrary from "../components/ChatLibrary";
+import CreditMeter from "../components/CreditMeter";
 
 /**
  * The conversational data agent.
@@ -17,25 +19,6 @@ const STARTERS = [
   "Is anything running low?",
   "Who's working this week?",
 ];
-
-function Usage({ usage }) {
-  if (!usage) return null;
-  const pct = Math.min(usage.percent_used ?? 0, 100);
-  const over = (usage.percent_used ?? 0) > 100;
-
-  return (
-    <div className="agent-usage" title={`${usage.tokens_used?.toLocaleString()} of ${usage.included_allowance?.toLocaleString()} tokens this month`}>
-      <div className="agent-usage-bar">
-        <span style={{ width: `${pct}%`, background: over ? "var(--rose)" : "var(--accent)" }} />
-      </div>
-      <small>
-        {over
-          ? `Over allowance — billing at ${((usage.overage_rate_per_1k_cents ?? 2) / 100).toFixed(2)}/1k`
-          : `${pct}% of this month's assistant allowance`}
-      </small>
-    </div>
-  );
-}
 
 function Proposal({ proposal, onResolved }) {
   const [state, setState] = useState("pending");
@@ -97,13 +80,35 @@ export default function AgentPage() {
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [threadId, setThreadId] = useState(null);
-  const [usage, setUsage] = useState(null);
   const [error, setError] = useState("");
+  // Bumped after every exchange so the meter and the library reload without
+  // either of them needing to know what the other did.
+  const [changed, setChanged] = useState(0);
   const endRef = useRef(null);
   const inputRef = useRef(null);
 
-  useEffect(() => {
-    api("/agent/usage").then(setUsage).catch(() => {});
+  /** Open a stored conversation. */
+  const openThread = useCallback(async (id) => {
+    setError("");
+    try {
+      const thread = await api(`/threads/${id}`);
+      setThreadId(String(thread.id));
+      setTurns(
+        thread.messages
+          .filter((m) => ["user", "assistant", "summary"].includes(m.role))
+          .map((m) => ({ role: m.role, content: m.content })),
+      );
+    } catch (problem) {
+      setError(problem?.message || "That conversation could not be opened.");
+    }
+  }, []);
+
+  /** Start fresh. The thread is created on the server by the first message. */
+  const newChat = useCallback(() => {
+    setThreadId(null);
+    setTurns([]);
+    setDraft("");
+    setError("");
   }, []);
 
   useEffect(() => {
@@ -120,22 +125,17 @@ export default function AgentPage() {
     setTurns((prev) => [...prev, { role: "user", content: message }]);
 
     try {
-      // Only plain text goes back as history — proposal cards are UI state and
-      // resending them would confuse the model about what it already proposed.
-      const history = turns
-        .filter((t) => t.role === "user" || t.role === "assistant")
-        .map((t) => ({ role: t.role, content: t.content }));
-
+      // No history is sent any more. The server reads the transcript from the
+      // thread, which is what lets a conversation survive closing the tab and
+      // lets long ones be compacted — neither is possible while the browser is
+      // the only place the conversation exists.
       const reply = await api("/agent/chat", {
         method: "POST",
-        body: JSON.stringify({ message, thread_id: threadId, history }),
+        body: JSON.stringify({ message, thread_id: threadId }),
       });
 
       setThreadId(reply.thread_id);
-      if (reply.usage) {
-        setUsage((u) => ({ ...(u || {}), ...reply.usage, percent_used:
-          Math.round((reply.usage.tokens_this_month / reply.usage.included_allowance) * 100) }));
-      }
+      setChanged((n) => n + 1);
       setTurns((prev) => [
         ...prev,
         {
@@ -170,9 +170,19 @@ export default function AgentPage() {
           <h1>Ask your business anything</h1>
           <p>Answers come from your actual records. Changes wait for your approval.</p>
         </div>
-        <Usage usage={usage} />
+        <CreditMeter refreshKey={changed} />
       </div>
 
+      <div className="agent-layout">
+      <ChatLibrary
+        surface="business"
+        activeId={threadId ? Number(threadId) : null}
+        onOpen={openThread}
+        onNew={newChat}
+        refreshKey={changed}
+      />
+
+      <div className="agent-main">
       <section className="card agent-thread">
         {turns.length === 0 && (
           <div className="agent-empty">
@@ -187,9 +197,15 @@ export default function AgentPage() {
 
         {turns.map((turn, i) => (
           <div key={i} className={`agent-turn is-${turn.role}`}>
+            {turn.role === "summary" ? (
+              <p className="agent-summary">
+                <strong>Earlier in this conversation:</strong> {turn.content}
+              </p>
+            ) : (
             <div className="agent-bubble">
               {turn.content.split("\n").filter(Boolean).map((line, j) => <p key={j}>{line}</p>)}
             </div>
+            )}
 
             {turn.proposals?.map((p) => (
               <Proposal key={p.id} proposal={p} />
@@ -233,6 +249,8 @@ export default function AgentPage() {
         <button className="primary-btn" onClick={() => send()} disabled={busy || !draft.trim()}>
           {busy ? "Thinking…" : "Ask"}
         </button>
+      </div>
+      </div>
       </div>
     </div>
   );

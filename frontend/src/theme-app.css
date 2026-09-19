@@ -511,3 +511,233 @@
 @media (max-width: 720px) {
   .module-tag { display: none; }
 }
+
+/* ============================================================================
+   The assistant page: a library beside the conversation, a meter above it.
+   ========================================================================= */
+
+.agent-layout {
+  display: grid;
+  grid-template-columns: minmax(200px, 260px) 1fr;
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.agent-main { min-width: 0; }
+
+@media (max-width: 900px) {
+  .agent-layout { grid-template-columns: 1fr; }
+  /* The conversation first on a phone. The library is how you get back to one,
+     not how you have one. */
+  .chat-library { order: 2; }
+  .agent-main { order: 1; }
+}
+
+/* ---------------------------------------------------------------- library */
+
+.chat-library {
+  position: sticky;
+  top: var(--space-5);
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-3);
+  background: var(--glass);
+}
+
+.chat-library-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.chat-library-empty { margin: 0; color: var(--faint); font-size: var(--text-sm); line-height: 1.5; }
+
+.chat-library-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-1);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.chat-library-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  border-radius: var(--radius-2);
+  transition: background 160ms var(--ease);
+}
+
+.chat-library-item:hover { background: var(--glass-2); }
+
+.chat-library-item.is-open {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.chat-library-open {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+/* One line each. A title that wraps to three lines turns a list of twenty
+   conversations into a page nobody scrolls. */
+.chat-library-open strong,
+.chat-library-open small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-library-open strong { font-size: var(--text-sm); font-weight: 500; color: var(--ink-2); }
+.chat-library-item.is-open .chat-library-open strong { color: var(--ink); }
+.chat-library-open small { font-size: var(--text-xs); color: var(--faint); }
+
+/* Hidden until the row is hovered or something in it has focus — twenty rows
+   each showing two icons is forty things competing with the titles. */
+.chat-library-actions { display: flex; gap: var(--space-1); opacity: 0; transition: opacity 160ms var(--ease); }
+.chat-library-item:hover .chat-library-actions,
+.chat-library-item:focus-within .chat-library-actions { opacity: 1; }
+
+.chat-library-action {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: var(--radius-1);
+  background: transparent;
+  color: var(--faint);
+  cursor: pointer;
+  font-size: var(--text-sm);
+}
+
+.chat-library-action:hover { background: var(--glass-2); color: var(--ink); }
+.chat-rename { font-size: var(--text-sm); }
+
+/* ----------------------------------------------------------------- meter */
+
+.credit-meter { position: relative; }
+
+.credit-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--glass);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: border-color 180ms var(--ease), background 180ms var(--ease);
+}
+
+.credit-trigger:hover { border-color: color-mix(in srgb, var(--accent) 34%, transparent); }
+
+.credit-dial {
+  width: 34px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--ink) 12%, transparent);
+  overflow: hidden;
+}
+
+.credit-dial-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--mint);
+  transition: width 400ms var(--ease), background 400ms var(--ease);
+}
+
+.credit-trigger.is-low .credit-dial-fill { background: var(--accent); }
+.credit-trigger.is-empty .credit-dial-fill { background: var(--rose); }
+.credit-trigger.is-empty { border-color: color-mix(in srgb, var(--rose) 40%, transparent); }
+
+.credit-left { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--ink); }
+.credit-word { color: var(--faint); font-size: var(--text-xs); }
+
+.credit-panel {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: 60;
+  width: 280px;
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-3);
+  background: color-mix(in srgb, var(--void-lift) 96%, transparent);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--shadow);
+}
+
+.credit-panel-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.credit-rows { margin: 0 0 var(--space-3); display: grid; gap: var(--space-2); }
+.credit-rows > div { display: flex; justify-content: space-between; gap: var(--space-3); }
+.credit-rows dt { color: var(--muted); font-size: var(--text-sm); }
+.credit-rows dd { margin: 0; font-variant-numeric: tabular-nums; color: var(--ink-2); font-size: var(--text-sm); }
+
+.credit-rows-total { padding-top: var(--space-2); border-top: 1px solid var(--line-soft); }
+.credit-rows-total dt, .credit-rows-total dd { color: var(--ink); font-weight: 600; }
+
+.credit-rows dd.is-low { color: var(--accent); }
+.credit-rows dd.is-empty { color: var(--rose); }
+
+.credit-yours, .credit-note {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--faint);
+}
+
+.credit-breakdown { margin: var(--space-3) 0; }
+.credit-line {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-1) 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+.credit-line span:last-child { font-variant-numeric: tabular-nums; color: var(--ink-2); }
+
+.credit-note { margin-top: var(--space-3); }
+
+/* --------------------------------------------------------------- summary */
+
+/* A compaction summary is not a message somebody sent. It reads as a note in
+   the margin, because that is what it is. */
+.agent-summary {
+  margin: var(--space-4) 0;
+  padding: var(--space-3) var(--space-4);
+  border-left: 2px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  background: var(--glass);
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
+.agent-summary strong { color: var(--ink-2); font-weight: 600; }

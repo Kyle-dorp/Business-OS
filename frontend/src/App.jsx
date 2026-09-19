@@ -101,13 +101,15 @@ const MANAGER_TABS = [
     { id: "notifications", label: "Notifications", icon: "notifications", module: "notifications" },
   ]},
 
-  { id: "ask", label: "Ask", icon: "ask" },
-
   { group: "Settings", items: [
     { id: "settings", label: "Workspace", icon: "settings" },
     { id: "billing", label: "Plan & billing", icon: "billing" },
     { id: "security", label: "Security", icon: "security" },
   ]},
+
+  // Last, and outside every group, because it is not a category of work — it
+  // is the thing you ask about all of them. Same reason Today is first.
+  { id: "ask", label: "Ask", icon: "ask" },
 ];
 
 /** Every leaf, flattened — for id lookups, which do not care about grouping. */

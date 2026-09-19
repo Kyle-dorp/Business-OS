@@ -106,11 +106,11 @@
 
 .eos-panel-head {
   flex: none;
-  padding: 1.5rem 1.5rem 1.1rem;
+  padding: var(--space-5) var(--space-5) var(--space-4);
   border-bottom: 1px solid var(--line-soft);
 }
 .eos-panel-head h2 {
-  margin: 0.45rem 0 0.4rem;
+  margin: var(--space-2) 0 var(--space-2);
   font-size: 1.28rem;
   letter-spacing: -0.02em;
   color: var(--ink);
@@ -126,15 +126,15 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 1.2rem 1.5rem;
+  padding: var(--space-4) var(--space-5);
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: var(--space-3);
 }
 
 /* --------------------------------------------------------------- starters */
 
-.eos-panel-starters { display: flex; flex-direction: column; gap: 0.5rem; }
+.eos-panel-starters { display: flex; flex-direction: column; gap: var(--space-2); }
 .eos-panel-starters > span {
   color: var(--faint);
   font-size: 0.72rem;
@@ -144,8 +144,8 @@
 
 .eos-starter {
   text-align: left;
-  padding: 0.7rem 0.9rem;
-  border-radius: 12px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-3);
   border: 1px solid var(--line-soft);
   background: var(--glass);
   color: var(--ink-2);
@@ -166,8 +166,8 @@
 
 .eos-turn {
   max-width: 92%;
-  padding: 0.75rem 0.95rem;
-  border-radius: 14px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-3);
   font-size: 0.92rem;
   line-height: 1.6;
   animation: eos-turn-in 0.32s var(--ease) both;
@@ -191,8 +191,8 @@
 }
 
 .eos-turn-note {
-  margin-top: 0.5rem !important;
-  padding-top: 0.5rem;
+  margin-top: var(--space-2) !important;
+  padding-top: var(--space-2);
   border-top: 1px solid var(--line-soft);
   color: var(--mint);
   font-size: 0.8rem;
@@ -205,7 +205,7 @@
 
 /* Thinking. Three dots rather than a spinner, because it reads as somebody
    composing a reply rather than as the software being busy. */
-.eos-turn.is-thinking { display: flex; gap: 0.3rem; padding: 0.95rem; }
+.eos-turn.is-thinking { display: flex; gap: var(--space-1); padding: var(--space-4); }
 .eos-turn.is-thinking span {
   width: 0.4rem; height: 0.4rem;
   border-radius: 50%;
@@ -221,16 +221,16 @@
   30%           { opacity: 1;    transform: translateY(-3px); }
 }
 
-.eos-panel-error { margin-top: 0.3rem; font-size: 0.85rem; }
+.eos-panel-error { margin-top: var(--space-1); font-size: 0.85rem; }
 
 /* ------------------------------------------------------------------- foot */
 
 .eos-panel-foot {
   flex: none;
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
   align-items: flex-end;
-  padding: 1rem 1.5rem 1.4rem;
+  padding: var(--space-4) var(--space-5) var(--space-5);
   border-top: 1px solid var(--line-soft);
 }
 
@@ -238,8 +238,8 @@
   flex: 1;
   min-height: 2.6rem;
   max-height: 8rem;
-  padding: 0.7rem 0.9rem;
-  border-radius: 12px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-3);
   border: 1px solid var(--line-soft);
   background: var(--glass);
   color: var(--ink);
@@ -253,7 +253,7 @@
   border-color: color-mix(in srgb, var(--accent) 40%, transparent);
   background: var(--glass-2);
 }
-.eos-panel-foot .primary-btn { flex: none; padding: 0.7rem 1.1rem; }
+.eos-panel-foot .primary-btn { flex: none; padding: var(--space-3) var(--space-4); }
 
 /* On a phone the panel is the screen, and the orb would sit on top of its own
    input, so it steps aside entirely while open. */

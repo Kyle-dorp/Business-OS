@@ -4,15 +4,15 @@
 
 .billing-page { max-width: 1180px; margin: 0 auto; }
 
-.billing-grace { margin-bottom: 1rem; }
-.billing-grace strong { display: block; margin-bottom: 0.25rem; color: var(--rose); }
+.billing-grace { margin-bottom: var(--space-4); }
+.billing-grace strong { display: block; margin-bottom: var(--space-1); color: var(--rose); }
 
 .billing-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.6fr) minmax(300px, 1fr);
-  gap: 1.25rem;
+  gap: var(--space-5);
   align-items: start;
-  margin-top: 1.5rem;
+  margin-top: var(--space-5);
 }
 @media (max-width: 900px) {
   .billing-layout { grid-template-columns: 1fr; }
@@ -25,7 +25,7 @@
 .billing-modules {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr));
-  gap: 0.7rem;
+  gap: var(--space-3);
   align-content: start;
 }
 @media (max-width: 640px) {
@@ -34,7 +34,7 @@
 
 .billing-included {
   grid-column: 1 / -1;
-  margin: 0.4rem 0 0;
+  margin: var(--space-2) 0 0;
   color: var(--faint);
   font-size: 0.82rem;
 }
@@ -42,11 +42,11 @@
 .billing-module {
   position: relative;
   display: flex;
-  gap: 0.85rem;
+  gap: var(--space-3);
   width: 100%;
   text-align: left;
-  padding: 1.15rem 1.25rem;
-  border-radius: 16px;
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-3);
   background: var(--glass);
   border: 1px solid var(--line-soft);
   cursor: pointer;
@@ -103,7 +103,7 @@
 .bm-check {
   flex: none;
   width: 1.35rem; height: 1.35rem;
-  margin-top: 0.15rem;
+  margin-top: var(--space-1);
   border-radius: 50%;
   border: 1px solid var(--line);
   display: grid; place-items: center;
@@ -118,12 +118,12 @@
 }
 .is-on.is-changed .bm-check { background: var(--mint); border-color: var(--mint); }
 
-.bm-body { display: flex; flex-direction: column; gap: 0.3rem; flex: 1; min-width: 0; }
+.bm-body { display: flex; flex-direction: column; gap: var(--space-1); flex: 1; min-width: 0; }
 
-.bm-top { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+.bm-top { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-4); }
 .bm-top strong { color: var(--ink); font-size: 1rem; font-weight: 600; }
 
-.bm-price { display: inline-flex; align-items: baseline; gap: 0.5rem; white-space: nowrap; }
+.bm-price { display: inline-flex; align-items: baseline; gap: var(--space-2); white-space: nowrap; }
 .bm-price s { color: var(--rose); opacity: 0.7; font-size: 0.85rem; }
 .bm-price em {
   font-style: normal; font-size: 0.76rem;
@@ -155,7 +155,7 @@
 .billing-module:focus-visible .bm-argument {
   grid-template-rows: 1fr;
   opacity: 1;
-  margin-top: 0.55rem;
+  margin-top: var(--space-2);
 }
 .bm-argument-inner {
   min-height: 0;
@@ -165,10 +165,10 @@
 
 .bm-elsewhere { display: block; color: var(--faint); font-size: 0.8rem; }
 .bm-elsewhere s { color: var(--rose); opacity: 0.8; }
-.bm-replaces { display: block; color: var(--faint); font-size: 0.78rem; margin-top: 0.15rem; }
+.bm-replaces { display: block; color: var(--faint); font-size: 0.78rem; margin-top: var(--space-1); }
 
 @media (prefers-reduced-motion: reduce) {
-  .bm-argument { grid-template-rows: 1fr; opacity: 1; margin-top: 0.55rem; }
+  .bm-argument { grid-template-rows: 1fr; opacity: 1; margin-top: var(--space-2); }
   .billing-module, .billing-module::before { transition: none; }
 }
 
@@ -177,22 +177,22 @@
 .billing-summary { position: sticky; top: 6rem; }
 @media (max-width: 900px) { .billing-summary { position: static; } }
 
-.bs-card { padding: 1.6rem 1.7rem; }
+.bs-card { padding: var(--space-5) var(--space-5); }
 
 .bs-status {
   display: inline-block;
-  padding: 0.3rem 0.75rem;
+  padding: var(--space-1) var(--space-3);
   border-radius: 999px;
   font-size: 0.72rem; letter-spacing: 0.12em;
   text-transform: uppercase; font-weight: 600;
-  margin-bottom: 1.3rem;
+  margin-bottom: var(--space-5);
 }
 .bs-status.tone-good { color: var(--mint); background: color-mix(in srgb, var(--mint) 10%, transparent); }
 .bs-status.tone-warn { color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
 .bs-status.tone-bad { color: var(--rose); background: color-mix(in srgb, var(--rose) 10%, transparent); }
 .bs-status.tone-neutral { color: var(--faint); background: color-mix(in srgb, var(--ink) 5%, transparent); }
 
-.bs-price { display: flex; align-items: baseline; gap: 0.4rem; }
+.bs-price { display: flex; align-items: baseline; gap: var(--space-2); }
 .bs-amount {
   font-family: "Fraunces", serif;
   font-size: clamp(2.4rem, 5vw, 3.2rem);
@@ -204,14 +204,14 @@
 }
 .bs-per { color: var(--muted); font-size: 0.95rem; }
 
-.bs-breakdown { margin: 0.8rem 0 0; color: var(--muted); font-size: 0.88rem; line-height: 1.6; }
+.bs-breakdown { margin: var(--space-3) 0 0; color: var(--muted); font-size: 0.88rem; line-height: 1.6; }
 
 .bs-compare {
-  margin-top: 1.3rem; padding-top: 1.2rem;
+  margin-top: var(--space-5); padding-top: var(--space-4);
   border-top: 1px solid var(--line-soft);
-  display: flex; flex-direction: column; gap: 0.55rem;
+  display: flex; flex-direction: column; gap: var(--space-2);
 }
-.bs-compare > div { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+.bs-compare > div { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-4); }
 .bs-compare span { color: var(--muted); font-size: 0.88rem; }
 .bs-compare s { color: var(--rose); opacity: 0.75; font-variant-numeric: tabular-nums; }
 .bs-saving strong {
@@ -223,13 +223,13 @@
 }
 .bs-saving span { color: var(--ink-2); }
 
-.bs-actions { display: flex; gap: 0.5rem; margin-top: 1.5rem; }
-.bs-actions .primary-btn { flex: 1; padding: 0.75rem 1rem; }
-.bs-actions .ghost-btn { padding: 0.75rem 1rem; }
+.bs-actions { display: flex; gap: var(--space-2); margin-top: var(--space-5); }
+.bs-actions .primary-btn { flex: 1; padding: var(--space-3) var(--space-4); }
+.bs-actions .ghost-btn { padding: var(--space-3) var(--space-4); }
 
-.bs-renews { margin: 1rem 0 0; color: var(--faint); font-size: 0.82rem; }
+.bs-renews { margin: var(--space-4) 0 0; color: var(--faint); font-size: 0.82rem; }
 .bs-fine {
-  margin: 1.2rem 0 0; padding-top: 1.1rem;
+  margin: var(--space-4) 0 0; padding-top: var(--space-4);
   border-top: 1px solid var(--line-soft);
   color: var(--faint); font-size: 0.8rem; line-height: 1.65;
 }

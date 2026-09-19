@@ -4,9 +4,9 @@
 
 .compliance-page { max-width: 1180px; margin: 0 auto; }
 
-.cmp-card { padding: 1.6rem 1.8rem; margin-bottom: 1rem; }
-.cmp-card h3 { margin: 0 0 0.5rem; }
-.cmp-blurb { color: var(--muted); font-size: 0.92rem; line-height: 1.65; margin: 0 0 1.4rem; max-width: 62ch; }
+.cmp-card { padding: var(--space-5) var(--space-6); margin-bottom: var(--space-4); }
+.cmp-card h3 { margin: 0 0 var(--space-2); }
+.cmp-blurb { color: var(--muted); font-size: 0.92rem; line-height: 1.65; margin: 0 0 var(--space-5); max-width: 62ch; }
 .cmp-empty { color: var(--muted); margin: 0; }
 
 /* ----------------------------------------------------------- readiness */
@@ -14,7 +14,7 @@
 .cmp-readiness { min-width: 15rem; text-align: right; }
 .cmp-readiness-bar {
   height: 3px; border-radius: 3px; overflow: hidden;
-  background: color-mix(in srgb, var(--ink) 8%, transparent); margin-bottom: 0.5rem;
+  background: color-mix(in srgb, var(--ink) 8%, transparent); margin-bottom: var(--space-2);
 }
 .cmp-readiness-bar span { display: block; height: 100%; border-radius: 3px; transition: width 0.5s var(--ease); }
 .cmp-readiness small { color: var(--faint); font-size: 0.78rem; }
@@ -24,82 +24,82 @@
 .cmp-fields {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.2rem;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
 }
 .cmp-fields .os-field span { color: var(--muted); font-size: 0.82rem; font-weight: 500; }
-.cmp-fields select { width: 100%; padding: 0.7rem 0.85rem !important; }
+.cmp-fields select { width: 100%; padding: var(--space-3) var(--space-3) !important; }
 
 .cmp-toggle {
-  display: flex; gap: 0.8rem; align-items: flex-start;
-  padding: 0.95rem 1.05rem;
-  border-radius: 12px;
+  display: flex; gap: var(--space-3); align-items: flex-start;
+  padding: var(--space-4) var(--space-4);
+  border-radius: var(--radius-3);
   background: var(--glass);
   border: 1px solid var(--line-soft);
   cursor: pointer;
   transition: all 0.25s var(--ease);
 }
 .cmp-toggle:hover { border-color: color-mix(in srgb, var(--accent) 20%, transparent); background: color-mix(in srgb, var(--accent) 5%, transparent); }
-.cmp-toggle input { margin-top: 0.2rem; flex: none; }
+.cmp-toggle input { margin-top: var(--space-1); flex: none; }
 .cmp-toggle strong { display: block; color: var(--ink); font-size: 0.94rem; font-weight: 600; }
-.cmp-toggle small { display: block; margin-top: 0.2rem; color: var(--muted); font-size: 0.84rem; line-height: 1.55; }
+.cmp-toggle small { display: block; margin-top: var(--space-1); color: var(--muted); font-size: 0.84rem; line-height: 1.55; }
 
-.cmp-fallback { margin-top: 1.2rem; }
-.cmp-fallback strong { display: block; margin-bottom: 0.2rem; }
+.cmp-fallback { margin-top: var(--space-4); }
+.cmp-fallback strong { display: block; margin-bottom: var(--space-1); }
 
 /* What is actually in force, which may not be what was chosen. */
 .cmp-effective {
-  margin-top: 1.3rem; padding: 1.2rem 1.3rem;
-  border-radius: 14px;
+  margin-top: var(--space-5); padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-3);
   background: color-mix(in srgb, var(--mint) 5%, transparent);
   border: 1px solid color-mix(in srgb, var(--mint) 20%, transparent);
 }
 .cmp-effective-label {
   display: block; font-size: 0.72rem; letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--mint); font-weight: 600;
-  margin-bottom: 0.4rem;
+  margin-bottom: var(--space-2);
 }
 .cmp-effective > strong { color: var(--ink); font-size: 1.05rem; }
-.cmp-effective small { display: block; margin-top: 0.9rem; color: var(--faint); font-size: 0.76rem; line-height: 1.55; }
+.cmp-effective small { display: block; margin-top: var(--space-4); color: var(--faint); font-size: 0.76rem; line-height: 1.55; }
 
 .cmp-rules {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0.7rem 1.4rem; margin-top: 1rem;
+  gap: var(--space-3) var(--space-5); margin-top: var(--space-4);
 }
-.cmp-rule { display: flex; flex-direction: column; gap: 0.15rem; }
+.cmp-rule { display: flex; flex-direction: column; gap: var(--space-1); }
 .cmp-rule span { color: var(--faint); font-size: 0.76rem; }
 .cmp-rule strong { color: var(--ink-2); font-size: 0.94rem; font-variant-numeric: tabular-nums; }
 
-.cmp-actions { margin-top: 1.3rem; }
-.cmp-actions .primary-btn { padding: 0.7rem 1.5rem; }
+.cmp-actions { margin-top: var(--space-5); }
+.cmp-actions .primary-btn { padding: var(--space-3) var(--space-5); }
 
 /* ------------------------------------------------------------- employees */
 
 .cmp-table-wrap { background: transparent; border: 0; box-shadow: none; padding: 0; }
 .cmp-table { min-width: 760px; }
-.cmp-table td { vertical-align: middle; padding: 0.75rem 0.9rem; }
+.cmp-table td { vertical-align: middle; padding: var(--space-3) var(--space-4); }
 .cmp-table td strong { display: block; color: var(--ink); font-size: 0.94rem; }
 .cmp-table td small { color: var(--faint); font-size: 0.78rem; }
 
 .cmp-table input[type="date"],
 .cmp-table input[type="number"] {
-  padding: 0.5rem 0.65rem !important;
+  padding: var(--space-2) var(--space-3) !important;
   font-size: 0.9rem;
   width: 100%;
   min-width: 8rem;
 }
 
-.cmp-rate { display: flex; align-items: center; gap: 0.3rem; }
+.cmp-rate { display: flex; align-items: center; gap: var(--space-1); }
 .cmp-rate span { color: var(--faint); }
 .cmp-rate input { max-width: 6.5rem; }
 
-.cmp-flags { display: flex; flex-direction: column; gap: 0.35rem; }
-.cmp-flags label { display: flex; align-items: center; gap: 0.45rem; cursor: pointer; }
+.cmp-flags { display: flex; flex-direction: column; gap: var(--space-1); }
+.cmp-flags label { display: flex; align-items: center; gap: var(--space-2); cursor: pointer; }
 .cmp-flags span { color: var(--muted); font-size: 0.84rem; }
 
 .cmp-row-action { text-align: right; white-space: nowrap; }
-.cmp-row-action .primary-btn { padding: 0.45rem 1rem; font-size: 0.86rem; }
-.cmp-row-error { display: block; color: var(--rose); font-size: 0.78rem; margin-bottom: 0.35rem; }
+.cmp-row-action .primary-btn { padding: var(--space-2) var(--space-4); font-size: 0.86rem; }
+.cmp-row-error { display: block; color: var(--rose); font-size: 0.78rem; margin-bottom: var(--space-1); }
 
 /* A row missing data is not an error — it is an invitation. Amber, not rose. */
 .cmp-missing { color: var(--accent); font-size: 0.82rem; }
@@ -107,5 +107,5 @@
 .cmp-incomplete td:first-child { box-shadow: inset 2px 0 0 var(--accent); }
 
 @media (max-width: 720px) {
-  .cmp-readiness { min-width: 0; text-align: left; margin-top: 1rem; }
+  .cmp-readiness { min-width: 0; text-align: left; margin-top: var(--space-4); }
 }

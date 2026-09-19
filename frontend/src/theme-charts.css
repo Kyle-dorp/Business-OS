@@ -8,8 +8,8 @@
 
 .chart {
   margin: 0;
-  padding: 1.4rem 1.5rem 1.2rem;
-  border-radius: 16px;
+  padding: var(--space-5) var(--space-5) var(--space-4);
+  border-radius: var(--radius-3);
   background: var(--glass);
   border: 1px solid var(--line-soft);
 }
@@ -18,9 +18,9 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-4);
   flex-wrap: wrap;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
 .chart-head h3 {
   margin: 0;
@@ -28,12 +28,12 @@
   font-weight: 500;
   color: var(--ink);
 }
-.chart-head p { margin: 0.25rem 0 0; color: var(--muted); font-size: 0.85rem; }
-.chart-head-right { display: flex; align-items: center; gap: 0.9rem; }
+.chart-head p { margin: var(--space-1) 0 0; color: var(--muted); font-size: 0.85rem; }
+.chart-head-right { display: flex; align-items: center; gap: var(--space-4); }
 
 /* A legend is present whenever more than one series is drawn. */
-.chart-legend { display: flex; gap: 0.85rem; }
-.chart-key { display: inline-flex; align-items: center; gap: 0.35rem;
+.chart-legend { display: flex; gap: var(--space-3); }
+.chart-key { display: inline-flex; align-items: center; gap: var(--space-1);
              color: var(--muted); font-size: 0.8rem; }
 .chart-key::before {
   content: "";
@@ -43,7 +43,7 @@
 .chart-key.is-out::before { background: var(--rose); }
 
 .chart-table-toggle {
-  padding: 0.3rem 0.6rem;
+  padding: var(--space-1) var(--space-2);
   border: 1px solid var(--line-soft);
   border-radius: 999px;
   background: transparent;
@@ -86,9 +86,9 @@
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.5rem 0.7rem;
-  border-radius: 10px;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-2);
   background: color-mix(in srgb, var(--void-lift) 97%, transparent);
   border: 1px solid var(--line);
   box-shadow: 0 18px 40px -22px rgba(0, 0, 0, 0.9);
@@ -124,15 +124,15 @@
 
 /* ------------------------------------------------------------ ranked bars */
 
-.chart-bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.6rem; }
+.chart-bars { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
 
 .chart-bars-row {
   display: grid;
   grid-template-columns: minmax(6rem, 10rem) 1fr auto;
   align-items: center;
-  gap: 0.85rem;
-  padding: 0.3rem 0.4rem;
-  border-radius: 10px;
+  gap: var(--space-3);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-2);
   transition: background-color 0.2s var(--ease);
 }
 .chart-bars-row.is-hover { background: var(--glass); }
@@ -177,10 +177,10 @@
 .chart-bars-row.is-over .chart-bars-value { color: var(--rose); }
 
 .chart-foot {
-  margin: 0.9rem 0 0;
+  margin: var(--space-4) 0 0;
   color: var(--faint);
   font-size: 0.78rem;
-  display: flex; align-items: center; gap: 0.45rem;
+  display: flex; align-items: center; gap: var(--space-2);
 }
 .chart-foot-mark {
   width: 1px; height: 0.8rem;
@@ -189,10 +189,10 @@
 
 /* -------------------------------------------------------------- the table */
 
-.chart-table-wrap { margin-top: 1rem; max-height: 16rem; overflow: auto; }
+.chart-table-wrap { margin-top: var(--space-4); max-height: 16rem; overflow: auto; }
 .chart-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
 .chart-table th, .chart-table td {
-  padding: 0.4rem 0.6rem;
+  padding: var(--space-2) var(--space-2);
   text-align: left;
   border-bottom: 1px solid var(--line-soft);
 }

@@ -331,3 +331,71 @@ describe("the legacy stylesheet", () => {
     expect(app.indexOf("theme-legacy.css")).toBeLessThan(app.indexOf("theme.css"));
   });
 });
+
+
+// ------------------------------------------------------------------- scale
+
+describe("spacing is a scale, not a series of guesses", () => {
+  // Before this existed the stylesheets held 42 distinct gap values, 53
+  // paddings and 22 border-radii — including every integer from 10px to 20px.
+  // 117 independent decisions where a design system makes about a dozen.
+  //
+  // Nothing lined up, because nothing shared a value. That is invisible in any
+  // single screenshot and it is most of what reads as homemade next to
+  // software people pay for.
+  const SPACED = /(?:^|[;{\s])(gap|row-gap|column-gap|margin|margin-top|margin-right|margin-bottom|margin-left|padding|padding-top|padding-right|padding-bottom|padding-left|border-radius)\s*:\s*([^;{}]+)/g;
+
+  // Three kinds of literal are a decision rather than an unconsidered number,
+  // and the rule matters more than the list — a list goes stale the first time
+  // somebody needs a fourth.
+  //
+  //   a pill        999px is "however round it needs to be", not a size
+  //   a sharp edge  under 5px is a deliberately square corner; every rung on
+  //                 the radius ladder would be rounder than the element
+  //   a nudge       a negative value is pulling something back into place,
+  //                 which is not spacing and has no business on a ladder
+  function deliberate(prop, token) {
+    const px = parseFloat(token) * (/rem|em$/.test(token) ? 16 : 1);
+    if (Number.isNaN(px) || px === 0) return true;
+    if (px < 0) return true;
+    if (prop === "border-radius") return px >= 99 || px < 5;
+    return false;
+  }
+
+  function strayValues(file) {
+    const css = code(file);
+    const stray = [];
+    for (const [, prop, value] of css.matchAll(SPACED)) {
+      if (value.includes("var(") || value.includes("calc(") || value.includes("clamp(")) continue;
+      for (const token of value.trim().split(/\s+/)) {
+        if (!/^-?[\d.]+(px|rem|em)$/.test(token)) continue;
+        if (deliberate(prop, token)) continue;
+        stray.push(`${prop}: ${token}`);
+      }
+    }
+    return stray;
+  }
+
+  const files = fs
+    .readdirSync(SRC)
+    .filter((f) => f.endsWith(".css"));
+
+  it("has stylesheets to check", () => {
+    // A guard that silently checks nothing is worse than no guard.
+    expect(files.length).toBeGreaterThan(5);
+  });
+
+  it.each(files)("%s spaces everything from the scale", (file) => {
+    // theme.css defines the ladder, so its own rungs are literals by
+    // definition — but only inside the token block, which `code()` leaves
+    // intact. The declarations below it must still use var().
+    expect(strayValues(file)).toEqual([]);
+  });
+
+  it("defines the ladder it is asking everything to use", () => {
+    const css = read("theme.css");
+    for (const token of ["--space-1", "--space-4", "--space-9", "--radius-1", "--radius-4", "--gutter"]) {
+      expect(css).toContain(`${token}:`);
+    }
+  });
+});

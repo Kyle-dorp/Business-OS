@@ -15,33 +15,33 @@
 .page {
   max-width: 1180px;
   margin: 0 auto;
-  padding: clamp(1.25rem, 3vw, 2rem) clamp(1rem, 3vw, 2rem) 4rem;
+  padding: clamp(1.25rem, 3vw, 2rem) clamp(1rem, 3vw, 2rem) var(--space-8);
 }
 
 .page-header {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 1.5rem;
+  gap: var(--space-5);
   flex-wrap: wrap;
   margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
 }
-.page-header h1 { margin: 0.35rem 0 0.4rem; }
+.page-header h1 { margin: var(--space-1) 0 var(--space-2); }
 .page-header p { margin: 0; color: var(--muted); max-width: 62ch; line-height: 1.65; }
 
 .section-title, .fin-section-title {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-4);
   flex-wrap: wrap;
-  margin-bottom: 1.1rem;
+  margin-bottom: var(--space-4);
 }
 .section-title h2, .fin-section-title h2,
 .section-title h3, .fin-section-title h3 { margin: 0; }
-.section-title p, .fin-section-title p { margin: 0.3rem 0 0; color: var(--muted); font-size: 0.9rem; }
+.section-title p, .fin-section-title p { margin: var(--space-1) 0 0; color: var(--muted); font-size: 0.9rem; }
 
-.stack { display: flex; flex-direction: column; gap: 1rem; }
+.stack { display: flex; flex-direction: column; gap: var(--space-4); }
 
 /* ---------------------------------------------------------------- finance */
 
@@ -53,8 +53,8 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.7rem 0;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
   border-bottom: 1px solid var(--line-soft);
   font-variant-numeric: tabular-nums;
 }
@@ -73,14 +73,14 @@
 .fin-stat-row .red, .fin-mini-row .red, .red { color: var(--rose); }
 .fin-stat-row .green, .fin-mini-row .green, .green { color: var(--mint); }
 
-.fin-hint { color: var(--faint); font-size: 0.82rem; line-height: 1.6; margin: 0.7rem 0 0; }
+.fin-hint { color: var(--faint); font-size: 0.82rem; line-height: 1.6; margin: var(--space-3) 0 0; }
 
 /* ---------------------------------------------------------------- buttons */
 
 .small-btn {
-  padding: 0.42rem 0.85rem;
+  padding: var(--space-2) var(--space-3);
   font-size: 0.85rem;
-  border-radius: 9px;
+  border-radius: var(--radius-2);
   background: transparent;
   color: var(--muted);
   border: 1px solid var(--line);
@@ -97,8 +97,8 @@
   background: transparent;
   color: var(--muted);
   border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 0.62rem 1.1rem;
+  border-radius: var(--radius-2);
+  padding: var(--space-2) var(--space-4);
   cursor: pointer;
   transition: all 0.25s var(--ease);
 }
@@ -113,12 +113,12 @@
 .danger-text-btn {
   background: none;
   border: 0;
-  padding: 0.35rem 0.5rem;
+  padding: var(--space-1) var(--space-2);
   color: var(--rose);
   font: inherit;
   font-size: 0.88rem;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: var(--radius-2);
   transition: background-color 0.2s var(--ease);
 }
 .danger-text-btn:hover { background: color-mix(in srgb, var(--rose) 10%, transparent); }
@@ -130,7 +130,7 @@
   align-items: center;
   justify-content: center;
   min-width: 1.5rem;
-  padding: 0.1rem 0.5rem;
+  padding: var(--space-1) var(--space-2);
   border-radius: 999px;
   font-size: 0.78rem;
   font-weight: 600;
@@ -142,8 +142,8 @@
 .check-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.4rem 0.8rem;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border-radius: 999px;
   font-size: 0.86rem;
   color: var(--muted);
@@ -163,17 +163,17 @@
 .checkbox-label, .switch-line {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: var(--space-2);
   color: var(--ink-2);
   font-size: 0.92rem;
   cursor: pointer;
 }
-.switch-line { justify-content: space-between; padding: 0.6rem 0; }
+.switch-line { justify-content: space-between; padding: var(--space-2) 0; }
 .checkbox-label input, .switch-line input { accent-color: var(--accent); }
 
 .single-value-field {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--space-2);
   align-items: center;
 }
 .single-value-field input { flex: 1; }
@@ -181,11 +181,11 @@
 /* ---------------------------------------------------------------- alerts */
 
 .alert {
-  padding: 0.8rem 1rem;
-  border-radius: 11px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-2);
   font-size: 0.9rem;
   line-height: 1.6;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-4);
 }
 .alert.error, .error {
   background: color-mix(in srgb, var(--rose) 9%, transparent);
@@ -211,7 +211,7 @@
   left: 50%;
   transform: translateX(-50%);
   z-index: 200;
-  padding: 0.7rem 1.2rem;
+  padding: var(--space-3) var(--space-4);
   border-radius: 999px;
   background: color-mix(in srgb, var(--void-lift) 94%, transparent);
   border: 1px solid color-mix(in srgb, var(--mint) 30%, transparent);
@@ -232,15 +232,15 @@
    says "no data" makes the reader wonder whether it is broken. */
 .empty-state {
   text-align: center;
-  padding: clamp(2rem, 5vw, 3.2rem) 1.5rem;
+  padding: clamp(2rem, 5vw, 3.2rem) var(--space-5);
   color: var(--muted);
 }
-.empty-state h3 { color: var(--ink); margin: 0 0 0.6rem; }
+.empty-state h3 { color: var(--ink); margin: 0 0 var(--space-2); }
 .empty-state p { max-width: 46ch; margin: 0 auto; line-height: 1.7; }
-.empty-state .primary-btn { margin-top: 1.4rem; }
+.empty-state .primary-btn { margin-top: var(--space-5); }
 
 .empty-inline {
-  padding: 1.2rem;
+  padding: var(--space-4);
   text-align: center;
   color: var(--muted);
   font-size: 0.9rem;
@@ -248,16 +248,16 @@
 
 /* --------------------------------------------------------------- requests */
 
-.request-list { display: flex; flex-direction: column; gap: 0.6rem; }
+.request-list { display: flex; flex-direction: column; gap: var(--space-2); }
 
 .request-summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-4);
   flex-wrap: wrap;
-  padding: 1rem 1.2rem;
-  border-radius: 13px;
+  padding: var(--space-4) var(--space-4);
+  border-radius: var(--radius-3);
   background: var(--glass);
   border: 1px solid var(--line-soft);
   transition: border-color 0.25s var(--ease), background-color 0.25s var(--ease);
@@ -272,8 +272,8 @@
 .request-date-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0.75rem;
-  margin: 0.9rem 0;
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
 }
 
 /* -------------------------------------------------------------- assistant */
@@ -294,7 +294,7 @@
 /* ---------------------------------------------------------------- compact */
 
 .compact { font-size: 0.9rem; }
-.os-metrics.compact article { min-height: 0; padding: 1.1rem 1.2rem; }
+.os-metrics.compact article { min-height: 0; padding: var(--space-4) var(--space-4); }
 
 /* ---------------------------------------------------------------- states */
 
@@ -302,13 +302,13 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.9rem;
-  padding: clamp(2rem, 5vw, 3rem) 1.5rem;
+  gap: var(--space-4);
+  padding: clamp(2rem, 5vw, 3rem) var(--space-5);
   text-align: center;
 }
 .state-block h3 { margin: 0; color: var(--ink); }
 .state-block p { margin: 0; max-width: 46ch; color: var(--muted); line-height: 1.7; }
-.state-block .primary-btn, .state-block .ghost-btn { margin-top: 0.5rem; }
+.state-block .primary-btn, .state-block .ghost-btn { margin-top: var(--space-2); }
 
 .state-icon {
   width: 2.6rem; height: 2.6rem;
@@ -324,7 +324,7 @@
 .skeleton {
   display: block;
   height: 0.85rem;
-  border-radius: 6px;
+  border-radius: var(--radius-1);
   background: linear-gradient(
     90deg,
     color-mix(in srgb, var(--ink) 4.5%, transparent) 25%,
@@ -334,7 +334,7 @@
   background-size: 400% 100%;
   animation: eos-shimmer 1.4s ease-in-out infinite;
 }
-.skeleton + .skeleton { margin-top: 0.65rem; }
+.skeleton + .skeleton { margin-top: var(--space-3); }
 .skeleton.w-40 { width: 40%; }
 .skeleton.w-60 { width: 60%; }
 .skeleton.w-80 { width: 80%; }
@@ -352,7 +352,7 @@
 
 @media (max-width: 680px) {
   .page-header { flex-direction: column; align-items: flex-start; }
-  .fin-stat-row, .fin-mini-row { flex-direction: column; align-items: flex-start; gap: 0.2rem; }
+  .fin-stat-row, .fin-mini-row { flex-direction: column; align-items: flex-start; gap: var(--space-1); }
   .request-summary { flex-direction: column; align-items: flex-start; }
 }
 
@@ -365,7 +365,7 @@
 .assistant, .two-column {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1rem;
+  gap: var(--space-4);
   align-items: start;
 }
 
@@ -373,16 +373,16 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 1.5rem;
+  gap: var(--space-5);
   flex-wrap: wrap;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--space-5);
 }
-.assistant-heading h1, .manager-heading h1 { margin: 0.3rem 0 0.4rem; }
+.assistant-heading h1, .manager-heading h1 { margin: var(--space-1) 0 var(--space-2); }
 .assistant-heading p, .manager-heading p { margin: 0; color: var(--muted); line-height: 1.6; }
 
 .crew-info {
   display: flex;
-  gap: 1.2rem;
+  gap: var(--space-4);
   flex-wrap: wrap;
   color: var(--muted);
   font-size: 0.88rem;
@@ -393,7 +393,7 @@
 .position-column {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
   min-width: 0;
 }
 
@@ -402,7 +402,7 @@
   place-items: center;
   width: 2.6rem;
   height: 2.6rem;
-  margin: 0 auto 0.9rem;
+  margin: 0 auto var(--space-4);
   border-radius: 50%;
   background: color-mix(in srgb, var(--ink) 5%, transparent);
   border: 1px solid var(--line);
@@ -428,8 +428,8 @@
 }
 
 .team-access-card {
-  padding: 1.2rem 1.4rem;
-  border-radius: 14px;
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-3);
   background: var(--glass);
   border: 1px solid var(--line-soft);
   transition: border-color 0.25s var(--ease), background-color 0.25s var(--ease);
@@ -438,7 +438,7 @@
   border-color: color-mix(in srgb, var(--accent) 20%, transparent);
   background: color-mix(in srgb, var(--accent) 4%, transparent);
 }
-.team-access-card strong { display: block; color: var(--ink); margin-bottom: 0.2rem; }
+.team-access-card strong { display: block; color: var(--ink); margin-bottom: var(--space-1); }
 .team-access-card span { color: var(--muted); font-size: 0.88rem; }
 
 /* ------------------------------------------------------------ nav groups
@@ -450,8 +450,8 @@
 .nav-group { display: contents; }
 
 .nav-group-label {
-  margin: 1.1rem 0 0.35rem;
-  padding: 0 0.85rem;
+  margin: var(--space-4) 0 var(--space-1);
+  padding: 0 var(--space-3);
   color: var(--faint);
   font-size: 0.68rem;
   font-weight: 600;
@@ -459,4 +459,4 @@
   text-transform: uppercase;
 }
 
-.nav-group:first-of-type .nav-group-label { margin-top: 0.6rem; }
+.nav-group:first-of-type .nav-group-label { margin-top: var(--space-2); }

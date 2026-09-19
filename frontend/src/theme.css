@@ -192,6 +192,37 @@
    ======================================================================== */
 
 :root {
+  /* -------------------------------------------------------------- space */
+  /* Eight rungs, because the stylesheets held 42 distinct gap values, 53
+     paddings and 22 radii — 117 independent decisions where a design system
+     makes about a dozen. Nothing lined up because nothing shared a value, and
+     that is most of what reads as homemade next to software people pay for.
+
+     8px base. 12 is on the ladder despite not being a multiple of 8: the jump
+     from 8 to 16 is too coarse for dense controls, and every real system
+     (Tailwind, Material, Radix) carries it for the same reason. */
+  --space-1: 0.25rem;   /*  4px */
+  --space-2: 0.5rem;    /*  8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.5rem;    /* 24px */
+  --space-6: 2rem;      /* 32px */
+  --space-7: 3rem;      /* 48px */
+  --space-8: 4rem;      /* 64px */
+  --space-9: 5rem;      /* 80px */
+
+  /* ------------------------------------------------------------- radius */
+  /* Radius reads as a family. Eleven consecutive integers from 10px to 20px
+     do not read as anything — they read as eleven people guessing. */
+  --radius-1: 6px;
+  --radius-2: 10px;
+  --radius-3: 14px;
+  --radius-4: 20px;
+  --radius-pill: 999px;
+
+  /* The side gutter, from the landing page, which got this right first. */
+  --gutter: clamp(1.25rem, 5vw, 4.5rem);
+
   --ease: cubic-bezier(0.22, 0.72, 0.2, 1);
 
   /* Older rules in theme-legacy.css read these names. Remapping them here
@@ -265,14 +296,14 @@ body::after {
 :focus-visible {
   outline: 2px solid var(--accent-hot);
   outline-offset: 3px;
-  border-radius: 6px;
+  border-radius: var(--radius-1);
 }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--ink) 9%, transparent);
-  border-radius: 6px;
+  border-radius: var(--radius-1);
   border: 3px solid transparent;
   background-clip: padding-box;
 }
@@ -308,7 +339,7 @@ p, span, div, td, th, label, small { color: inherit; }
   display: grid;
   place-content: center;
   justify-items: center;
-  gap: 1.4rem;
+  gap: var(--space-5);
   background: var(--void);
   color: var(--ink-2);
   z-index: 999;
@@ -377,7 +408,7 @@ p, span, div, td, th, label, small { color: inherit; }
   color: var(--muted);
   background: transparent;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--radius-2);
   font-weight: 400;
   transition: color 0.25s var(--ease), background-color 0.25s var(--ease),
               box-shadow 0.3s var(--ease), border-color 0.25s var(--ease);
@@ -421,14 +452,14 @@ p, span, div, td, th, label, small { color: inherit; }
   background: var(--glass);
   color: var(--ink);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius-2);
 }
 .workspace-switcher .workspace-select:focus { border-color: var(--accent); outline: none; }
 .workspace-switcher button {
   background: color-mix(in srgb, var(--accent) 10%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
   color: var(--accent);
-  border-radius: 10px;
+  border-radius: var(--radius-2);
 }
 .workspace-switcher button:hover { background: color-mix(in srgb, var(--accent) 18%, transparent); }
 
@@ -468,7 +499,7 @@ p, span, div, td, th, label, small { color: inherit; }
   background: transparent;
   border: 1px solid transparent;
   color: var(--muted);
-  border-radius: 10px;
+  border-radius: var(--radius-2);
   transition: all 0.25s var(--ease);
 }
 .topbar-notification:hover,
@@ -499,7 +530,7 @@ p, span, div, td, th, label, small { color: inherit; }
 .os-welcome {
   background: var(--glass);
   border: 1px solid var(--line-soft);
-  border-radius: 16px;
+  border-radius: var(--radius-3);
   color: var(--ink-2);
   box-shadow: 0 22px 54px -30px rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(8px);
@@ -563,7 +594,7 @@ input, select, textarea {
   background: var(--glass) !important;
   color: var(--ink) !important;
   border: 1px solid var(--line) !important;
-  border-radius: 10px !important;
+  border-radius: var(--radius-2) !important;
   transition: border-color 0.25s var(--ease), box-shadow 0.3s var(--ease);
 }
 
@@ -590,7 +621,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
   background: color-mix(in srgb, var(--accent) 10%, transparent);
   color: var(--accent-hot);
   border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
-  border-radius: 10px;
+  border-radius: var(--radius-2);
   font-weight: 600;
   transition: all 0.25s var(--ease);
 }
@@ -605,7 +636,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
   background: transparent;
   color: var(--muted);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius-2);
   transition: all 0.25s var(--ease);
 }
 .ghost-btn:hover, .secondary-btn:hover {
@@ -622,7 +653,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 .module-toggle-row {
   background: var(--glass);
   border: 1px solid var(--line-soft);
-  border-radius: 14px;
+  border-radius: var(--radius-3);
   transition: all 0.25s var(--ease);
 }
 .module-toggle-row:hover {

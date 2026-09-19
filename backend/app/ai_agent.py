@@ -152,30 +152,76 @@ def _month_usage(session: Session, business_id: int) -> tuple[int, int]:
     return sum(r.tokens_used for r in rows), sum(r.cost_cents for r in rows)
 
 
-def _check_budget(session: Session, business_id: int) -> None:
-    used, _ = _month_usage(session, business_id)
-    included = INCLUDED_INPUT_TOKENS + INCLUDED_OUTPUT_TOKENS
-    if used >= included * HARD_CEILING_MULTIPLIER:
-        raise HTTPException(
-            429,
-            "This workspace has hit its hard assistant ceiling for the month. "
-            "Raise it in Settings → Billing, or wait for the reset on the first. "
-            "Everything else keeps working.",
+def _check_budget(
+    session: Session,
+    business_id: int,
+    *,
+    user_id: Optional[int] = None,
+    is_employee: bool = False,
+) -> None:
+    """
+    Whether a question can be asked, before it is asked.
+
+    This used to compare a running token count against a hard ceiling of five
+    times the included allowance. Two things were wrong with that. Nobody knows
+    what 650,000 tokens buys — measured, it was six questions on a large
+    workspace and sixty-five on a small one — and a ceiling can only ever stop,
+    so the first thing a heavy user saw was the feature switching off with no
+    way to carry on.
+
+    It is a wallet now: $5 a month at what we pay Anthropic, and top-ups at the
+    same rate. See ai_wallet.
+    """
+    from backend.app.ai_wallet import (
+        AssistantOff,
+        UserCapReached,
+        WalletEmpty,
+        check_can_spend,
+    )
+
+    try:
+        check_can_spend(
+            session, business_id, user_id=user_id, is_employee=is_employee
         )
+    except AssistantOff as off:
+        raise HTTPException(403, str(off))
+    except UserCapReached as capped:
+        raise HTTPException(429, str(capped))
+    except WalletEmpty as empty:
+        raise HTTPException(402, str(empty))
 
 
 def _record_usage(
-    session: Session, business_id: int, in_tok: int, out_tok: int, feature: str = "agent"
+    session: Session,
+    business_id: int,
+    in_tok: int,
+    out_tok: int,
+    feature: str = "agent",
+    *,
+    user_id: Optional[int] = None,
+    cache_read_tokens: int = 0,
+    cache_write_tokens: int = 0,
 ) -> Dict[str, Any]:
-    """Log tokens, bill overage past the included allowance, return a usage summary."""
-    used_before, _ = _month_usage(session, business_id)
-    included = INCLUDED_INPUT_TOKENS + INCLUDED_OUTPUT_TOKENS
-    total = in_tok + out_tok
+    """
+    Log what the call cost and take it out of the wallet.
 
-    billable = max((used_before + total) - included, 0)
-    already_billed = max(used_before - included, 0)
-    newly_billable = billable - already_billed
-    cost_cents = round((newly_billable / 1000) * OVERAGE_CENTS_PER_1K_TOKENS)
+    Two numbers are recorded and they are not the same. `vendor_cost_milli` is
+    what Anthropic charged us, to the thousandth of a cent, and is what the
+    wallet is spent against. `cost_cents` is what the customer is billed, which
+    is the same figure — the allowance is sold at cost — rounded to whole cents
+    for an invoice.
+    """
+    from backend.app.ai_pricing import cost_milli
+    from backend.app.ai_wallet import remaining_milli, spend
+
+    total = in_tok + out_tok + cache_read_tokens + cache_write_tokens
+    milli = cost_milli(
+        MODEL,
+        input_tokens=in_tok,
+        output_tokens=out_tok,
+        cache_read_tokens=cache_read_tokens,
+        cache_write_tokens=cache_write_tokens,
+    )
 
     today = date.today().isoformat()
     row = session.exec(
@@ -183,42 +229,36 @@ def _record_usage(
             ApiUsage.business_id == business_id,
             ApiUsage.date == today,
             ApiUsage.feature == feature,
+            ApiUsage.user_id == user_id,
         )
     ).first()
     if row is None:
-        row = ApiUsage(business_id=business_id, date=today, feature=feature)
+        row = ApiUsage(
+            business_id=business_id, date=today, feature=feature, user_id=user_id
+        )
 
     row.tokens_used += total
-    row.cost_cents += cost_cents
+    row.vendor_cost_milli += milli
+    row.cost_cents += round(milli / 1000)
     session.add(row)
 
     business = session.get(Business, business_id)
     if business:
         business.claude_api_tokens_used += total
-        business.claude_api_cost_cents += cost_cents
+        business.claude_api_cost_cents += round(milli / 1000)
         session.add(business)
 
     session.commit()
 
-    # Anything past the included allowance is metered to Stripe. Imported locally
-    # so a billing misconfiguration can never stop the assistant from answering.
-    if newly_billable > 0:
-        try:
-            from backend.app.billing import report_meter_usage
-            report_meter_usage(session, business_id, newly_billable)
-        except Exception:
-            log.warning("Could not meter %s overage tokens for business %s",
-                        newly_billable, business_id)
+    wallet = spend(session, business_id, milli)
 
-    used_after = used_before + total
     return {
-        "tokens_this_month": used_after,
-        "included_allowance": included,
-        "remaining_included": max(included - used_after, 0),
-        "overage_cents_this_month": max(
-            round((max(used_after - included, 0) / 1000) * OVERAGE_CENTS_PER_1K_TOKENS), 0
-        ),
-        "billed_this_call_cents": cost_cents,
+        "tokens_this_call": total,
+        "cost_this_call": round(milli / 100_000, 5),
+        "spent_this_month": round(wallet.spent_milli / 100_000, 4),
+        "remaining": round(remaining_milli(wallet) / 100_000, 4),
+        "included": round(wallet.included_milli / 100_000, 2),
+        "topped_up": round(wallet.topped_up_milli / 100_000, 2),
     }
 
 
@@ -679,7 +719,7 @@ def agent_chat(
             "is limited to owners, admins, managers and accountants.",
         )
 
-    _check_budget(session, bid)
+    _check_budget(session, bid, user_id=user.id)
 
     business = session.get(Business, bid)
     modules = _enabled_modules(session, bid)
@@ -751,7 +791,7 @@ def agent_chat(
     else:
         reply = "That turned into more lookups than I can do in one go. Try narrowing the question."
 
-    usage = _record_usage(session, bid, total_in, total_out)
+    usage = _record_usage(session, bid, total_in, total_out, user_id=user.id)
 
     session.add(AgentThread(business_id=bid, user_id=user.id, thread_id=thread_id,
                             role="user", content=body.message))

@@ -99,42 +99,119 @@ def test_the_workspace_total_moves_too(business_id):
 
 def test_a_workspace_inside_its_allowance_is_not_stopped(business_id):
     with Session(engine) as s:
-        _record_usage(s, business_id, INCLUDED // 2, 0, feature="assistant")
+        _record_usage(s, business_id, 20_000, 2_000, feature="assistant")
         _check_budget(s, business_id)   # must not raise
 
 
-def test_going_past_the_allowance_meters_rather_than_blocks(business_id):
+def test_spending_draws_the_wallet_down_by_what_the_call_cost(business_id):
     """
-    Cutting somebody off mid-conversation for exceeding an allowance they are
-    happy to pay for is worse than billing them for it.
+    The allowance is money now, not tokens. 650,000 tokens was unreadable —
+    measured, it bought six questions on a large workspace and sixty-five on a
+    small one — and a number nobody can convert into questions cannot be
+    budgeted against by the person paying for it.
     """
+    from backend.app.ai_pricing import cost_milli
+    from backend.app.ai_wallet import get_wallet
+
+    from backend.app.ai_agent import MODEL
+
+    expected = cost_milli(MODEL, input_tokens=100_000, output_tokens=5_000)
+
     with Session(engine) as s:
-        _record_usage(s, business_id, INCLUDED + 50_000, 0, feature="assistant")
-        _check_budget(s, business_id)   # still not raising
+        before = get_wallet(s, business_id).spent_milli
+        _record_usage(s, business_id, 100_000, 5_000, feature="assistant")
+        after = get_wallet(s, business_id).spent_milli
+
+    assert after - before == expected
 
 
-def test_a_runaway_is_stopped_at_the_hard_ceiling(business_id):
+def test_the_last_question_of_the_month_is_allowed_to_finish(business_id):
+    """
+    The check runs before a request and the charge after it, so a call that
+    empties the wallet completes rather than being cut off mid-sentence. Being
+    cut off costs us the tokens anyway and gives the customer nothing for them.
+    """
+    from backend.app.ai_wallet import get_wallet, remaining_milli, spend
+
+    with Session(engine) as s:
+        wallet = get_wallet(s, business_id)
+        spend(s, business_id, remaining_milli(wallet) - 1)
+        _check_budget(s, business_id)   # one unit left: still allowed
+
+        # And that call is permitted to overshoot.
+        _record_usage(s, business_id, 50_000, 1_000, feature="assistant")
+        assert remaining_milli(get_wallet(s, business_id)) == 0
+
+
+def test_a_runaway_is_stopped_when_the_wallet_is_empty(business_id):
     """
     The ceiling exists for the loop that does not stop. Metering without one
-    turns a bug into a five-figure invoice.
+    turns a bug into a five-figure invoice. 402 rather than 429 — this is not
+    a rate limit, it is a balance.
     """
+    from backend.app.ai_wallet import get_wallet, remaining_milli, spend
+
     with Session(engine) as s:
-        _record_usage(s, business_id, int(INCLUDED * HARD_CEILING_MULTIPLIER) + 1, 0,
-                      feature="assistant")
+        spend(s, business_id, remaining_milli(get_wallet(s, business_id)))
 
     with Session(engine) as s, pytest.raises(HTTPException) as exc:
         _check_budget(s, business_id)
-    assert exc.value.status_code == 429
+    assert exc.value.status_code == 402
 
 
-def test_the_ceiling_message_says_the_rest_still_works(business_id):
-    """A capped assistant is not an outage, and the wording has to say so."""
+def test_the_empty_message_says_the_rest_still_works(business_id):
+    """
+    A paused assistant is not an outage, and the wording has to say so. This
+    assertion predates the wallet and survived the rewrite — the first version
+    of the new message dropped the sentence and this caught it.
+    """
+    from backend.app.ai_wallet import get_wallet, remaining_milli, spend
+
     with Session(engine) as s:
-        _record_usage(s, business_id, int(INCLUDED * HARD_CEILING_MULTIPLIER) + 1, 0,
-                      feature="assistant")
+        spend(s, business_id, remaining_milli(get_wallet(s, business_id)))
+
     with Session(engine) as s, pytest.raises(HTTPException) as exc:
         _check_budget(s, business_id)
     assert "keeps working" in exc.value.detail
+
+
+def test_the_message_says_credit_can_be_bought(business_id):
+    """
+    The old ceiling could only stop. The first thing a heavy user saw was the
+    feature switching off with nothing to do about it.
+    """
+    from backend.app.ai_wallet import get_wallet, remaining_milli, spend
+
+    with Session(engine) as s:
+        spend(s, business_id, remaining_milli(get_wallet(s, business_id)))
+    with Session(engine) as s, pytest.raises(HTTPException) as exc:
+        _check_budget(s, business_id)
+    assert "credit" in exc.value.detail.lower()
+    assert "no markup" in exc.value.detail.lower()
+
+
+def test_purchased_credit_survives_the_month_rolling_over(business_id):
+    """
+    The allowance resets. Money somebody paid for does not evaporate because a
+    calendar page turned — that is the difference between a plan and a debt.
+    """
+    from datetime import date
+
+    from backend.app.ai_wallet import add_credit, get_wallet
+
+    with Session(engine) as s:
+        add_credit(s, business_id, 300_000)          # $3 bought
+        wallet = get_wallet(s, business_id)
+        wallet.spent_milli = wallet.included_milli   # allowance used up
+        s.add(wallet)
+        s.commit()
+
+        next_month = date(2099, 1, 15)
+        rolled = get_wallet(s, business_id, today=next_month)
+
+    assert rolled.spent_milli == 0, "the meter should reset"
+    assert rolled.included_milli == 500_000, "the allowance should come back"
+    assert rolled.topped_up_milli == 300_000, "purchased credit must not be wiped"
 
 
 def test_one_workspace_cannot_spend_anothers_allowance(business_id):
@@ -246,9 +323,11 @@ def test_the_chat_endpoint_refuses_past_the_ceiling(client):
     within = client.post("/assistant/chat", headers=headers, json={"message": "hello"})
     assert within.status_code == 200, within.text
 
+    from backend.app.ai_wallet import get_wallet, remaining_milli, spend
+
     with Session(engine) as s:
-        _record_usage(s, bid, int(INCLUDED * HARD_CEILING_MULTIPLIER) + 1, 0,
-                      feature="assistant")
+        spend(s, bid, remaining_milli(get_wallet(s, bid)))
 
     over = client.post("/assistant/chat", headers=headers, json={"message": "hello again"})
-    assert over.status_code == 429, "the endpoint ignored the budget"
+    assert over.status_code == 402, "the endpoint ignored the wallet"
+    assert "keeps working" in over.json()["detail"]

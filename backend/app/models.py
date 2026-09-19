@@ -509,13 +509,52 @@ class PayrollRun(SQLModel, table=True):
 
 
 # API Usage Tracking
+class AiWallet(SQLModel, table=True):
+    """
+    What a workspace has to spend on the assistant this month, in money.
+
+    Denominated in thousandths of a cent because a single employee question
+    costs a fraction of one, and a meter that rounds those to zero is a meter
+    that reads zero all month and then jumps.
+
+    Three separate numbers rather than one balance, because they answer three
+    different questions and a customer asks all of them:
+
+      included   what the plan gives, reset on the first of the month
+      topped_up  what they bought, which does NOT reset — money they paid for
+                 does not evaporate because a calendar page turned
+      spent      what has been used, against included first and then top-ups
+
+    `period` is the YYYY-MM the included allowance belongs to. Rolling the
+    month is what resets `included` and `spent`, and deliberately leaves
+    `topped_up` alone.
+    """
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    business_id: int = Field(index=True, unique=True)
+    period: str = ""                    # YYYY-MM
+    included_milli: int = 0
+    topped_up_milli: int = 0
+    spent_milli: int = 0
+    # Off by default for employees: the workspace decides who gets an assistant
+    # and how much of the wallet any one person may drain.
+    employees_enabled: bool = False
+    per_user_cap_milli: int = 0         # 0 means no individual cap
+    updated_at: str = Field(default_factory=utc_now_iso)
+
+
 class ApiUsage(SQLModel, table=True):
     """Track Claude API usage per customer"""
     id: Optional[int] = Field(default=None, primary_key=True)
     business_id: int = Field(index=True)
     date: str = Field(index=True)  # YYYY-MM-DD
     tokens_used: int = 0
-    cost_cents: int = 0  # Cost in cents
+    cost_cents: int = 0  # What the customer is billed, in cents
+    # What the call cost us, in thousandths of a cent. Separate from
+    # cost_cents because they are different numbers answering different
+    # questions, and the wallet is spent against this one.
+    vendor_cost_milli: int = 0
+    user_id: Optional[int] = Field(default=None, index=True)
     feature: str = ""  # Which feature used the API (e.g., "assistant", "scheduling")
     created_at: str = Field(default_factory=utc_now_iso)
 

@@ -323,7 +323,7 @@ def my_assistant_chat(
     from backend.app.tenancy import current_business_id
 
     bid = current_business_id()
-    _check_budget(session, bid)
+    _check_budget(session, bid, user_id=user.id, is_employee=True)
 
     context = employee_context(session, user)
     if not context.get("linked"):
@@ -362,7 +362,7 @@ def my_assistant_chat(
     reply = "".join(block.text for block in response.content if block.type == "text")
     _record_usage(
         session, bid, response.usage.input_tokens, response.usage.output_tokens,
-        feature="my-assistant",
+        feature="my-assistant", user_id=user.id,
     )
 
     return MyAssistantOut(

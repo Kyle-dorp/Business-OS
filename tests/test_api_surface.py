@@ -48,6 +48,7 @@ KNOWN_PREFIXES = {
     "/crew-targets",
     "/debug",
     "/departments",
+    "/ai",                      # the assistant wallet: usage, spend settings
     "/docs", "/redoc", "/openapi.json",
     # The single-page app's catch-all, which serves index.html for any path the
     # API does not claim. It is registered only when static/ exists — so it is

@@ -314,26 +314,88 @@ def test_the_context_is_built_by_name_and_never_spread():
 # alternative was editing the one line standing between them and the business
 # assistant's forty-six thousand tokens of company finances.
 
-def test_an_employee_can_reach_their_own_assistant(shop):
+def _employee_headers(shop) -> dict:
     signin = shop["client"].post("/auth/login", json={
         "username": _username(shop), "password": "a-real-password-123",
     })
     assert signin.status_code == 200, signin.text
+    return {
+        "Authorization": f"Bearer {signin.json()['token']}",
+        "X-Business-Id": str(shop["business_id"]),
+    }
+
+
+def test_staff_access_is_off_until_the_workspace_turns_it_on(shop):
+    """
+    Off by default, and the refusal says who can change it. A workspace that
+    does not want to pay for staff to have an assistant should not be paying
+    for staff to have an assistant — "pay for what you use" cuts both ways.
+    """
+    response = shop["client"].post(
+        "/my/assistant/chat",
+        json={"message": "when am I on this week"},
+        headers=_employee_headers(shop),
+    )
+    assert response.status_code == 403
+    assert "not switched on" in response.json()["detail"]
+    assert "manager" in response.json()["detail"].lower()
+
+
+def test_an_employee_can_reach_it_once_the_workspace_has(shop):
+    from backend.app.ai_wallet import get_wallet
+
+    set_current_business_id(shop["business_id"])
+    with Session(engine) as session:
+        wallet = get_wallet(session, shop["business_id"])
+        wallet.employees_enabled = True
+        session.add(wallet)
+        session.commit()
 
     response = shop["client"].post(
         "/my/assistant/chat",
         json={"message": "when am I on this week"},
-        headers={
-            "Authorization": f"Bearer {signin.json()['token']}",
-            "X-Business-Id": str(shop["business_id"]),
-        },
+        headers=_employee_headers(shop),
     )
     # No API key is configured in the suite, so the call cannot reach a model.
-    # 403 would mean the permission gate refused, which is the thing being
-    # checked; anything else means they got through it.
+    # 403 would mean a permission gate refused; anything else means they got
+    # through it, which is what is being checked.
     assert response.status_code != 403, (
         "an employee cannot reach the assistant built for them"
     )
+
+
+def test_one_person_cannot_drain_the_month(shop):
+    """
+    The per-user cap is not a cost control for us — the wallet already bounds
+    the total. It is so one curious employee cannot spend the whole month in an
+    afternoon and leave the manager without it.
+    """
+    from backend.app.ai_wallet import UserCapReached, check_can_spend, get_wallet
+    from backend.app.models import ApiUsage
+
+    set_current_business_id(shop["business_id"])
+    with Session(engine) as session:
+        wallet = get_wallet(session, shop["business_id"])
+        wallet.employees_enabled = True
+        wallet.per_user_cap_milli = 50_000          # 50 cents
+        session.add(wallet)
+        session.add(ApiUsage(
+            business_id=shop["business_id"],
+            date=date.today().isoformat(),
+            feature="my-assistant",
+            user_id=shop["user_id"],
+            vendor_cost_milli=50_000,
+        ))
+        session.commit()
+
+        with pytest.raises(UserCapReached):
+            check_can_spend(
+                session, shop["business_id"],
+                user_id=shop["user_id"], is_employee=True,
+            )
+
+        # The workspace itself still has credit — this is one person's limit.
+        assert wallet.spent_milli < wallet.included_milli
 
 
 def test_it_needed_no_change_to_the_employee_allowlist():

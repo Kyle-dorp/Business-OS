@@ -84,6 +84,7 @@ from backend.app.stripe_service import (
     stripe_configured,
 )
 from backend.app.today import router as today_router
+from backend.app.ai_wallet import router as ai_wallet_router
 from backend.app.employee_assistant import router as my_assistant_router
 from backend.app.onboarding import router as onboarding_router
 from backend.app.admin_routes import admin_router
@@ -111,6 +112,7 @@ app = FastAPI(title="Business EOS API", version="1.0.0")
 app.include_router(platform_router)
 app.include_router(finance_router)
 app.include_router(today_router)
+app.include_router(ai_wallet_router)
 app.include_router(my_assistant_router)
 app.include_router(onboarding_router)
 app.include_router(admin_router)

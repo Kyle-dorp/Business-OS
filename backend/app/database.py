@@ -94,6 +94,12 @@ def apply_lightweight_migrations() -> None:
             )
         )
 
+    # The assistant wallet. ApiUsage gained the true vendor cost of a call and
+    # the user who made it, so the meter can answer "what has this cost" and
+    # "who spent it" rather than only "how many tokens".
+    _add_column_if_missing("apiusage", "vendor_cost_milli", "INTEGER", "0")
+    _add_column_if_missing("apiusage", "user_id", "INTEGER", "NULL", nullable=True)
+
     # Labor projection range fields.
     _add_column_if_missing("laborprojection", "min_labor_percent", "FLOAT", "NULL", nullable=True)
     _add_column_if_missing("laborprojection", "max_labor_percent", "FLOAT", "NULL", nullable=True)
